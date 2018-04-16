@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>AV</title>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(45deg, rgb(206, 127, 250) 0%, rgb(76, 152, 250) 100%);
+        }
+
+        .triangle {
+            transform-origin: center;
+            fill: none;
+            stroke: white;
+            stroke-width: 10;
+        }
+
+        .triangle.a {
+            transform: rotate(180deg);
+        }
+
+        *[flex] {
+            display: flex;
+            flex-direction: column;
+        }
+
+        *[flex-center] {
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body flex flex-center>
+    <svg height="300" width="300">
+        <g class="logo" transform="scale(.8) translate(40, 40)">
+            <g class="a" transform="translate(-100,-100)">
+                <polygon
+                        class="triangle a"
+                        points="0,0 200,0 100,169"
+                ></polygon>
+            </g>
+            <g class="v" transform="translate(100,100)">
+                <polygon
+                        class="triangle v"
+                        points="0,0 200,0 100,169"
+                ></polygon>
+            </g>
+        </g>
+    </svg>
+</body>
+</html>
