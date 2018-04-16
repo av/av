@@ -18,8 +18,15 @@
             box-sizing: border-box;
         }
 
-        body {
-            background: linear-gradient(45deg, rgb(206, 127, 250) 0%, rgb(76, 152, 250) 100%);
+        background {
+            position: fixed;
+            width: 400%;
+            height: 400%;
+
+            background: linear-gradient(135deg, rgb(206, 127, 250) 30%, rgb(76, 152, 250) 70%);
+            background-size: 200% 200%;
+            animation: gradient 13s ease infinite alternate, spin 17s ease infinite;
+            z-index: -1;
         }
 
         .triangle {
@@ -42,9 +49,29 @@
             justify-content: center;
             align-items: center;
         }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0;
+            }
+            100% {
+                background-position: 100%;
+            }
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 <body flex flex-center>
+    <background></background>
     <svg height="300" width="300">
         <g class="logo" transform="scale(.8) translate(40, 40)">
             <g class="a" transform="translate(-100,-100)">
