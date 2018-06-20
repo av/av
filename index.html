@@ -1,92 +1,222 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>AV</title>
-    <style>
-        html, body {
-            width: 100%;
-            height: 100%;
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+  >
+    <meta
+      http-equiv="X-UA-Compatible"
+      content="ie=edge"
+    >
+      <title>AV</title>
+
+      <style>
+        body {
+          background: linear-gradient(to top left, #d755ff 0%, #7dd4ee 100%);
+          background-size: 200% 200%;
+          overflow: hidden;
+        }
+
+        .logo .bottom {
+          filter: url(#fancy-goo);
+        }
+
+        .logo .bottom polygon {
+          transform-origin: center;
+          fill: transparent;
+          stroke: #b600ee;
+          stroke-width: 20px;
+        }
+
+        .logo .bottom .a {
+          animation: stronger-shaking 100s infinite alternate;
+          animation-delay: -10s;
+        }
+
+        .logo .bottom .v {
+          animation: stronger-shaking 100s infinite alternate;
+        }
+
+        .logo .bottom .accent {
+          stroke: #c1eaf7;
+          animation: stronger-shaking 50s infinite alternate;
+        }
+
+        .logo .bottom .accent.a {
+          animation-delay: -16.66667s;
+        }
+
+        .logo .bottom .accent.v {
+          animation-delay: -33.33333s;
+        }
+
+        .logo .top {
+          transform: scale(0.9);
+          transform-origin: center;
+          mix-blend-mode: overlay;
+          opacity: 1;
+        }
+
+        .logo .top polygon {
+          fill: transparent;
+          stroke: white;
+          stroke-width: 10px;
+        }
+
+        .logo .top.glitching {
+          transform: scale(0.92) translate(4px);
+          mix-blend-mode: hue;
+        }
+
+        [flex-row] {
+          display: flex;
+          flex-direction: row;
+        }
+
+        [flex-center] {
+          justify-content: center;
+          align-items: center;
         }
 
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+          padding: 0;
+          margin: 0;
+          box-sizing: border-box;
         }
 
-        background {
-            position: fixed;
-            width: 400%;
-            height: 400%;
-
-            background: linear-gradient(135deg, rgb(206, 127, 250) 30%, rgb(76, 152, 250) 70%);
-            background-size: 200% 200%;
-            animation: gradient 13s ease infinite alternate, spin 17s ease infinite;
-            z-index: -1;
+        html,
+        body {
+          width: 100%;
+          height: 100%;
         }
 
-        .triangle {
-            transform-origin: center;
-            fill: none;
-            stroke: white;
-            stroke-width: 10;
+        .offscreen {
+          position: fixed;
+          left: -9999px;
         }
 
-        .triangle.a {
-            transform: rotate(180deg);
+        @keyframes shaking {
+          0% {
+            transform: translate(0px, 0px) rotate(2.1deg);
+          }
+          10% {
+            transform: translate(1px, 1px) rotate(-2.4deg);
+          }
+          20% {
+            transform: translate(1px, 1px) rotate(-1.1deg);
+          }
+          30% {
+            transform: translate(1px, 1px) rotate(-0.1deg);
+          }
+          40% {
+            transform: translate(1px, 0px) rotate(-2.35deg);
+          }
+          50% {
+            transform: translate(1px, 0px) rotate(0.65deg);
+          }
+          60% {
+            transform: translate(0px, 1px) rotate(0.75deg);
+          }
+          70% {
+            transform: translate(1px, 1px) rotate(1.4deg);
+          }
+          80% {
+            transform: translate(1px, 1px) rotate(0.5deg);
+          }
+          90% {
+            transform: translate(1px, 1px) rotate(-1.2deg);
+          }
+          100% {
+            transform: translate(0px, 1px) rotate(-0.1deg);
+          }
         }
 
-        *[flex] {
-            display: flex;
-            flex-direction: column;
+        @keyframes stronger-shaking {
+          0% {
+            transform: translate(9px, 4px) rotate(-1.8deg);
+          }
+          10% {
+            transform: translate(3px, -4px) rotate(1.6deg);
+          }
+          20% {
+            transform: translate(-8px, 7px) rotate(-0.7deg);
+          }
+          30% {
+            transform: translate(9px, -5px) rotate(-1.35deg);
+          }
+          40% {
+            transform: translate(-5px, 6px) rotate(-1.25deg);
+          }
+          50% {
+            transform: translate(-9px, 10px) rotate(-2.3deg);
+          }
+          60% {
+            transform: translate(-8px, 9px) rotate(0.6deg);
+          }
+          70% {
+            transform: translate(7px, -6px) rotate(-1.3deg);
+          }
+          80% {
+            transform: translate(-1px, -4px) rotate(0.5deg);
+          }
+          90% {
+            transform: translate(10px, -9px) rotate(-0.95deg);
+          }
+          100% {
+            transform: translate(9px, 4px) rotate(-0.95deg);
+          }
         }
-
-        *[flex-center] {
-            justify-content: center;
-            align-items: center;
-        }
-
-        @keyframes gradient {
-            0% {
-                background-position: 0;
-            }
-            100% {
-                background-position: 100%;
-            }
-        }
-
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
+      </style>
 </head>
-<body flex flex-center>
-    <background></background>
-    <svg height="300" width="300">
-        <g class="logo" transform="scale(.8) translate(40, 40)">
-            <g class="a" transform="translate(-100,-100)">
-                <polygon
-                        class="triangle a"
-                        points="0,0 200,0 100,169"
-                ></polygon>
-            </g>
-            <g class="v" transform="translate(100,100)">
-                <polygon
-                        class="triangle v"
-                        points="0,0 200,0 100,169"
-                ></polygon>
-            </g>
-        </g>
+<body
+  flex-row
+  flex-center
+>
+  <svg
+    class="logo"
+    height="500"
+    width="500"
+    viewbox="0 0 500 500"
+  >
+    <g class="bottom">
+      <polygon
+        class="a"
+        points="100,300 300,300 200,130"
+      ></polygon>
+        <polygon
+          class="a accent"
+          points="100,300 300,300 200,130"
+        ></polygon>
+          <polygon
+            class="v accent"
+            points="200,200 300,370 400,200"
+          ></polygon>
+            <polygon
+              class="v"
+              points="200,200 300,370 400,200"
+            ></polygon>
+    </g>
+    <g class="top">
+      <polygon
+        class="a"
+        points="100,300 300,300 200,130"
+      ></polygon>
+        <polygon
+          class="v"
+          points="200,200 300,370 400,200"
+        ></polygon>
+    </g>
     </svg>
-</body>
+
+    <svg class="offscreen">
+      <filter id="fancy-goo">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="15" result="blur"></feGaussianBlur>
+        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo"></feColorMatrix>
+      </filter>
+    </svg>
+
+    </body>
+
 </html>
