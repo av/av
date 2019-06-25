@@ -1,0 +1,134 @@
+include mixins/fixed
+include mixins/floater
+include mixins/intro-section
+
+section(
+  flex-row
+  flex-wrap
+  align-baseline 
+  justify-center
+  padding-lg
+)
+  section(
+    card 
+    margin-lg
+    color-inverse
+    bg-gradient-primary-tip
+  )
+    .floater.animation-rotating(
+      style=`
+        z-index: 1;
+        position: absolute; 
+        bottom: 0; right: 0;
+        opacity: .8;
+      `
+    )
+      .element.color-lime.animation-sliding
+      .element.color-amber.shape-large-square
+      .element.color-secondary.animation-orbiting.shape-pill
+      .element.color-red.animation-orbiting.shape-circle(
+        style={'animation-delay': '-10s', 'animation-duration': '20s'}
+      )
+
+    h1 Fullstack/Demo engineer
+    p.
+      Started my professional career in 2014. Fascinated with creating things and destroying problems.
+      Believe that simple things are the best ones, though life is beautiful in all of its chaos.
+  
+
+  section(
+    card 
+    bg-gradient-lime-tip
+    style=`max-width: 30rem`
+  )       
+    h1 Achievements
+
+    h6 Leading product development
+    p Bringing customer needs to life
+    
+    h6 Creating Applications from scratch
+    p Web and Desktop applications to make other people work doable
+
+    h6 Building Deployment pipelines
+    p Bridging sources with where they have to run, with only a few buttons in between
+    h6 Creating E2E from scratch
+    p End-to-end testing pipeline with a framework enabling painless implementation of tests
+    h6 Creating UI kits from scratch
+    p Designed the architecture of UI kits for Polymer and React, to enable building interfaces quicker and more predictably
+
+section(
+  flex-row
+  center
+  padding-lg
+
+  bg-secondary-to-white
+  color-inverse
+  style=`
+    display: flex;
+    height: 10rem;
+  `
+)
+  h1 Things i've built
+
+section(
+  flex-row
+  flex-wrap
+  align-start
+  justify-center
+)
+  section(
+    flex-column
+  )
+    section(
+      card
+      margin
+      bg-white
+    )
+      h4 Tools
+      h6 thng-query
+      p Custom DSL translating plain english queries to requests to RESTful API
+      h6 dtg
+      p Tool allowing to quickly generate data in a declarative fashion
+      h6 tohu
+      p Application tracer, compatible with chrome://tracing frontend
+      h6 your-script
+      p Toolkit to quickly produce subsets of Javascript with arbitrary set of keywords. Most notably, Redscript
+      h6 requirist
+      p Common JS loader orchestrator with support of require by globs
+
+    section(
+      card
+      margin
+    )
+      h4 Presentations
+      h6 Serverless & IoT
+      p Using AWS Lambda for processing of data from things connected to internet
+      h6 Collaborative AR
+      p THREE.js, ar.js for quickly building digital experiences for consumer products
+
+  section(
+    flex-column
+  )
+    section(
+      card
+      margin
+    )
+      h4 Visualizations
+      h6 Event sequencing
+      p Visualizing events from a distributed system to give a grasp on its internals
+      h6 Bidirectional Tree
+      p Lazy rendering of infinite asynchronous structures with circular references
+      h6 Graph visualization
+      p API for rendering arbitrary graphs programmatically
+
+    section(
+      card
+      margin
+    )
+      h4 Articles
+      h6 Tracing and Javascript
+      p Guide on how to build simple tracing tool and start using it for more insights on your application performance
+      h6 Creating custom Javascript subsets
+      p Guide on using any given sets of keywords for javascript subsets with RedScript as an example
+      h6 Javasript timers with autocorrection
+      p Guide on achieving stable cycle times with setTimeout

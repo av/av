@@ -1,0 +1,39 @@
+@import './vars';
+
+.splitter {
+  $size: 10rem;
+  $circle-size: $size / 2;
+  $top-color: $primary;
+  $animation-duration: 100s;
+  $bottom-color: white;
+  filter: url(#fancy-goo);
+
+  .circle-container {
+    flex: 1;
+    width: $circle-size;
+    height: $circle-size;
+    overflow: visible;
+  }
+
+  .top {
+    background: $top-color;
+  }
+
+  .bottom {
+    background: $bottom-color;
+  }
+
+  .circle {
+    width: 150%;
+    height: 150%;
+    border-radius: 100%;
+
+    &.top {
+      animation: shake $animation-duration alternate infinite;
+    }
+
+    &.bottom {
+      animation: shake $animation-duration alternate infinite;
+    }
+  }
+}

@@ -1,0 +1,56 @@
+section.splitter(
+  style=`
+    overflow: hidden;
+    margin: -2rem;
+  `
+)
+  - var randomDelay = () => `-${Math.random() * 25}s`;
+
+  section(
+    flex-row
+    bg-primary
+    style=`
+      margin: 0 -2rem;
+      height: 3rem;
+    `
+  )
+    - var count = 5
+    while count > 0
+      .circle.top(style={
+        'animation-delay': randomDelay()
+      })
+      - count--
+
+  section(
+    flex-row
+    style=`
+      margin: 0 -2rem;
+      height: 2rem;
+    `
+  )
+    - var count = 3
+    while count > 0
+      .circle.bottom(style={
+        'animation-delay': randomDelay()
+      })
+      - count--
+
+
+  //- section.top(flex-row justify-stretch)
+    - var count = 5
+    while count > 0
+      .circle-container
+        .circle.top(style={
+          'animation-delay': randomDelay()
+        })
+      - count--
+
+  //- section.bottom(flex-row justify-stretch)
+    - var count = 5
+    while count > 0
+      .circle-container
+        .circle.bottom(style={
+          'animation-delay': randomDelay()
+        })
+      - count--
+    

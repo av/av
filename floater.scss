@@ -1,0 +1,78 @@
+@import './vars';
+
+.floater {
+  @include md {
+    display: none;
+  }
+
+  $size: 3rem;
+  $size-large: $size * 1.5;
+  $animation-duration: 50s;
+
+  position: relative;
+  overflow: visible;
+  filter: url(#fancy-goo);
+
+  .element {
+    width: $size;
+    height: $size;
+    position: absolute;
+    left: -$size / 2;
+    top: -$size / 2;
+  }
+
+  .color-primary { background: $primary; }
+  .color-secondary { background: $secondary; }
+  .color-lime { background: $lime; }
+  .color-amber { background: $amber; }
+  .color-red { background: $red; }
+
+  .shape-square {
+    // Nothing to add :)
+  }
+  
+  .shape-large-square {
+    width: $size-large;
+    height: $size-large;
+    left: -($size-large / 2);
+    top: -($size-large / 2);
+  }
+
+  .shape-pill {
+    width: $size-large;
+    left: -$size;
+    border-radius: $size * 2;
+  }
+
+  .shape-circle {
+    border-radius: $size * 10;
+  }
+
+  .animation-orbiting {
+    animation: orbiting $animation-duration infinite linear;
+  }
+
+  .animation-sliding {
+    animation: sliding $animation-duration alternate infinite ease-in-out;
+  }
+
+  &.animation-rotating {
+    animation: rotating $animation-duration infinite linear;
+  }
+
+  &.animation-skewing {
+    animation: skewing $animation-duration infinite;
+  }
+
+  &.animation-shake-lr {
+    animation: shake-lr $animation-duration infinite;
+  }
+
+  &.animation-jello-vertical {
+    animation: jello-vertical ($animation-duration * 2) infinite;
+  }
+
+  &.animation-none {
+    animation: none;
+  }
+}

@@ -1,0 +1,170 @@
+@import './vars';
+
+@mixin md {
+  @media (max-width: $md) {
+    @content;
+  }
+}
+
+@mixin sm {
+  @media (max-width: $sm) {
+    @content;
+  }
+}
+
+[bg-white] {
+  background: white;
+}
+
+[bg-primary] {
+  background: $primary;
+}
+
+[bg-secondary] {
+  background: $secondary;
+}
+
+[bg-gray] {
+  background: rgba(0, 0, 0, .1);
+}
+
+[bg-gradient] {
+  background: linear-gradient(to top, $primary 5%, $secondary 100%);
+}
+
+[bg-secondary-to-white] {
+  background: linear-gradient(to top, white 0%, whitesmoke 10%, $secondary 120%);
+}
+
+[bg-gradient-primary-tip] {
+  background: linear-gradient(to top left, $primary 0%, $secondary 40%);
+}
+
+[bg-gradient-amber-tip] {
+  background: linear-gradient(to top left, $amber -20%, white 20%);
+}
+
+[bg-gradient-lime-tip] {
+  background: linear-gradient(to top left, $lime -20%, white 20%);
+}
+
+[padding] {
+  padding: 1rem;
+}
+
+[padding-sm] {
+  padding: 0.5rem;
+}
+
+[padding-lg] {
+  padding: 2rem;
+}
+
+[margin] {
+  margin: 1rem;
+}
+
+[margin-bt] {
+  margin-bottom: 1rem;
+}
+
+[margin-rt] {
+  margin-right: 1rem;
+}
+
+[margin-sm] {
+  margin: 0.5rem;
+}
+
+[margin-lg] {
+  margin: 2rem;
+}
+
+[max-width-20] {
+  max-width: 20rem;
+}
+
+[fill] {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+[color-inverse] {
+  color: $text-inverse;
+}
+
+[shadow-diffuse] {
+  box-shadow: 0 1rem 2rem 0 $secondary; 
+}
+
+[flex-row] {
+  display: flex;
+  flex-direction: row;
+
+  &[responsive] {
+    @include md {
+      flex-direction: column;
+    }
+  }
+}
+
+[flex-row],
+[flex-column] {
+  &[align-start] {
+    align-items: flex-start;
+  }
+
+  &[align-baseline] {
+    align-items: baseline;
+  }
+
+  &[align-center] {
+    align-items: center;
+  }
+
+  &[center] {
+    align-items: center;
+    justify-content: center;
+  }
+
+  &[space-between] {
+    justify-content: space-between;
+  }
+
+  &[space-around] {
+    justify-content: space-around;
+  }
+
+  &[justify-center] {
+    justify-content: center;
+  }
+
+  &[justify-stretch] {
+    justify-content: stretch;
+  }
+}
+
+[flex-column] {
+  display: flex;
+  flex-direction: column;
+}
+
+[flex-wrap] {
+  flex-wrap: wrap;
+}
+
+[flex-fill] {
+  flex: 1 0 auto;
+}
+
+[flex-center] {
+  justify-content: center;
+  align-items: center;
+}
+
+[text-center] {
+  text-align: center;
+}

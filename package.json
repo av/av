@@ -1,0 +1,11 @@
+{
+  "name": "av.codes",
+  "scripts": {
+    "start": "parcel index.pug",
+    "deploy": "now --target production"
+  },
+  "devDependencies": {
+    "pug": "^2.0.3",
+    "sass": "^1.21.0"
+  }
+}

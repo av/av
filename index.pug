@@ -1,0 +1,20 @@
+doctype html
+html(lang='en')
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0')
+    meta(http-equiv='X-UA-Compatible', content='ie=edge')
+    title AV
+    link(rel='stylesheet', href='main.scss')
+  body
+    include logo
+    //- include logo-intro-splitter
+    include intro
+    include contacts
+    include footer
+    //- include debug
+
+    svg.offscreen
+      filter#fancy-goo
+        fegaussianblur(in='SourceGraphic', stdDeviation='15', result='blur')
+        fecolormatrix(in='blur', mode='matrix', values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9', result='goo')

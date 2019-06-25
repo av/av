@@ -1,0 +1,51 @@
+include fixed
+mixin floater()
+  -
+    var any = (...arr) => () => arr[Math.floor(Math.random() * arr.length)]
+    var randomFunction = () => `-${Math.random() * 2}s`
+    var color = any(
+      'color-primary', 
+      'color-secondary',
+      'color-lime',
+      'color-amber',
+      'color-red'
+    )
+    var shape = any(
+      'shape-square', 
+      'shape-large-square',
+      'shape-circle',
+      'shape-pill'
+    )
+    var elementsAnimation = any(
+      'animation-orbiting',
+      'animation-sliding'
+    )
+    var selfAnimation = any(
+      'animation-rotating',
+      'animation-shake-lr',
+      'animation-jello-vertical',
+      'animation-none'
+    )
+
+  .floater(
+    class=[selfAnimation()]
+    style={ 'animation-delay': randomFunction() }
+  )
+    - var n = 0
+    while (n < 4)
+      .element(
+        class=[color(), shape(), elementsAnimation()]
+        style={ 'animation-delay': randomFunction() }
+      )
+      - n++
+
+mixin random-floater()
+  - var x = `${Math.floor(Math.random() * 100)}vw`
+  - var y = `${Math.floor(Math.random() * 100)}vh`
+
+  +fixed({ top: y, left: x })
+    +floater
+
+mixin fixed-floater(position)
+  +fixed(position)
+    +floater
