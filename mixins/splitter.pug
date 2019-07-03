@@ -1,0 +1,59 @@
+mixin splitter(top, bottom)
+  - var topAttrs = { [top]: top };
+
+  section(
+    style=`
+      height: 1vh;
+    `
+  )&attributes(topAttrs)
+  section.splitter(
+    style=`
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      margin-top: -5vh;
+    `
+  )
+    - 
+      var animations = ['shaking', 'stronger-shaking', 'sliding', 'rotating'];
+      var randomDelay = () => `-${Math.random() * 25}s`;
+      var randomRadius = () => `${Math.random() * 100}%`;
+      var randomHeight = () => `${Math.random() * 100 + 120}%`;
+      var animationName = () => animations[Math.floor(Math.random() * animations.length)];
+
+    section(
+      style=`
+        height: 12vh;
+        margin-bottom: -8vh;
+      `
+    )&attributes(topAttrs)
+
+    section(
+      flex-row
+      style=`
+        height: 12vh;
+      `
+    )
+      - 
+        var count = 50;
+        var width = `${100 / count}vw`;
+
+      while count > 0
+        .circle(
+          style={
+            'animation-delay': randomDelay(),
+            'animation-name': animationName(),
+            'border-radius': randomRadius(),
+            'height': randomHeight(),
+            'width': width
+          }
+        )&attributes({ [top]: top })
+        - count--
+
+    section(
+      flex-row
+      style=`
+        margin: 0 -2rem;
+        height: 5rem;
+      `
+    )

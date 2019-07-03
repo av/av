@@ -29,7 +29,7 @@
 }
 
 [bg-gradient] {
-  background: linear-gradient(to top, $primary 5%, $secondary 100%);
+  background: linear-gradient(to top, $primary 10%, $secondary 100%);
 }
 
 [bg-secondary-to-white] {
@@ -45,7 +45,7 @@
 }
 
 [bg-gradient-lime-tip] {
-  background: linear-gradient(to top left, $lime -20%, white 20%);
+  background: linear-gradient(to top left, $lime -100%, white 20%);
 }
 
 [padding] {
@@ -66,6 +66,10 @@
 
 [margin-bt] {
   margin-bottom: 1rem;
+}
+
+[margin-bt-lg] {
+  margin-bottom: 2rem;
 }
 
 [margin-rt] {
@@ -157,7 +161,7 @@
 }
 
 [flex-fill] {
-  flex: 1 0 auto;
+  flex: 1;
 }
 
 [flex-center] {
@@ -167,4 +171,8 @@
 
 [text-center] {
   text-align: center;
+}
+
+[one-liner] {
+  height: 1em;
 }

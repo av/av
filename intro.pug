@@ -1,54 +1,76 @@
 include mixins/fixed
 include mixins/floater
 include mixins/intro-section
+include mixins/splitter
 
 section(
   flex-row
   flex-wrap
   align-baseline 
   justify-center
-  padding-lg
+  style=`
+    overflow: hidden;
+    padding-bottom: 1rem;
+  `
 )
-  section(
-    card 
-    margin-lg
-    color-inverse
-    bg-gradient-primary-tip
-  )
-    .floater.animation-rotating(
+
+  .floater.lg.animation-rotating(
       style=`
-        z-index: 1;
+        z-index: -1;
         position: absolute; 
-        bottom: 0; right: 0;
-        opacity: .8;
+        bottom: 40%; right: 60%;
+        animation-duration: 100s;
+        animation-direction: reverse;
       `
     )
-      .element.color-lime.animation-sliding
-      .element.color-amber.shape-large-square
-      .element.color-secondary.animation-orbiting.shape-pill
-      .element.color-red.animation-orbiting.shape-circle(
+      .element.color-secondary.animation-sliding.shape-circle
+      .element.color-amber.animation-orbiting(
+        style=`height: 3rem`
+      )
+      .element.color-red.animation-sliding.shape-circle(
         style={'animation-delay': '-10s', 'animation-duration': '20s'}
       )
 
-    h1 Fullstack/Demo engineer
+  section(
+    card 
+    color-inverse
+    bg-gradient-primary-tip
+  )
+    //- .floater.animation-rotating(
+    //-   style=`
+    //-     z-index: 1;
+    //-     position: absolute; 
+    //-     top: 2rem; left: -2rem;
+    //-   `
+    //- )
+    //-   .element.color-lime.animation-sliding
+    //-   .element.color-amber.shape-large-square
+    //-   .element.color-secondary.animation-orbiting.shape-pill
+    //-   .element.color-red.animation-orbiting.shape-circle(
+    //-     style={'animation-delay': '-10s', 'animation-duration': '20s'}
+    //-   )
+
+    h1 
+      img(
+        src='https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Unofficial_JavaScript_logo_2.svg/1200px-Unofficial_JavaScript_logo_2.svg.png'
+        one-liner
+        margin-rt 
+      )
+      span engineer
     p.
-      Started my professional career in 2014. Fascinated with creating things and destroying problems.
+      Fascinated with creating things and destroying problems.
       Believe that simple things are the best ones, though life is beautiful in all of its chaos.
-  
 
   section(
     card 
     bg-gradient-lime-tip
-    style=`max-width: 30rem`
   )       
     h1 Achievements
 
     h6 Leading product development
     p Bringing customer needs to life
-    
     h6 Creating Applications from scratch
     p Web and Desktop applications to make other people work doable
-
     h6 Building Deployment pipelines
     p Bridging sources with where they have to run, with only a few buttons in between
     h6 Creating E2E from scratch
@@ -56,13 +78,89 @@ section(
     h6 Creating UI kits from scratch
     p Designed the architecture of UI kits for Polymer and React, to enable building interfaces quicker and more predictably
 
++splitter('bg-white')
+
+section(
+  flex-row
+  center
+  bg-secondary
+
+  style=`
+    margin-top: -20vh;
+    padding-top: 25vh;
+    padding-bottom: 1rem;
+  `
+)
+  section(
+    card
+    bg-white
+    margin-bt-lg
+    style=`
+      max-width: 50rem;
+    `
+  )
+    h1 Technology proficiency
+
+    h6 Javascript
+    p.
+      In top 1% of engineers on Codewars, twice won JavaScript contests competing with 80 other people.
+      Wrote code running in browsers, servers, desktops and microcontrollers.
+
+    section(flex-row responsive)
+      section(flex-fill margin-rt)
+        h6 Node.js
+        p.
+          Built production-grade RESTful APIs, pub/sub services for IoT devices,
+          distributed serverless applications, CLI tools, SDKs  and desktop applications.
+
+        h6 AWS
+        p.
+          Created and provisioned multiple multi-tenant services. 
+          Most experienced with Lambda, ECS, SQS, S3.
+
+        h6 Docker
+        p.
+          Built and maintained numerous applications using docker as containerization layer.
+
+        h6 Mongo
+        p.
+          Built multiple services using mongo as data storage, experience with 
+          aggregation pipelines for realtime analytics, scaling and optimizing datasets for better performance.
+
+      section(flex-fill)
+        h6 Webpack
+        p.
+          Experience building with webpack from scratch, introducing tool to existing projects and 
+          using it in conjunction with other tools.
+
+        h6 D3
+        p.
+          Built multiple complex visualizations with advanced features from scratch, please see examples below.
+
+        h6 React
+        p.
+          Multiple production ready applications
+
+
+    h6 Now
+    p.
+      Created multiple services for running in zeit's now environment, both v1 and v2.  
+
+    section(
+      flex-row
+      flex-wrap
+    )
+      h6 Grunt/Gulp/NPM Scripts
+      h6 bash
+
++splitter('bg-secondary')
+
 section(
   flex-row
   center
   padding-lg
 
-  bg-secondary-to-white
-  color-inverse
+  bg-primary-to-white
   style=`
     display: flex;
     height: 10rem;

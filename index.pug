@@ -7,14 +7,24 @@ html(lang='en')
     title AV
     link(rel='stylesheet', href='main.scss')
   body
+    include mixins/splitter
+
+    include filters
     include logo
-    //- include logo-intro-splitter
+    +splitter('bg-primary', 'bg-white')
     include intro
-    include contacts
+    //- include contacts
     include footer
     //- include debug
+    
+    .offscreen
+      h1 This is offscreen
+    
+    //- Google analytics
+    script(async src='https://www.googletagmanager.com/gtag/js?id=UA-143258835-1')
+    script.
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-143258835-1');
 
-    svg.offscreen
-      filter#fancy-goo
-        fegaussianblur(in='SourceGraphic', stdDeviation='15', result='blur')
-        fecolormatrix(in='blur', mode='matrix', values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9', result='goo')

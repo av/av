@@ -2,9 +2,10 @@
   "name": "av.codes",
   "scripts": {
     "start": "parcel index.pug",
-    "deploy": "now --target production"
+    "deploy": "./scripts/deploy.sh"
   },
   "devDependencies": {
+    "cssnano": "^4.1.10",
     "pug": "^2.0.3",
     "sass": "^1.21.0"
   }

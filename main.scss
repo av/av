@@ -20,7 +20,7 @@ body {
 
   font-family: "Open Sans", sans-serif;
   font-weight: lighter;
-  font-size: 32px;
+  font-size: 24px;
   color: $text;
 }
 
@@ -97,11 +97,21 @@ section[card] {
   position: relative;
   max-width: 20rem;
   @extend [padding];
+  @extend [margin];
+
+  border-radius: 1rem;
+
   
-  box-shadow: 0 1rem 2rem 0 rgba(0, 0, 0, .5);
+  box-shadow: 
+    0 1rem 2rem -.5rem rgba(0, 0, 0, .2),
+    0 0 .2rem .1rem rgba(0, 0, 0, .05);
 
   card-bg {
     z-index: -1;
+  }
+
+  @include md {
+    max-width: 90vw;
   }
 }
 

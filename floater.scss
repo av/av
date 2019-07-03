@@ -7,18 +7,30 @@
 
   $size: 3rem;
   $size-large: $size * 1.5;
+  $lg-multiplier: 3;
   $animation-duration: 50s;
 
   position: relative;
   overflow: visible;
   filter: url(#fancy-goo);
+  &.lg {
+    filter: url(#fancy-goo-lg);
+  }
+
+  @mixin element-size($width, $height: $width) {
+    width: $width;
+    height: $height;
+    left: -$width / 2;
+    top: -$height / 2;
+  }
 
   .element {
-    width: $size;
-    height: $size;
     position: absolute;
-    left: -$size / 2;
-    top: -$size / 2;
+    @include element-size($size);
+  }
+  
+  &.lg .element {
+    @include element-size($size * $lg-multiplier);
   }
 
   .color-primary { background: $primary; }
@@ -32,16 +44,20 @@
   }
   
   .shape-large-square {
-    width: $size-large;
-    height: $size-large;
-    left: -($size-large / 2);
-    top: -($size-large / 2);
+    @include element-size($size-large);
+    
+    .floater.lg & {
+      @include element-size($size-large * $lg-multiplier);
+    }
   }
 
   .shape-pill {
-    width: $size-large;
-    left: -$size;
-    border-radius: $size * 2;
+    @include element-size($size-large, $size);
+    border-radius: 200vmax;
+  }
+
+  &.lg .shape-pill {
+    @include element-size($size-large * $lg-multiplier, $size * $lg-multiplier);
   }
 
   .shape-circle {
@@ -54,6 +70,14 @@
 
   .animation-sliding {
     animation: sliding $animation-duration alternate infinite ease-in-out;
+  }
+
+  .animation-shake-lr {
+    animation: shake-lr $animation-duration infinite;
+  }
+
+  .animation-skewing {
+    animation: skewing $animation-duration infinite;
   }
 
   &.animation-rotating {

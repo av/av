@@ -1,11 +1,11 @@
-@import './vars';
+@import "./vars";
 
 .splitter {
-  $size: 10rem;
+  $size: 20rem;
   $circle-size: $size / 2;
-  $top-color: $primary;
   $animation-duration: 100s;
-  $bottom-color: white;
+
+  z-index: 1;
   filter: url(#fancy-goo);
 
   .circle-container {
@@ -15,25 +15,7 @@
     overflow: visible;
   }
 
-  .top {
-    background: $top-color;
-  }
-
-  .bottom {
-    background: $bottom-color;
-  }
-
   .circle {
-    width: 150%;
-    height: 150%;
-    border-radius: 100%;
-
-    &.top {
-      animation: shake $animation-duration alternate infinite;
-    }
-
-    &.bottom {
-      animation: shake $animation-duration alternate infinite;
-    }
+    animation: $animation-duration alternate infinite;
   }
 }

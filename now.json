@@ -1,8 +1,4 @@
 {
   "version": 2,
-  "alias": ["av.codes"],
-  "builds": [{
-    "src": "index.pug" ,
-    "use": "now-parcel"
-  }]
+  "alias": ["av.codes"]
 }
