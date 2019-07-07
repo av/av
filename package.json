@@ -8,5 +8,8 @@
     "cssnano": "^4.1.10",
     "pug": "^2.0.3",
     "sass": "^1.21.0"
+  },
+  "dependencies": {
+    "simple-parallax-js": "^5.1.0"
   }
 }
