@@ -6,14 +6,17 @@ html(lang='en')
     meta(http-equiv='X-UA-Compatible', content='ie=edge')
     title AV
     link(rel='stylesheet', href='main.scss')
+    script(src='scrollbars.js')
+
   body
     include mixins/splitter
 
     include filters
     include logo
-    +splitter('bg-primary', 'bg-white')
+    +splitter('bg-primary')
     include intro
     //- include contacts
+    +splitter('bg-white')
     include footer
     //- include debug
     

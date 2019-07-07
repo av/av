@@ -6,12 +6,9 @@
 @import './floater';
 @import './splitter';
 
-// $primary: #b600ee;
-// $secondary: #c1eaf7;
-
-// $primary: #ffecd2;
-// $secondary: #fcb69f;
-
+html {
+  scroll-behavior: smooth;
+}
 
 html,
 body {
@@ -28,6 +25,18 @@ body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+body::-webkit-scrollbar {
+  width: 6px;
+}
+ 
+body::-webkit-scrollbar-track {
+  // background: rgba(0,0 ,0 ,.1);
+}
+ 
+body::-webkit-scrollbar-thumb {
+  background: #666; 
 }
 
 .logo .bottom {

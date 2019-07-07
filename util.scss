@@ -28,6 +28,10 @@
   background: rgba(0, 0, 0, .1);
 }
 
+[bg-red] {
+  background: $red;
+}
+
 [bg-gradient] {
   background: linear-gradient(to top, $primary 10%, $secondary 100%);
 }
@@ -98,6 +102,10 @@
 
 [color-inverse] {
   color: $text-inverse;
+
+  a {
+    color: $text-inverse;
+  }
 }
 
 [shadow-diffuse] {

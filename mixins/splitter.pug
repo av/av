@@ -3,7 +3,7 @@ mixin splitter(top, bottom)
 
   section(
     style=`
-      height: 1vh;
+      height: 5vh;
     `
   )&attributes(topAttrs)
   section.splitter(
@@ -18,8 +18,15 @@ mixin splitter(top, bottom)
       var animations = ['shaking', 'stronger-shaking', 'sliding', 'rotating'];
       var randomDelay = () => `-${Math.random() * 25}s`;
       var randomRadius = () => `${Math.random() * 100}%`;
-      var randomHeight = () => `${Math.random() * 100 + 120}%`;
+      var randomHeight = () => Math.random() * 100 + 120;
       var animationName = () => animations[Math.floor(Math.random() * animations.length)];
+      var map = (val, [domainLower, domainUpper], [rangeLower, rangeUpper]) => {
+        const domain = domainUpper - domainLower;
+        const range = rangeUpper - rangeLower;
+        const valuePercentage = (val - domainLower) / domain;
+
+        return rangeLower + (range * valuePercentage);
+      }
 
     section(
       style=`
@@ -35,8 +42,9 @@ mixin splitter(top, bottom)
       `
     )
       - 
-        var count = 50;
-        var width = `${100 / count}vw`;
+        var count = 100;
+        var total = count;
+        var width = `${100 / count * 2}vw`;
 
       while count > 0
         .circle(
@@ -44,7 +52,7 @@ mixin splitter(top, bottom)
             'animation-delay': randomDelay(),
             'animation-name': animationName(),
             'border-radius': randomRadius(),
-            'height': randomHeight(),
+            'height': randomHeight() * Math.sin(map(count, [0, total], [Math.PI * .1, Math.PI * .9])) + '%',
             'width': width
           }
         )&attributes({ [top]: top })
