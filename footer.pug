@@ -5,13 +5,15 @@ section(
   bg-red
   color-inverse
   style=`
-    margin-top: -25vh;
+    margin-top: -15vh;
     padding-top: 25vh;
+    display: flex;
   `
 )
-  small
-    small(flex-column center)
-      small Built by <b>AV</b>, 2019
+    small(flex-column center style=`min-height: 10vh;`)
+      small 
+        span Built by <b>AV</b>, 
+        span.current-year 2020
       small(flex-row) 
         a(href='https://github.com/av') GitHub
         span &nbsp;
@@ -20,3 +22,5 @@ section(
         a(href='https://codepen.io/iamfrontender/') Codepen
         span &nbsp;
         a(href='https://www.codewars.com/users/iamfrontender') Codewars
+    script.
+      document.querySelector('.current-year').textContent = (new Date()).getFullYear();

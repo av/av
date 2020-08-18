@@ -97,10 +97,9 @@ body::-webkit-scrollbar-thumb {
 }
 
 section[fullscreen] {
-  min-height: 100vh;
+  min-height: 70vh;
   width: 100%;
 }
-
 
 section[card] {
   position: relative;
