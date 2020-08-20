@@ -7,9 +7,12 @@
   "devDependencies": {
     "cssnano": "^4.1.10",
     "pug": "^2.0.3",
-    "sass": "^1.21.0"
+    "sass": "^1.21.0",
+    "typescript": "^3.9.7"
   },
   "dependencies": {
+    "@types/d3": "^5.7.2",
+    "d3": "^5.16.0",
     "simple-parallax-js": "^5.1.0"
   }
 }
