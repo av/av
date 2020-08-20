@@ -1,16 +1,25 @@
+@import "./vars.scss";
+
 section.skills {
   max-width: 60rem;
   margin: 0 auto;
 
   h2 {
     text-align: center;
-    margin-top: 5rem;
+    margin: 2rem 0;
   }
 
   .skills-container {
-    box-shadow: 0 1rem 2rem 0 rgba(0, 0, 0, 0.2);
-    border-radius: 1rem;
+    box-shadow: 0 1rem 2rem 0 rgba(0, 0, 0, 0.1),
+      0 0.1rem 0.3rem 0 rgba(0, 0, 0, 0.2);
     margin-bottom: 2rem;
+    border-radius: 0.2rem;
+
+    text {
+      fill: black;
+      font-weight: bolder;
+      font-style: italic;
+    }
   }
 
   p.legend {
@@ -55,13 +64,16 @@ section.skills {
   }
 
   .skill-name {
-    fill: black;
-    font-size: 0.6rem;
-    font-weight: bolder;
+    font-size: 0.5rem;
   }
 
   .skill-node {
     transition: opacity 0.15s;
+
+    circle {
+      stroke: black;
+      stroke-width: .1rem;
+    }
   }
 
   .axis-label {
@@ -71,7 +83,9 @@ section.skills {
 
   .axis-x,
   .axis-y {
-    color: rgba(0, 0, 0, 0.2);
+    color: #ddd;
+    stroke-width: 4px;
+    stroke-linecap: round;
   }
 }
 

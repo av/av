@@ -16,7 +16,7 @@ const types = [
   "database",
 ];
 const colorScale = d3.scaleOrdinal(
-  types.map((_, i) => d3.interpolatePlasma(i / types.length))
+  types.map((_, i) => d3.interpolateCool(i / types.length))
   // d3.schemeRdYlBu[types.length]
 );
 
