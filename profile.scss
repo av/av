@@ -1,0 +1,11 @@
+@import "./animations.scss";
+section.profile {
+  max-width: 60rem;
+  margin: 4rem auto;
+
+  .waving-hand {
+    display: inline-block;
+    transform-origin: bottom right;
+    animation: rocking 1s infinite alternate ease-in-out;
+  }
+}

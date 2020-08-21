@@ -3,23 +3,19 @@
 section.skills {
   max-width: 60rem;
   margin: 0 auto;
+  padding-bottom: 3rem;
 
-  h2 {
+  h1 {
     text-align: center;
     margin: 2rem 0;
   }
 
   .skills-container {
-    box-shadow: 0 1rem 2rem 0 rgba(0, 0, 0, 0.1),
-      0 0.1rem 0.3rem 0 rgba(0, 0, 0, 0.2);
-    margin-bottom: 2rem;
-    border-radius: 0.2rem;
-
-    text {
-      fill: black;
-      font-weight: bolder;
-      font-style: italic;
-    }
+    position: relative;
+    background: darken($secondary, 20%);
+    border-radius: 1rem;
+    box-shadow: 0 1rem 2rem 0 rgba(0, 0, 0, 0.2);
+    overflow: hidden;
   }
 
   p.legend {
@@ -63,36 +59,30 @@ section.skills {
     }
   }
 
-  .skill-name {
-    font-size: 0.5rem;
-  }
-
   .skill-node {
-    transition: opacity 0.15s;
-
-    circle {
-      stroke: black;
-      stroke-width: .1rem;
-    }
+    fill: rgba(255, 255, 255, 0.8);
+    font-size: .6rem;
+    text-transform: capitalize;
+    transition: opacity .3s;
   }
 
   .axis-label {
-    font-weight: bolder;
-    font-size: 0.7rem;
-  }
+    position: absolute;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    border-radius: 100rem;
+    padding: 0.25rem 1rem;
+    background: white;
 
-  .axis-x,
-  .axis-y {
-    color: #ddd;
-    stroke-width: 4px;
-    stroke-linecap: round;
-  }
-}
+    &.axis-x {
+      bottom: .2rem;
+      left: 50%;
+      transform: translateX(-50%);
+    }
 
-.skill-tooltip {
-  position: fixed;
-  box-shadow: 0 0.25rem 0.5rem 0 rgba(0, 0, 0, 0.1);
-  background: white;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
+    &.axis-y {
+      top: 50%;
+      left: -2.5rem;
+      transform: rotate(-90deg);
+    }
+  }
 }

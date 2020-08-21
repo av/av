@@ -1,0 +1,33 @@
+section.logo {
+  position: relative;
+
+  .scroll-control {
+    $size: 3rem;
+
+    position: absolute;
+    font-size: 1.4rem;
+    line-height: 2rem;
+    bottom: 1rem;
+    width: $size;
+    height: $size;
+    background: white;
+    border-radius: 100rem;
+    color: rgba(0, 0, 0, .7);
+    cursor: pointer;
+    box-shadow: 0 .2rem .4rem 0 rgba(0, 0, 0, .3);
+
+    .triangle-down {
+      animation: pointing-down 3s alternate infinite ease-in-out;
+    }
+  }
+}
+
+@keyframes pointing-down {
+  from {
+    transform: translateY(-10%);
+  }
+
+  to {
+    transform: translateY(10%);
+  }
+}

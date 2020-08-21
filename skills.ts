@@ -1,10 +1,9 @@
 import * as d3 from "d3";
 import skillList from "./skillList";
-import { contourDensity } from "d3";
 
 const container = document.querySelector("section.skills > .skills-container");
 const width = container.getBoundingClientRect().width;
-const height = window.innerHeight * .6;
+const height = window.innerHeight * 0.6;
 const padding = 50;
 const types = [
   "lang",
@@ -17,7 +16,6 @@ const types = [
 ];
 const colorScale = d3.scaleOrdinal(
   types.map((_, i) => d3.interpolateCool(i / types.length))
-  // d3.schemeRdYlBu[types.length]
 );
 
 const x = d3
@@ -37,46 +35,21 @@ const svg = d3
   .attr("width", width)
   .attr("height", height);
 
-svg
-  .append("g")
-  .attr("class", "axis-x")
-  .call(
-    d3
-      .axisBottom(x)
-      .ticks(width / 100)
-      .tickFormat(() => "")
-  )
-  .attr("transform", `translate(0, ${height - padding})`);
+const zoom = d3
+  .zoom()
+  .scaleExtent([1, 5])
+  .translateExtent([
+    [0, 0],
+    [width, height],
+  ])
+  .on("zoom", () => {
+    chartContainer.attr("transform", d3.event.transform.toString());
+  });
 
-svg
-  .append("g")
-  .attr("transform", `translate(${width / 2}, ${height - 20})`)
-  .append("text")
-  .attr("text-anchor", "middle")
-  .attr("class", "axis-label")
-  .text("Interest 🡒");
+const chartContainer = svg.append("g");
+svg.call(zoom);
 
-svg
-  .append("g")
-  .attr("class", "axis-y")
-  .call(d3.axisLeft(y).tickFormat(() => ""))
-  .attr("transform", `translate(${padding}, 0)`);
-
-svg
-  .append("g")
-  .attr("transform", `translate(30, ${height / 2}) rotate(-90)`)
-  .append("text")
-  .attr("text-anchor", "middle")
-  .attr("class", "axis-label")
-  .text("Experience 🡒");
-
-const tooltip = d3
-  .select("body")
-  .append("div")
-  .attr("class", "skill-tooltip")
-  .style("opacity", "0");
-
-const skills = svg
+const skills = chartContainer
   .append("g")
   .attr("fill", "red")
   .selectAll("circle")
@@ -91,7 +64,7 @@ const skills = svg
 
 skills
   .append("g")
-  .attr("transform", (d) => `translate(0, ${z(d.importance)})`)
+  .attr("transform", (d) => `translate(0, ${z(d.importance) + 4})`)
   .append("text")
   .attr("class", "skill-name")
   .attr("text-anchor", "middle")
@@ -101,21 +74,21 @@ skills
 skills
   .append("circle")
   .on("mouseover", (d) => {
-    tooltip
-      .style("left", `${d3.event.pageX}px`)
-      .style("top", `${d3.event.pageY + 10}px`);
-
-    tooltip.transition().duration(150).style("opacity", 1).text(d.name);
+    skills.filter((skill) => skill.name !== d.name).style("opacity", 0.3);
+    skills.filter((skill) => skill.name === d.name).raise();
   })
   .on("mouseout", (d) => {
-    tooltip.transition().duration(150).style("opacity", 0);
+    skills.style("opacity", 1);
   })
   .attr("data-type", (d) => d.type)
-  .attr("r", (d) => z(d.importance))
-  .style("fill", (d) => colorScale(d.type));
+  .style("fill", (d) => colorScale(d.type))
+  .transition()
+  .duration(600)
+  .delay((d, i) => i * 10)
+  .attr("r", (d) => z(d.importance));
 
 const legend = d3
-  .select("section.skills")
+  .select("section.skills .legend-container")
   .append("p")
   .attr("class", "legend")
   .selectAll(".skill-type")
@@ -125,7 +98,7 @@ const legend = d3
 const skillType = legend.append("div").attr("class", "skill-type");
 
 skillType
-  .on("mouseenter", (d) => {
+  .on("mouseenter touchstart", (d) => {
     skills.style("opacity", 0.1);
     skills
       .filter((skill) => skill.type === d)

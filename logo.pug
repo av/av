@@ -1,4 +1,4 @@
-section(
+section.logo(
   fullscreen 
   flex-center
   flex-row
@@ -13,3 +13,13 @@ section(
     g.top
       polygon.a(points='100,300 300,300 200,130')
       polygon.v(points='200,200 300,370 400,200')
+  
+  .scroll-control(flex flex-center flex-row) 
+    span.triangle-down ▾
+
+script.
+  document.querySelector("section.logo .scroll-control").addEventListener("click", () => {
+    document.body.scrollY = 500;
+  });
+
+link(rel="stylesheet" href="./logo.scss")
