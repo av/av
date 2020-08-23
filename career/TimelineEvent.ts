@@ -17,7 +17,6 @@ export default class TimelineEvent implements Drawable {
   startY: number = 0;
   endY: number = 0;
   lineHeight: number = 50;
-  boundingRect: BoundingRect = [0, 0, 0, 0];
   transform: SmoothTransform;
 
   constructor(config: TimelineEventConfig) {
@@ -25,9 +24,9 @@ export default class TimelineEvent implements Drawable {
   }
 
   draw(ctx: CanvasRenderingContext2D) {
-    let startX = this.transform.currentTransform.applyX(this.startX);
-    let endX = this.transform.currentTransform.applyX(this.endX);
-    let length = endX - startX;
+    const startX = this.transform.currentTransform.applyX(this.startX);
+    const endX = this.transform.currentTransform.applyX(this.endX);
+    const length = endX - startX;
 
     ctx.beginPath();
     ctx.fillStyle = this.config.color;
@@ -48,6 +47,12 @@ export default class TimelineEvent implements Drawable {
     this.endX = scale(this.config.end);
     this.startY = this.config.depth * this.lineHeight;
     this.endY = this.startY + this.lineHeight;
-    this.boundingRect = [this.startX, this.endX, this.startY, this.endY];
+  }
+
+  get boundingRect(): BoundingRect {
+    const startX = this.transform.currentTransform.applyX(this.startX);
+    const endX = this.transform.currentTransform.applyX(this.endX);
+
+    return [startX, endX, this.startY, this.endY];
   }
 }
