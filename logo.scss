@@ -1,33 +1,135 @@
+@import './vars.scss';
+
 section.logo {
   position: relative;
+  background: $primary;
 
   .scroll-control {
-    $size: 3rem;
+    $size: 2rem;
+    $bg: $secondary;
+    $fg: white;
 
     position: absolute;
-    font-size: 1.4rem;
-    line-height: 2rem;
     bottom: 1rem;
     width: $size;
     height: $size;
-    background: white;
-    border-radius: 100rem;
-    color: rgba(0, 0, 0, .7);
     cursor: pointer;
-    box-shadow: 0 .2rem .4rem 0 rgba(0, 0, 0, .3);
+    border-radius: 100rem;
+    background: $bg;
 
-    .triangle-down {
-      animation: pointing-down 3s alternate infinite ease-in-out;
+    .line {
+      width: 4px;
+      height: 50%;
+      background: $fg;
+      animation: lining-down 2s infinite ease-in-out;
+      border-radius: 100rem;
+    }
+
+    .dot {
+      width: 4px;
+      height: 4px;
+      background: $fg;
+      border-radius: 100rem;
+      margin: 4px 0;
+      font-size: 16px;
     }
   }
 }
 
+.logo .bottom {
+  filter: url(#fancy-goo);
+}
+
+.logo .bottom polygon {
+  transform-origin: center;
+  fill: transparent;
+  stroke: $primary;
+  stroke-width: 20px;
+}
+
+.logo .bottom .a {
+  animation: stronger-shaking 100s infinite alternate;
+  animation-delay: -10s;
+}
+
+.logo .bottom .v {
+  animation: stronger-shaking 100s infinite alternate;
+}
+
+.logo .bottom .accent {
+  stroke: $secondary;
+  animation: stronger-shaking 50s infinite alternate;
+}
+
+.logo .bottom .accent.a {
+  animation-delay: -16.66667s;
+}
+
+.logo .bottom .accent.v {
+  animation-delay: -33.33333s;
+}
+
+.logo .top {
+  transform: scale(0.9);
+  transform-origin: center;
+  mix-blend-mode: overlay;
+  opacity: 1;
+}
+
+.logo .top polygon {
+  fill: transparent;
+  stroke: white;
+  stroke-width: 10px;
+}
+
+.logo .top.glitching {
+  transform: scale(0.92) translate(4px);
+  mix-blend-mode: hue;
+}
+
 @keyframes pointing-down {
-  from {
-    transform: translateY(-10%);
+  0% {
+    
+    transform: translateY(-100%) rotateZ(120deg);
   }
 
-  to {
-    transform: translateY(10%);
+  25% {
+    transform: scaleY(1.2) translateY(-50%) rotateZ(120deg);
+  }
+
+  50% {
+    transform: translateY(100%) rotateZ(120deg);
+  }
+
+  75% {
+    transform: scaleY(.8) translateY(50%) rotateZ(120deg);
+  }
+
+  100% {
+    transform: translateY(-100%) rotateZ(120deg);
+  }
+}
+
+@keyframes lining-down {
+  0% {
+    opacity: 0;
+    transform-origin: top;
+    transform: scaleY(0);
+  }
+
+  48% {
+    opacity: 1;
+    transform-origin: top;
+    transform: scaleY(1);
+  }
+
+  70% {
+    transform-origin: bottom;
+    transform: scaleY(1);
+  }
+
+  100% {
+    transform-origin: bottom;
+    transform: scaleY(0);
   }
 }

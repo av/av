@@ -16,12 +16,28 @@
   background: white;
 }
 
+[bg-black] {
+  background: black;
+}
+
 [bg-primary] {
   background: $primary;
 }
 
 [bg-secondary] {
   background: $secondary;
+}
+
+[bg-tertiary] {
+  background: $tertiary;
+}
+
+[bg-tertiary-light] {
+  background: lighten($tertiary, 25%);
+}
+
+[bg-secondary-light] {
+  background: lighten($secondary, 25%);
 }
 
 [bg-gray] {
@@ -179,6 +195,22 @@
 
 [text-center] {
   text-align: center;
+}
+
+[text-right] {
+  text-align: right;
+}
+
+[text-fuzzy] {
+  text-shadow: -4px 0 #00000022, 4px 0 #00000022, -2px 0 #00000055, 2px 0 #00000055;
+}
+
+[text-red] {
+  color: $red;
+}
+
+[text-underline] {
+  text-decoration: underline;
 }
 
 [one-liner] {

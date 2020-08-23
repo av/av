@@ -1,8 +1,57 @@
-section.tldr
-  h1 TLDR;
-  p 6+ years in the field 
-  p Delivered code for Browsers, Servers, Desktops and Microcontrollers
-  p Can live with fuzzy requirements and/or strict deadlines
-  p Best fitted for small independent team
+include mixins/shape
+
+section.tldr(
+  fullscreen
+  bg-primary
+)
+  //- h1 Computer Operator, lvl 120.
+  //- h1 Software Writer
+  //- h1 Ivan
+  //- h1 AV
+  //- h1 iamfrontender
+  //- h1 frontengineer
+  //- h1 backengineer
+  //- h1 fullstack
+  .content
+    h2 Ivan Cherepanov
+    h1 
+      span TLDR;
+    
+    
+    .tldr-items
+    
+      div.tldr-item
+        +shape('2rem')
+          i.gg-timer
+        span 6+ years in the field
+      
+      div.tldr-decoration
+        +shape('3rem', 70, ['stronger-shaking'], ['amber', 'tertiary'])
+
+      div.tldr-item
+        +shape('2rem')
+          i.gg-code-slash
+        span Delivered code for Browsers, Servers, Desktops and Microcontrollers
+
+      div.tldr-item
+        +shape('2rem')
+          i.gg-user-list
+        span Can live with 
+        span(text-fuzzy) fuzzy 
+        span requirements and/or 
+        b(text-underline) strict
+        span  deadlines
+
+      div.tldr-decoration
+        +shape('3rem', 70, ['stronger-shaking'], ['amber', 'tertiary'])
+
+      div.tldr-item
+        +shape('2rem')
+          i.gg-layout-pin
+        span Best fitted for small independent team 🤝
+
+    div.tldr-more
+      i.gg-mouse
+      
 
 link(rel="stylesheet" href="./tldr.scss")

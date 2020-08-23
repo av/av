@@ -1,9 +1,9 @@
 section.logo(
   fullscreen 
-  flex-center
+  flex-start
   flex-row
-  bg-gradient
 )
+  h1 Ivan Cherepanov
   svg.logo(height='500', width='500', viewBox='0 0 500 500')
     g.bottom
       polygon.a(points='100,300 300,300 200,130')
@@ -13,13 +13,15 @@ section.logo(
     g.top
       polygon.a(points='100,300 300,300 200,130')
       polygon.v(points='200,200 300,370 400,200')
-  
-  .scroll-control(flex flex-center flex-row) 
-    span.triangle-down ▾
+
+  .scroll-control(flex flex-center flex-column) 
+    .dot
+    .line
+    .dot
 
 script.
   document.querySelector("section.logo .scroll-control").addEventListener("click", () => {
-    document.body.scrollY = 500;
+    document.documentElement.scrollTop = document.querySelector("section.profile").getBoundingClientRect().top;
   });
 
 link(rel="stylesheet" href="./logo.scss")

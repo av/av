@@ -1,13 +1,15 @@
-
-$primary: #f192e8;
-$secondary: #1a3685;
+$primary: #69E2E0;
+$secondary: #332148;
+$tertiary: #ff1f8f;
 $lime: #bfff00;
 $amber: #ffc000;
 $red: red;
 
 $text: #222;
 $text-inverse: #eee;
-$font-size: 32px;
 
-$sm: 30rem;
-$md: 60rem;
+$font-size-min: 16px;
+$font-size-max: 48px;
+
+$sm: 400px;
+$md: 1000px;

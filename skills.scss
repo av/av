@@ -1,9 +1,10 @@
 @import "./vars.scss";
 
 section.skills {
-  max-width: 60rem;
+  max-width: 30rem;
   margin: 0 auto;
   padding-bottom: 3rem;
+  font-size: .5rem;
 
   h1 {
     text-align: center;
@@ -12,8 +13,8 @@ section.skills {
 
   .skills-container {
     position: relative;
-    background: darken($secondary, 20%);
-    border-radius: 1rem;
+    background: darken($secondary, 10%);
+    border-radius: .5rem;
     box-shadow: 0 1rem 2rem 0 rgba(0, 0, 0, 0.2);
     overflow: hidden;
   }
@@ -61,7 +62,7 @@ section.skills {
 
   .skill-node {
     fill: rgba(255, 255, 255, 0.8);
-    font-size: .6rem;
+    font-size: .4rem;
     text-transform: capitalize;
     transition: opacity .3s;
   }
@@ -81,7 +82,7 @@ section.skills {
 
     &.axis-y {
       top: 50%;
-      left: -2.5rem;
+      left: -1.5rem;
       transform: rotate(-90deg);
     }
   }

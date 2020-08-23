@@ -1,4 +1,133 @@
+@import "./vars.scss";
+
 section.tldr {
-  max-width: 60rem;
-  margin: 2rem auto;
+  background: linear-gradient(220deg, lighten($secondary, 20%), $primary 40%);
+  padding: 1rem;
+
+  .content {
+    max-width: 30rem;
+    margin: 0 auto;
+    padding: 1rem;
+    border-radius: 1vw;
+
+    & > * {
+      animation: scaleIn 0.5s ease;
+    }
+  }
+
+  .tldr-more {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+
+  i.gg-mouse {
+    --ggs: 1.5;
+
+    &:after {
+      animation: lining-down 2s infinite;
+    }
+  }
+
+  .tldr-items {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-flow: dense;
+    margin-top: 2rem;
+    gap: 2rem;
+
+    @media (max-width: $md) {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+
+  .tldr-decoration {
+    display: grid;
+    place-items: center;
+    @media (max-width: $md) {
+      display: none;
+    }
+  }
+
+  .tldr-item {
+    background: white;
+    position: relative;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.7rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1),
+      0 0.1rem 0.2rem rgba(0, 0, 0, 0.2);
+
+    .morphing-shape {
+      flex-shrink: 0;
+      position: absolute !important;
+      top: -1rem;
+      left: 1rem;
+    }
+
+    @media (max-width: $sm) {
+      flex-direction: column;
+    }
+
+    @media (max-width: $md) {
+      background: $secondary;
+      color: white;
+    }
+  }
+
+  .morphing-shape {
+    display: inline-block;
+    color: white;
+
+    --ggs: 1;
+
+    @media (min-width: $md * 0.8) {
+      --ggs: 2;
+    }
+
+    & > .goo {
+      @media (max-width: $sm) {
+        filter: url(#fancy-goo-sm) !important;
+      }
+    }
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0) translateY(200px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes lining-down {
+  0% {
+    opacity: 0;
+    transform-origin: top;
+    transform: scaleY(0);
+  }
+
+  48% {
+    opacity: 1;
+    transform-origin: top;
+    transform: scaleY(1);
+  }
+
+  70% {
+    transform-origin: bottom;
+    transform: scaleY(1);
+  }
+
+  100% {
+    transform-origin: bottom;
+    transform: scaleY(0);
+  }
 }
