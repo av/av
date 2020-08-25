@@ -32,16 +32,20 @@ html {
   font-size: $font-size-min;
 }
 
-@media screen and (min-width: 400px) {
+@media screen and (min-width: $sm) {
   html {
     font-size: calc(#{$font-size-min} + 32 * ((100vw - #{$sm}) / 600));
   }
 }
 
-@media screen and (min-width: 1000px) {
+@media screen and (min-width: $md) {
   html {
     font-size: $font-size-max;
   }
+}
+
+a:active, a:focus {
+  outline: none;
 }
 
 * {

@@ -21,7 +21,7 @@ export default class TimelineVisualisation {
   ctx: CanvasRenderingContext2D;
 
   width: number = 0;
-  height: number = 0;
+  height: number = 500;
 
   constructor(config: TimelineVisualisationConfig) {
     this.config = config;
@@ -32,7 +32,6 @@ export default class TimelineVisualisation {
 
   start() {
     this.width = this.config.container.getBoundingClientRect().width;
-    this.height = 500;
 
     this.timeScale = d3
       .scaleTime()
@@ -41,7 +40,7 @@ export default class TimelineVisualisation {
 
     this.zoom = d3
       .zoom()
-      .scaleExtent([1, 8])
+      .scaleExtent([1, 100])
       .translateExtent([
         [0, 0],
         [this.width, this.height],
@@ -96,8 +95,7 @@ export default class TimelineVisualisation {
       const isTriggered = isHovered && this.cursor.isDown;
 
       if (isTriggered) {
-        console.log(event.config.name);
-        micromodal.show("modal-life", {
+        micromodal.show(`modal-${event.config.id}`, {
           awaitOpenAnimation: true,
           awaitCloseAnimation: true,
         });

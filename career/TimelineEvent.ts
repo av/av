@@ -3,6 +3,7 @@ import { BoundingRect, overflowCanvasText } from "../utils";
 import SmoothTransform from "./SmoothTransform";
 
 interface TimelineEventConfig {
+  id: string,
   start: Date;
   end: Date;
   name: string;

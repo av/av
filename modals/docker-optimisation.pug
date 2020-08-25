@@ -1,0 +1,5 @@
++modal('docker-optimisation', "Docker Image Optimisation")
+  p Alongside with main Product development we were always looking for ways to streamline and simplify developer experience, making our work less tedious.
+  p One of the legacy decisions resulted ot a huge size of Application's Docker image - it was over 2Gb.
+  p In the process of optimisation I've reduced the size of the image to 136Mb and migrated it to multi-stage builds, to make it possible to use same exact Dockerfile for running Application on local machine, on CI/CD Instances and in Production. 
+  p One of the interesting features implemented was pruning of development dependencies for production stage.

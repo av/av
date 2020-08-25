@@ -1,0 +1,6 @@
++modal('drop-bower', "Migrated away from Bower/RequireJS")
+  p As we have maintained a mature and constantly growing application, we were trying to keep the balance between the legacy burden and keeping our technology stack up-to-date.
+  p After certain stage, we faced the need to implement better code splitting techniques than we had employed at the time. We've conducted an architecture council to determine a way forward.
+  p Over one of the weekends, I've concluded a technical spike proving a possibility to migrate our codebase to a Webpack, alongside with introduction of better code splitting and lazy-loading techniques.
+  p Shortly after, we've used our Tech Debt quota to implement the changes.
+  p One of the most interesting features of a migration was that we managed to avoid refactoring of the most of the codebase by adjusting Webpack to work with multiple different module formats employed during the Application life.

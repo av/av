@@ -1,3 +1,4 @@
+import mediumZoom from "medium-zoom";
 import events from "./career/timelineEvents";
 import TimelineVisualisation from "./career/TimelineVisualisation";
 
@@ -7,3 +8,4 @@ const visualisation = new TimelineVisualisation({
 });
 
 visualisation.start();
+mediumZoom('[data-zoomable]');

@@ -1,0 +1,4 @@
++modal('backend-testing', "Metaframework for Backend unit testing")
+  p As we were maintaining an Application with its own backend, we were maintaining a test suite for its APIs, on top of the Platform APIs.
+  p I've implemented a meta-framework to make implementing backend tests less painful.
+  p Such an approach enabled us to bootsrap new test suite with a single import containing all the necessary tools preconfigured and with application server running in a production-like environment and ready to accept requests. It also implemented mocks for main Platform APIs for tests to be run in a complete isolation either on CI/CD instances or on local machine. 
