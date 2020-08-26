@@ -8,4 +8,9 @@ const visualisation = new TimelineVisualisation({
 });
 
 visualisation.start();
-mediumZoom('[data-zoomable]');
+
+mediumZoom("[data-zoomable]", {
+  background: "rgba(0, 0, 0, .5)",
+}).on("close", (e) => {
+  console.log(e);
+});

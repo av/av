@@ -3,4 +3,6 @@
   p At some stage, during build pipeline optimisation, we've decided to split main Application codebase and codebase of tests alongside with covering new user flows.
   p As we had plans to enable different technology stacks in addition to existing one, during the split, I've dropped Protractor and replaced it with TestCafe, building a metaframework to make writing e2e tests less painful.
   p The core sense of Metaframework was to cover basic application interactions, such as Login/Logout, change of selected Project, working with unified CRUD pages, so that instead of relying on instructions set tied to particular elements it would be possible to orchestrate them at a higher level, in terminology of the Application itself.
+  script( src="https://gist.github.com/av/fa5cb30e365c3a52b5a6252b33e088e9.js")
+  p.description Sample test using the metaframework. 
   p Another interesting feature was environment setup. I've managed to build a system which was capable to be run on any of our environments without additional configuration steps.

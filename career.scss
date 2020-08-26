@@ -6,3 +6,15 @@ section.career {
     background-color: whitesmoke;
   }
 }
+
+.medium-zoom-image {
+  transition: all .3s ease-in-out;
+  
+  &--opened {
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .5);
+  }
+  
+  &--hidden {
+    box-shadow: none;
+  }
+}

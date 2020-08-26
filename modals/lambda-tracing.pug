@@ -1,4 +1,6 @@
 +modal('lambda-tracing', "Distributed tracing for AWS Lambda")
   p As Solution grew, we faced the necessity to manage dozens of sequential and parallel invocations of AWS Lambda related to certain device workflows.
   p To overcome the complexity of debugging such a solution, I've implemented a system for tracing the events happening within our Lambdas, collecting and aggregating them for display in our Platform.
-  p As addition to that, I've written an article on creating such tracers and released a stripped-down version of the tracer. It's compatible with chrome://tracing protocol and could give you an insight of what HTTP calls are happening when your code is running with just a one-line change.
+  img(src="/images/lambda-tracing.png" data-zoomable)
+  p.description One of the traces we recorded. Tool allowed zooming and panning over traces and reviewing additional metadata available on the events.
+  p As addition to that, I've written an <a href="https://habr.com/ru/post/354716/" target="_blank">article (RU)</a> on creating such tracers and released a <a href="https://github.com/av/tohu" target="_blank">stripped-down version of the tracer</a>. It's compatible with <code>chrome://tracing</code> protocol and could give you an insight of HTTP calls issued when your code is running with just a one-line change.

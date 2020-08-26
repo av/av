@@ -1,4 +1,4 @@
-@import './vars';
+@import "./vars";
 
 .modal {
   display: none;
@@ -12,7 +12,7 @@
   }
 
   @media (min-width: $md) {
-    font-size: .7rem;
+    font-size: 0.7rem;
   }
 
   .modal-overlay {
@@ -29,30 +29,30 @@
   .modal-container {
     display: flex;
     flex-direction: column;
-    border-radius: .5rem;
+    border-radius: 0.5rem;
     padding: 1rem;
     background: white;
     max-width: 90vw;
     margin: 0 auto;
     max-height: calc(100vh - 3rem);
-    box-shadow: 0 1rem 2rem 0 rgba(0, 0, 0, .4);
+    box-shadow: 0 1rem 2rem 0 rgba(0, 0, 0, 0.4);
 
     @media (max-width: $sm) {
       max-width: 90vw;
     }
-  
+
     @media (min-width: $sm) and (max-width: $md) {
       max-width: 80wv;
     }
-  
+
     @media (min-width: $md) {
       max-width: 60vw;
     }
-  
   }
 
   .modal-content {
     overflow: auto;
+    padding: 0 .5rem;
   }
 
   .modal-header {
@@ -65,19 +65,60 @@
     display: block;
   }
 
-  img {
+  ul.img-section {
+    margin: .5rem 0;
+    padding: 0 .5rem;
+    display: flex;
+    flex-direction: row;
+    list-style-type: none;
+
+    li {
+      margin: 0 .5rem;
+      flex-grow: 1;
+    }
+
+    img {
+      margin: 0;
+      min-height: 100%;
+      vertical-align: bottom;
+    }
+  }
+
+  img, video {
     display: block;
-    margin: .5rem auto;
+    margin: 0.5rem auto;
     max-width: 100%;
     max-height: 10rem;
-    border-radius: .2rem;
-    box-shadow: 0 .1rem .2rem 0 rgba(0, 0, 0, .2);
+    border-radius: 0.2rem;
+    box-shadow: 0 0.1rem 0.2rem 0 rgba(0, 0, 0, 0.2);
+  }
+
+  video:active, video:focus {
+    outline: none;
+  }
+
+  p + ul {
+    margin-top: -.25rem;
+  }
+
+  ul {
+    list-style-type: '- ';
+    padding-left: 1rem;
   }
 
   p.description {
     text-align: center;
-    font-size: .7em;
+    font-size: 0.7em;
     color: rgba(0, 0, 0, 0.6);
+  }
+
+  .twitter-tweet {
+    margin: 0 auto;
+  }
+
+  iframe {
+    display: block;
+    margin: 0 auto;
   }
 }
 

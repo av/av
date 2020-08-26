@@ -99,6 +99,7 @@ export default class TimelineVisualisation {
           awaitOpenAnimation: true,
           awaitCloseAnimation: true,
         });
+        break;
       }
     }
 

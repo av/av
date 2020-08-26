@@ -351,6 +351,7 @@ export default [
     color: "#29522233",
     depth: 3,
   }, {
+    id: 'photoshop-tutorials',
     start: new Date("May 12, 2004"),
     end: new Date("June 26, 2007"),
     name: "Following Photoshop tutorials",
