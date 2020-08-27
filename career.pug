@@ -1,5 +1,14 @@
 section.career
   h1 Timeline
+  .canvas-container
+  .pills-container(flex-column flex-center)
+    .pills(flex-row flex-wrap flex-center)
+      .pill.zoom-pill.life
+        span Reset zoom
+      .pill.zoom-pill.career
+        span Zoom into Career
+    .pointing-pill
+      span 👆
   
 include modals/life
 include modals/school
@@ -46,8 +55,15 @@ include modals/electronic-music
 include modals/graphic-design
 include modals/html-taste
 include modals/photoshop-tutorials
-
-
+include modals/flutter-articles
+include modals/oss-contribution
+include modals/flutter-clock
+include modals/redscript
+include modals/dtg
+include modals/euler-rust
+include modals/yson
+include modals/thng-query
+include modals/tohu
 
 script(src="./career.ts")
 link(rel="stylesheet" href="./career.scss")

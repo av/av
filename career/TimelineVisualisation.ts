@@ -3,7 +3,7 @@ import CanvasCursor from "./CanvasCursor";
 import Scene from "./Scene";
 import TimelineEvent from "./TimelineEvent";
 import SmoothTransform from "./SmoothTransform";
-import micromodal from "micromodal";
+import { unpackTemplate, showModal } from "../utils";
 
 interface TimelineVisualisationConfig {
   container: HTMLElement;
@@ -95,15 +95,30 @@ export default class TimelineVisualisation {
       const isTriggered = isHovered && this.cursor.isDown;
 
       if (isTriggered) {
-        micromodal.show(`modal-${event.config.id}`, {
-          awaitOpenAnimation: true,
-          awaitCloseAnimation: true,
-        });
+        showModal(event.config.id);
         break;
       }
     }
 
     this.cursor.isDown = false;
+  }
+
+  highlight(tags: Array<string>): void {
+    for (const event of this.config.events) {
+      if (tags.every((tag) => event.config.tags.includes(tag))) {
+        event.color.setValue(event.config.color);
+      } else {
+        event.color.setValue("rgba(0, 0, 0, .05)");
+      }
+    }
+  }
+
+  zoomIn(event: TimelineEvent) {
+    const scale = (event.endX - event.startX) / this.width;
+    this.canvas.call(
+      this.zoom.transform,
+      d3.zoomIdentity.scale(1 / scale).translate(-event.startX, 0)
+    );
   }
 
   get firstEvent(): TimelineEvent {

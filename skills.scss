@@ -27,18 +27,20 @@ section.skills {
     justify-content: center;
 
     & > * {
-      margin-right: 1rem;
+      margin-right: .5rem;
+      margin-bottom: .5rem;
     }
 
     .skill-type {
       box-shadow: 0 0.25rem 0.5rem 0 rgba(0, 0, 0, 0.1);
       border-radius: 100rem;
-      padding: 0.5rem;
+      padding: .25rem;
       display: flex;
       flex-direction: row;
       align-items: center;
       justify-content: start;
       cursor: pointer;
+      text-transform: capitalize;
 
       &:hover {
         box-shadow: 0 0.5rem 1rem 0 rgba(0, 0, 0, 0.1);

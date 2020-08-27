@@ -1,10 +1,68 @@
+@import './vars.scss';
+
 section.career {
   max-width: 60rem;
   margin: 0 auto;
 
-  canvas {
-    background-color: whitesmoke;
+  h1 {
+    text-align: center;
   }
+
+  canvas {
+    background-color: rgba(0, 0, 0, .03);
+  }
+
+  .canvas-container {
+    margin-bottom: -15px;
+  }
+
+  .pills-container {
+    position: relative;
+    background: rgba(0, 0, 0, .03);
+    padding-bottom: .5rem;
+
+    .pills {
+      margin-bottom: .5rem;
+    }
+
+    .pill.zoom-pill {
+      background: lighten($secondary, 10%);
+      color: rgba(255, 255, 255, .6);
+    }
+
+    .pointing-pill {
+      font-size: .5rem;
+      margin: 0 .2rem;
+      color: rgba(0, 0, 0, .2);
+    }
+
+    .pill {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-transform: capitalize;
+
+      cursor: pointer;
+      font-size: .6rem;
+      background: white;
+      box-shadow: 0 .25rem .5rem 0 rgba(0, 0, 0, .1);
+      border-radius: 100rem;
+      margin: 0 .2rem;
+      padding: .25rem .5rem;
+      transition: all .15s ease-in-out;
+
+      &.selected {
+        // background: rgba(0, 0, 0, .1);
+        transform: translateY(10%);
+        box-shadow: 0 .1rem .2rem rgba(0, 0, 0, .15);
+      }
+    }
+  }
+}
+
+.medium-zoom-overlay, .medium-zoom-image {
+  z-index: 1;
 }
 
 .medium-zoom-image {

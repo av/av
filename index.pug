@@ -12,18 +12,18 @@ html(lang='en')
   body
     include mixins/splitter
     include mixins/modal
+    include filters
 
-    //- include tldr
-    //- include filters
+    include tldr
     //- include logo
-    //- +splitter('bg-primary')
+    +splitter('bg-primary')
     //- include profile
     include career
     //- include intro
-    //- include skills
+    include skills
     //- include contacts
-    //- +splitter('bg-white')
-    //- include footer
+    +splitter('bg-white')
+    include footer
     //- include debug
     
     //- Google analytics

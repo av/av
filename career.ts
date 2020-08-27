@@ -1,16 +1,30 @@
-import mediumZoom from "medium-zoom";
-import events from "./career/timelineEvents";
+import events, { tags } from "./career/timelineEvents";
 import TimelineVisualisation from "./career/TimelineVisualisation";
+import SelectablePills from "./career/SelectablePills";
 
+const container: HTMLElement = document.querySelector("section.career");
 const visualisation = new TimelineVisualisation({
-  container: document.querySelector("section.career"),
+  container: container.querySelector(".canvas-container"),
   events,
+});
+
+new SelectablePills({
+  container: container.querySelector(".pills"),
+  pills: tags,
+  onChange: (selected) => {
+    visualisation.highlight(selected);
+  },
 });
 
 visualisation.start();
 
-mediumZoom("[data-zoomable]", {
-  background: "rgba(0, 0, 0, .5)",
-}).on("close", (e) => {
-  console.log(e);
+const careerEvent = events.find((e) => e.config.id === "career");
+const lifeEvent = events.find((e) => e.config.id === "life");
+
+container.querySelector('.zoom-pill.career').addEventListener('click', () => {
+  visualisation.zoomIn(careerEvent);
+});
+
+container.querySelector('.zoom-pill.life').addEventListener('click', () => {
+  visualisation.zoomIn(lifeEvent);
 });

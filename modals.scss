@@ -16,6 +16,7 @@
   }
 
   .modal-overlay {
+    z-index: 1;
     position: fixed;
     top: 0;
     left: 0;
@@ -119,6 +120,13 @@
   iframe {
     display: block;
     margin: 0 auto;
+  }
+
+  code {
+    font-size: .8em;
+    line-height: 1em;
+    font-weight: bold;
+    letter-spacing: -1px;
   }
 }
 

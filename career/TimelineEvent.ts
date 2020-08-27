@@ -1,6 +1,7 @@
 import Drawable from "./Drawable";
 import { BoundingRect, overflowCanvasText } from "../utils";
 import SmoothTransform from "./SmoothTransform";
+import InterpolatedValue from "./InterpolatedValue";
 
 interface TimelineEventConfig {
   id: string,
@@ -9,6 +10,7 @@ interface TimelineEventConfig {
   name: string;
   color: string;
   depth: number;
+  tags: string[],
 }
 
 export default class TimelineEvent implements Drawable {
@@ -19,18 +21,22 @@ export default class TimelineEvent implements Drawable {
   endY: number = 0;
   lineHeight: number = 50;
   transform: SmoothTransform;
+  color: InterpolatedValue<string>; 
 
   constructor(config: TimelineEventConfig) {
     this.config = config;
+    this.color = new InterpolatedValue(this.config.color);
   }
 
   draw(ctx: CanvasRenderingContext2D) {
+    this.color.tick();
+
     const startX = this.transform.currentTransform.applyX(this.startX);
     const endX = this.transform.currentTransform.applyX(this.endX);
     const length = endX - startX;
 
     ctx.beginPath();
-    ctx.fillStyle = this.config.color;
+    ctx.fillStyle = this.color.value;
     ctx.rect(startX, this.startY, length, this.lineHeight);
     ctx.fill();
     ctx.closePath();
@@ -40,6 +46,7 @@ export default class TimelineEvent implements Drawable {
       overflowCanvasText(ctx, this.config.name, length),
       startX + 10,
       this.startY + 38,
+      length - 20
     );
   }
 
