@@ -4,6 +4,7 @@ import Scene from "./Scene";
 import TimelineEvent from "./TimelineEvent";
 import SmoothTransform from "./SmoothTransform";
 import { unpackTemplate, showModal } from "../utils";
+import PointerTracker from "./PointerTracker";
 
 interface TimelineVisualisationConfig {
   container: HTMLElement;
@@ -18,19 +19,33 @@ export default class TimelineVisualisation {
   zoom: d3.ZoomBehavior<Element, unknown>;
   smoothTransform: SmoothTransform;
   canvas: d3.Selection<HTMLCanvasElement, unknown, null, undefined>;
+  container: d3.Selection<HTMLElement, unknown, null, undefined>;
+  tracker: PointerTracker;
   ctx: CanvasRenderingContext2D;
+  observer: IntersectionObserver;
+  paused = true;
 
-  width: number = 0;
-  height: number = 500;
+  width = 0;
+  height = 500;
 
   constructor(config: TimelineVisualisationConfig) {
     this.config = config;
     this.scene = new Scene();
     this.cursor = new CanvasCursor();
     this.smoothTransform = new SmoothTransform();
+    this.tracker = new PointerTracker();
   }
 
   start() {
+    this.observer = new IntersectionObserver(
+      this.onContainerIntersectionChanged.bind(this),
+      {
+        root: null,
+        threshold: 0,
+      }
+    );
+
+    this.container = d3.select(this.config.container);
     this.width = this.config.container.getBoundingClientRect().width;
 
     this.timeScale = d3
@@ -58,30 +73,44 @@ export default class TimelineVisualisation {
     this.canvas = d3
       .select(this.config.container)
       .append("canvas")
-      .attr("width", this.width)
-      .attr("height", this.height)
-      .on("mousemove", () => {
+      .lower()
+      .attr("width", this.width * this.dpr)
+      .attr("height", this.height * this.dpr)
+      .style("width", `${this.width}px`)
+      .style("height", `${this.height}px`);
+
+    this.container
+      .on("pointermove", () => {
         this.cursor.moveTo([d3.event.layerX, d3.event.layerY]);
       })
       .on("click", () => {
         this.cursor.moveTo([d3.event.layerX, d3.event.layerY]);
         this.cursor.isDown = true;
       })
-      .on("mouseout", () => {
+      .on("mouseout touchend", () => {
         this.cursor.hide();
       })
-      .call(this.zoom);
+      .call(this.zoom)
+      .style("touch-action", "auto")
+      .style("height", `${this.height}px`)
+      .select(".scroller")
+      .call(this.tracker.attach);
 
     this.ctx = this.canvas.node().getContext("2d");
+    this.ctx.scale(this.dpr, this.dpr);
     this.scene.add(this.cursor);
+    this.observer.observe(this.container.node());
     this.draw();
   }
 
   draw() {
-    this.smoothTransform.tick();
-    this.clear();
-    this.scene.draw(this.ctx);
-    this.processInteractions();
+    if (!this.paused) {
+      this.smoothTransform.tick();
+      this.clear();
+      this.scene.draw(this.ctx);
+      this.processInteractions();
+    }
+
     window.requestAnimationFrame(this.draw.bind(this));
   }
 
@@ -95,7 +124,10 @@ export default class TimelineVisualisation {
       const isTriggered = isHovered && this.cursor.isDown;
 
       if (isTriggered) {
-        showModal(event.config.id);
+        this.paused = true;
+        showModal(event.config.id, {
+          onClose: () => (this.paused = false),
+        });
         break;
       }
     }
@@ -115,13 +147,21 @@ export default class TimelineVisualisation {
 
   zoomIn(event: TimelineEvent) {
     const scale = (event.endX - event.startX) / this.width;
-    this.canvas.call(
+    this.container.call(
       this.zoom.transform,
       d3.zoomIdentity.scale(1 / scale).translate(-event.startX, 0)
     );
   }
 
+  onContainerIntersectionChanged([change]: Array<IntersectionObserverEntry>) {
+    this.paused = !change.isIntersecting;
+  }
+
   get firstEvent(): TimelineEvent {
     return this.config.events[0];
+  }
+
+  get dpr(): number {
+    return window.devicePixelRatio || 1;
   }
 }

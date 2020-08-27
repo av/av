@@ -26,7 +26,7 @@ const y = d3
   .scaleLinear()
   .domain([0, 1])
   .range([height - padding, padding]);
-const z = d3.scaleLinear().domain([0, 1]).range([5, 20]);
+const z = d3.scaleLinear().domain([0, 1]).range([5, 10]);
 
 const svg = d3
   .select(container)

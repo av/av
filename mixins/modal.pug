@@ -3,11 +3,12 @@ mixin modal(name, title)
     .modal.modal-slide(id=`modal-${name}` aria-hidden="true")
       div.modal-overlay(tabindex="-1" data-micromodal-close)
         div.modal-container(role="dialog" aria-modal="true" aria-labelledby=`modal-${life}-title`)
-  
+
           header.modal-header(flex-row)
             if title 
               h2.modal-title(id=`modal-${name}-title`)= title
-            button.modal-close-control(aria-label="Close modal" data-micromodal-close) X
-  
+            button.modal-close-control(aria-label="Close modal" data-micromodal-close)
+              i.gg-close
+
           div.modal-content(id=`modal-${life}-content`)
             block

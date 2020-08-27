@@ -1,13 +1,18 @@
 @import "./vars.scss";
 
 section.tldr {
-  background: linear-gradient(220deg, lighten($secondary, 20%), $primary 40%);
+  background: linear-gradient(210deg, lighten($secondary, 20%), $primary 40%);
   padding: 1rem;
+
+  h2 {
+    @include media(sm) {
+      font-size: 1em;
+    }
+  }
 
   .content {
     max-width: 30rem;
     margin: 0 auto;
-    padding: 1rem;
     border-radius: 1vw;
   }
 
@@ -20,7 +25,7 @@ section.tldr {
   }
 
   i.gg-mouse {
-    --ggs: 1.5;
+    --ggs: 2;
 
     &:after {
       animation: lining-down 2s infinite;
@@ -43,7 +48,8 @@ section.tldr {
   .tldr-decoration {
     display: grid;
     place-items: center;
-    @media (max-width: $md) {
+
+    @include media(lt-md) {
       display: none;
     }
   }
@@ -60,34 +66,27 @@ section.tldr {
     .morphing-shape {
       flex-shrink: 0;
       position: absolute !important;
-      top: -1rem;
-      left: 1rem;
+      top: 0;
+      left: 0;
+      transform: translate(-50%, -50%);
+
+      @include media (lt-md) {
+        transform: translate(-50%, -50%) scale(.7);
+      }
     }
 
     @media (max-width: $sm) {
       flex-direction: column;
-    }
-
-    @media (max-width: $md) {
-      background: $secondary;
-      color: white;
     }
   }
 
   .morphing-shape {
     display: inline-block;
     color: white;
+    --ggs: 1.5;
 
-    --ggs: 1;
-
-    @media (min-width: $md * 0.8) {
+    @include media(sm) {
       --ggs: 2;
-    }
-
-    & > .goo {
-      @media (max-width: $sm) {
-        filter: url(#fancy-goo-sm) !important;
-      }
     }
   }
 }

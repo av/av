@@ -21,7 +21,7 @@ export default class TimelineEvent implements Drawable {
   endY: number = 0;
   lineHeight: number = 50;
   transform: SmoothTransform;
-  color: InterpolatedValue<string>; 
+  color: InterpolatedValue<string>;
 
   constructor(config: TimelineEventConfig) {
     this.config = config;
@@ -37,17 +37,19 @@ export default class TimelineEvent implements Drawable {
 
     ctx.beginPath();
     ctx.fillStyle = this.color.value;
+    ctx.save();
     ctx.rect(startX, this.startY, length, this.lineHeight);
+    ctx.clip();
     ctx.fill();
     ctx.closePath();
     ctx.fillStyle = "white";
     ctx.font = '32px "Red Hat Display"';
     ctx.fillText(
-      overflowCanvasText(ctx, this.config.name, length),
+      this.config.name,
       startX + 10,
       this.startY + 38,
-      length - 20
     );
+    ctx.restore();
   }
 
   applyScale(scale: d3.ScaleTime<number, number>) {

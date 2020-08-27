@@ -3,16 +3,8 @@
 .modal {
   display: none;
 
-  @media (max-width: $sm) {
-    font-size: 1.5rem;
-  }
-
-  @media (min-width: $sm) and (max-width: $md) {
-    font-size: 1rem;
-  }
-
-  @media (min-width: $md) {
-    font-size: 0.7rem;
+  @include media(lt-md) {
+    font-size: .6rem;
   }
 
   .modal-overlay {
@@ -31,34 +23,53 @@
     display: flex;
     flex-direction: column;
     border-radius: 0.5rem;
-    padding: 1rem;
     background: white;
     max-width: 90vw;
     margin: 0 auto;
     max-height: calc(100vh - 3rem);
     box-shadow: 0 1rem 2rem 0 rgba(0, 0, 0, 0.4);
 
-    @media (max-width: $sm) {
+    @include media(sm) {
       max-width: 90vw;
+      padding: .25rem;
     }
 
-    @media (min-width: $sm) and (max-width: $md) {
+    @include media(md) {
       max-width: 80wv;
+      padding: .5rem;
     }
 
-    @media (min-width: $md) {
+    @include media(lg) {
       max-width: 60vw;
+      padding: 1rem;
     }
   }
 
   .modal-content {
     overflow: auto;
     padding: 0 .5rem;
+
+    @include media(lt-md) {
+      padding: 0;
+    }
   }
 
   .modal-header {
+    margin-bottom: .25rem;
+
     .modal-title {
+      flex-shrink: 1;
       margin: 0 auto;
+    }
+  }
+
+  .modal-close-control {
+    flex-shrink: 0;
+    align-self: flex-start;
+    border-radius: 100rem;
+
+    i {
+      pointer-events: none;
     }
   }
 
@@ -73,9 +84,17 @@
     flex-direction: row;
     list-style-type: none;
 
+    @include media (lt-md) {
+      padding: 0;
+    }
+
     li {
       margin: 0 .5rem;
       flex-grow: 1;
+
+      @include media (lt-md) {
+        margin: 0 .15rem;
+      } 
     }
 
     img {

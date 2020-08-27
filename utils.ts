@@ -1,5 +1,6 @@
 import micromodal from "micromodal";
 import mediumZoom from "medium-zoom";
+import "gist-embed/dist/gist-embed.min.js";
 
 export type CursorPosition = [number, number];
 export type BoundingRect = [number, number, number, number];
@@ -35,15 +36,38 @@ export function unpackTemplate(node: HTMLTemplateElement) {
   document.body.appendChild(node.content);
 }
 
-export function showModal(id: string): void {
+interface ModalOptions {
+  onShow?(): void;
+  onClose?(): void;
+}
+
+export function showModal(id: string, options: ModalOptions = {}) {
   unpackTemplate(document.querySelector(`#modal-${id}-template`));
 
   micromodal.show(`modal-${id}`, {
+    onShow: () => {
+      disableScroll();
+      options.onShow?.();
+    },
+    onClose: () => {
+      enableScroll();
+      options.onClose?.();
+    },
     awaitOpenAnimation: true,
     awaitCloseAnimation: true,
   });
 
   mediumZoom("[data-zoomable]", {
     background: "rgba(0, 0, 0, .5)",
-  });  
+  });
+
+  (<any>window).GistEmbed.init();
+}
+
+export function disableScroll() {
+  document.body.classList.add("no-scroll");
+}
+
+export function enableScroll() {
+  document.body.classList.remove("no-scroll");
 }

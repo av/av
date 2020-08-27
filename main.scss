@@ -7,6 +7,7 @@
 @import "./floater";
 @import "./splitter";
 @import "./modals";
+@import "./buttons";
 
 html {
   scroll-behavior: smooth;
@@ -26,25 +27,36 @@ body {
   --tertiary: #{$tertiary};
   --amber: #{$amber};
   --lime: #{$lime};
+
+  &.no-scroll {
+    overflow: hidden;
+  }
 }
 
 html {
   font-size: $font-size-min;
 }
 
-@media screen and (min-width: $sm) {
+@media screen and (max-width: $sm) {
   html {
-    font-size: calc(#{$font-size-min} + 32 * ((100vw - #{$sm}) / 600));
+    font-size: $font-size-min + ($font-size-max - $font-size-min) * 0.5;
+  }
+}
+
+@media screen and (min-width: $sm) and (max-width: $md) {
+  html {
+    font-size: $font-size-min + ($font-size-max - $font-size-min) * 0.5;
   }
 }
 
 @media screen and (min-width: $md) {
   html {
-    font-size: $font-size-max;
+    font-size: $font-size-min;
   }
 }
 
-a:active, a:focus {
+a:active,
+a:focus {
   outline: none;
 }
 
@@ -52,6 +64,7 @@ a:active, a:focus {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body::-webkit-scrollbar {

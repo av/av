@@ -1,0 +1,18 @@
+@import './vars';
+
+button {
+   background: $secondary;
+   color: white;
+   border: none;
+   outline: none;
+   padding: .2rem;
+   border-radius: .25rem;  
+
+   &:hover, &:focus {
+     background: lighten($secondary, 10%);
+   }
+
+   &:active {
+     background: $secondary;
+   }
+}
