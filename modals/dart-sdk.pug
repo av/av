@@ -1,0 +1,7 @@
++modal('dart-sdk', "Dart SDK for Platform APIs")
+  p During my work on IoT gateway on AWS Lambda, we were handed off one of the legacy components of the Client's system, a microservice written in Dart, containing a lot of crucial business logic.
+  p We've bridged given service with Platform APIs, so that it's consumers could still use older Gateway APIs, whilst gateway itself would have our Platform as backend.
+  p To provide better interop between existing codebase and Platform APIs, I've written a Dart SDK for the Platform.
+  p In addition to classic Request/Response workflow, it features support for streaming, implemented with Dart Streams, allowing to easily perform bulk operations.
+  code(data-gist-id="90bcab948f65b3cd699a4a785d5f397a")
+  p.description Example of streams API in action.

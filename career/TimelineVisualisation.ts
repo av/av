@@ -3,7 +3,7 @@ import CanvasCursor from "./CanvasCursor";
 import Scene from "./Scene";
 import TimelineEvent from "./TimelineEvent";
 import SmoothTransform from "./SmoothTransform";
-import { unpackTemplate, showModal } from "../utils";
+import { showModal } from "../utils";
 import PointerTracker from "./PointerTracker";
 
 interface TimelineVisualisationConfig {

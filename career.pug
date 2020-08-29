@@ -1,15 +1,29 @@
 section.career
   h1 Timeline
-  .canvas-container
-    .scroller
-  .pills-container(flex-column flex-center)
-    .pills(flex-row flex-wrap flex-center)
-      .pill.zoom-pill.life
-        span Reset zoom
-      .pill.zoom-pill.career
-        span Zoom into Career
-    .pointing-pill
-      span 👆
+  .timeline-container
+    .canvas-container
+      .scroller
+    .pills-container(flex-column flex-center)
+      .pills(flex-row flex-wrap flex-center)
+        .pill.list-pill
+          i.gg-list
+          span View as list
+        .pill.inverse.life
+          i.gg-maximize
+          span Reset zoom
+        .pill.inverse.career
+          i.gg-assign
+          span Zoom Career
+      .pointing-pill
+        span 👆
+    p.microinfo.github-link
+      a(href="https://github.com/av/av/blob/master/career/TimelineVisualisation.ts" target="_blank") 
+        span View on GitHub
+        include ./images/github.svg
+  .list-container
+    .pill.inverse.timeline-pill
+      i.gg-align-center
+      span View as timeline
   
 include modals/life
 include modals/school
@@ -37,6 +51,7 @@ include modals/backend-testing
 include modals/custom-dashboards
 include modals/iot-gateway
 include modals/iot-dashboard
+include modals/dart-sdk
 include modals/lambda-tracing
 include modals/frontend-lead
 include modals/drop-bower
@@ -46,11 +61,15 @@ include modals/satellite-applications
 include modals/traceability-dashboards
 include modals/e2e-testcafe
 include modals/docker-optimisation
+include modals/lambda-service
+include modals/experiences-service
 include modals/supply-chain-traceability
 include modals/ar-demo
 include modals/platform-quickstart
 include modals/pallet-tracking
-include modals/mobile-games
+include modals/singularity
+include modals/mlls
+include modals/lisp-interpreter
 include modals/wutch
 include modals/electronic-music
 include modals/graphic-design

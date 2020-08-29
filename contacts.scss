@@ -1,0 +1,31 @@
+@import './vars';
+
+section.contacts {
+  max-width: 60rem;
+  margin: 0 auto;
+
+  ul.links {
+    list-style-type: none;
+
+    svg {
+      fill: $secondary;
+      width: 5rem;
+      margin: .25rem;
+      border-radius: 100rem;
+      opacity: .5;
+      transition: opacity .15s linear;
+
+      &:hover {
+        opacity: 1;
+      }
+
+      @include media(sm) {
+        width: 2rem;
+      }
+
+      @include media(md) {
+        width: 3rem;
+      }
+    }
+  }
+}

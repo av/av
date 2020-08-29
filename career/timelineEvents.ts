@@ -1,7 +1,7 @@
 import TimelineEvent from "./TimelineEvent";
 import chroma from "chroma-js";
 
-const tagColors = {
+export const tagColors = {
   general: 0xf0f0f0,
   education: chroma('#ffc000').alpha(1),
   career: chroma(0x0000dd).alpha(1),
@@ -238,6 +238,15 @@ export default [
     tags: ["career", "project"],
   },
   {
+    id: "dart-sdk",
+    start: new Date("June 10, 2017"),
+    end: new Date("June 20, 2017"),
+    name: "Dart SDK for Platform APIs",
+    color: "#29522299",
+    depth: 6,
+    tags: ["career", "deliverable", "cool"],
+  },
+  {
     id: "iot-dashboard",
     start: new Date("May 15, 2017"),
     end: new Date("August 25, 2017"),
@@ -281,6 +290,15 @@ export default [
     color: "#29522299",
     depth: 5,
     tags: ["career", "project"],
+  },
+  {
+    id: "experiences-service",
+    start: new Date("August 10, 2018"),
+    end: new Date("August 30, 2018"),
+    name: "WYSIWYG Experiences Service",
+    color: "#29522299",
+    depth: 5,
+    tags: ["career", "deliverable", "cool"],
   },
   {
     id: "traceability-solution",
@@ -364,13 +382,40 @@ export default [
     tags: ["career", "project"],
   },
   {
-    id: "mobile-games",
+    id: "lambda-service",
+    start: new Date("June 20, 2019"),
+    end: new Date("July 10, 2019"),
+    name: "Service for serverless scripts",
+    color: "#29522299",
+    depth: 6,
+    tags: ["career", "deliverable", "cool"],
+  },
+  {
+    id: "singularity",
     start: new Date("August 1, 2019"),
-    end: new Date("April 20, 2020"),
-    name: "Two Mobile Games",
+    end: new Date("September 20, 2019"),
+    name: "Singularity",
     color: "#29522299",
     depth: 6,
     tags: ["career", "project", "cool"],
+  },
+  {
+    id: "mlls",
+    start: new Date("September 25, 2019"),
+    end: new Date("April 20, 2020"),
+    name: "My Long Locking Story",
+    color: "#29522299",
+    depth: 6,
+    tags: ["career", "project", "cool"],
+  },
+  {
+    id: "lisp-interpreter",
+    start: new Date("March 5, 2020"),
+    end: new Date("March 10, 2020"),
+    name: "LISP in Dart",
+    color: "#29522299",
+    depth: 7,
+    tags: ["career", "deliverable", "cool"],
   },
   {
     id: "wutch",

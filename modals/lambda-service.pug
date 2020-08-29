@@ -1,0 +1,6 @@
++modal('lambda-service', "Service for serverless scripts")
+  p As Platform offered very flexible extension points, we faced the need to extend their behavior to support more scenarios.
+  p I've architected and prototyped a service based on AWS Lambda allowing Platform Clients to create and execute arbitrary scripts.
+  p One of the interesting features was NPM-based build pipeline, so any client script could be installed in any way NPM supports, such as: directly from git (incl. private repos), from tarball package or from the registry itself.
+  code(data-gist-id="e34d3f6c8ec73a1207a2f7275be0ae16")
+  p.description An example of using prototyped service by creating a new User Script from private repo and then querying/modifying it.

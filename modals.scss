@@ -1,10 +1,11 @@
 @import "./vars";
+@import "./animations";
 
 .modal {
   display: none;
 
   @include media(lt-md) {
-    font-size: .6rem;
+    font-size: 0.6rem;
   }
 
   .modal-overlay {
@@ -31,12 +32,12 @@
 
     @include media(sm) {
       max-width: 90vw;
-      padding: .25rem;
+      padding: 0.25rem;
     }
 
     @include media(md) {
       max-width: 80wv;
-      padding: .5rem;
+      padding: 0.5rem;
     }
 
     @include media(lg) {
@@ -47,7 +48,7 @@
 
   .modal-content {
     overflow: auto;
-    padding: 0 .5rem;
+    padding: 0 0.5rem;
 
     @include media(lt-md) {
       padding: 0;
@@ -55,7 +56,7 @@
   }
 
   .modal-header {
-    margin-bottom: .25rem;
+    margin-bottom: 0.25rem;
 
     .modal-title {
       flex-shrink: 1;
@@ -78,23 +79,23 @@
   }
 
   ul.img-section {
-    margin: .5rem 0;
-    padding: 0 .5rem;
+    margin: 0.5rem 0;
+    padding: 0 0.5rem;
     display: flex;
     flex-direction: row;
     list-style-type: none;
 
-    @include media (lt-md) {
+    @include media(lt-md) {
       padding: 0;
     }
 
     li {
-      margin: 0 .5rem;
+      margin: 0 0.5rem;
       flex-grow: 1;
 
-      @include media (lt-md) {
-        margin: 0 .15rem;
-      } 
+      @include media(lt-md) {
+        margin: 0 0.15rem;
+      }
     }
 
     img {
@@ -104,7 +105,8 @@
     }
   }
 
-  img, video {
+  img,
+  video {
     display: block;
     margin: 0.5rem auto;
     max-width: 100%;
@@ -113,16 +115,17 @@
     box-shadow: 0 0.1rem 0.2rem 0 rgba(0, 0, 0, 0.2);
   }
 
-  video:active, video:focus {
+  video:active,
+  video:focus {
     outline: none;
   }
 
   p + ul {
-    margin-top: -.25rem;
+    margin-top: -0.25rem;
   }
 
   ul {
-    list-style-type: '- ';
+    list-style-type: "- ";
     padding-left: 1rem;
   }
 
@@ -142,46 +145,10 @@
   }
 
   code {
-    font-size: .8em;
+    font-size: 0.8em;
     line-height: 1em;
     font-weight: bold;
     letter-spacing: -1px;
-  }
-}
-
-@keyframes mmfadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes mmfadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes mmslideIn {
-  from {
-    transform: translateY(15%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-@keyframes mmslideOut {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(-10%);
   }
 }
 

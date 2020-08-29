@@ -78,6 +78,10 @@ section.tldr {
     @media (max-width: $sm) {
       flex-direction: column;
     }
+
+    b {
+      opacity: .7;
+    }
   }
 
   .morphing-shape {

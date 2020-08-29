@@ -1,6 +1,9 @@
-import events, { tags } from "./timelineEvents";
+import * as d3 from "d3";
+import events, { tags, tagColors } from "./timelineEvents";
 import SelectablePills from "./SelectablePills";
 import TimelineVisualisation from "./TimelineVisualisation";
+import { formatDateRange, updateGeneratedContent, qs } from "../utils";
+import ListVisualisation from "./ListVisualisation";
 
 export default class CareerSection {
   static selectors = {
@@ -9,45 +12,80 @@ export default class CareerSection {
     pills: ".pills",
     zoomCareer: ".zoom-pill.career",
     zoomLife: ".zoom-pill.life",
+    listView: ".list-pill",
+    timelineContainer: '.timeline-container',
+    listContainer: '.list-container',
   };
 
-  visualisation: TimelineVisualisation;
+  timeline: TimelineVisualisation;
+  list: ListVisualisation;
   pills: SelectablePills;
   container: HTMLElement;
+  timelineContainer: HTMLElement;
+  listContainer: HTMLElement;
 
   constructor() {
-    this.container = document.querySelector(CareerSection.selectors.container);
+    this.container = qs(CareerSection.selectors.container);
+    this.timelineContainer = qs(CareerSection.selectors.timelineContainer);
+    this.listContainer = qs(CareerSection.selectors.listContainer);
 
-    this.visualisation = new TimelineVisualisation({
+    this.timeline = new TimelineVisualisation({
       container: this.container.querySelector(CareerSection.selectors.timeline),
       events,
     });
+
+    this.list = new ListVisualisation({
+      container: this.listContainer,
+      events,
+    })
 
     this.pills = new SelectablePills({
       container: this.container.querySelector(CareerSection.selectors.pills),
       pills: tags,
       onChange: (selected) => {
-        this.visualisation.highlight(selected);
+        this.timeline.highlight(selected);
       },
     });
   }
 
   init() {
-    this.visualisation.start();
+    this.timeline.start();
 
     const careerEvent = events.find((e) => e.config.id === "career");
     const lifeEvent = events.find((e) => e.config.id === "life");
 
     this.container
-      .querySelector(".zoom-pill.career")
+      .querySelector(".pill.career")
       .addEventListener("click", () => {
-        this.visualisation.zoomIn(careerEvent);
+        this.timeline.zoomIn(careerEvent);
       });
 
     this.container
-      .querySelector(".zoom-pill.life")
+      .querySelector(".pill.life")
       .addEventListener("click", () => {
-        this.visualisation.zoomIn(lifeEvent);
+        this.timeline.zoomIn(lifeEvent);
       });
+
+    this.container.querySelector(".list-pill").addEventListener("click", () => {
+      this.showList();
+    });
+
+    this.container.querySelector(".timeline-pill").addEventListener("click", () => {
+      this.showTimeline();
+    });
+  }
+
+  showTimeline() {
+    this.timelineContainer.style.display = "block";
+    this.listContainer.style.display = "none";
+  }
+
+  showList() {
+    if (!this.list.ready) {
+      this.list.init();
+    }
+
+    this.timelineContainer.style.display = "none";
+    this.listContainer.style.display = "block";
   }
 }

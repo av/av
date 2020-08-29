@@ -1,0 +1,6 @@
++modal('lisp-interpreter', "LISP in Dart")
+  p During the development of "My Long Locking Story" I faced the need to decouple game scene and level generation from Dart code itself. The reason was simple, Flutter can't execute Dart code dynamically, it can only run what was compiled into the application bundle. 
+  p So, to empower myself with greater flexibility, for potential future uses and to simplify existing level development flow, I've explored various scripting technologies. LISP immediately caught my attention because of how easy it was to understand the core concepts and how well it was covered.
+  p I've written a simple LISP scripting engine connected to my game engine to control game scenes, their content and event flow between components.
+  code(data-gist-id="ae7a73948f535a092464b4ab4ee8678e")
+  p.description Example of evaluating simple LISP code with that interpreter.

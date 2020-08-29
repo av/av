@@ -1,10 +1,35 @@
-section(
-  flex-row
-  center
-  padding-lg
-)
-  a(href='mailto:mail@av.codes') Mail to me
-  a(href='https://github.com/av') GitHub
-  a(href='https://www.linkedin.com/in/ivan-cherepanov-891656ba/') LinkedIn
-  a(href='https://codepen.io/iamfrontender/') Codepen
-  a(href='https://www.codewars.com/users/iamfrontender') Codewars
+section.contacts
+  h1(text-center) Let's connect!
+  ul.links(flex-row flex-wrap flex-center)
+    li
+      a(href="https://www.linkedin.com/in/ivan-cherepanov" target="_blank")
+        include ./images/linkedin.svg
+    li
+      a(href="https://github.com/av" target="_blank")
+        include ./images/github.svg
+    li
+      a(href="https://codepen.io/iamfrontender" target="_blank")
+        include ./images/codepen.svg
+    li
+      a(href="https://www.codewars.com/users/iamfrontender" target="_blank")
+        include ./images/codewars.svg
+    li
+      a(href="https://soundcloud.com/everlier" target="_blank")
+        include ./images/soundcloud.svg
+    li
+      a(href="https://medium.com/@av.codes" target="_blank")
+        include ./images/medium.svg
+    li
+      a(href="https://habr.com/users/everlier/" target="_blank")
+        include ./images/habr.svg
+    li
+      a(href="mailto:av@av.codes" target="_blank")
+        include ./images/gmail.svg
+    
+    script.
+      Array.from(
+        document.currentScript.closest('ul.links').querySelectorAll('svg')
+      )
+        .map(svg => svg.setAttribute('viewBox', '-6 -6 36 36'))
+
+link(rel="stylesheet" href="./contacts.scss")

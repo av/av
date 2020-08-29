@@ -2,7 +2,7 @@ mixin modal(name, title)
   template(id=`modal-${name}-template`)
     .modal.modal-slide(id=`modal-${name}` aria-hidden="true")
       div.modal-overlay(tabindex="-1" data-micromodal-close)
-        div.modal-container(role="dialog" aria-modal="true" aria-labelledby=`modal-${life}-title`)
+        div.modal-container(role="dialog" aria-modal="true" aria-labelledby=`modal-${name}-title`)
 
           header.modal-header(flex-row)
             if title 

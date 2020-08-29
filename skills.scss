@@ -3,12 +3,11 @@
 section.skills {
   max-width: 30rem;
   margin: 0 auto;
-  padding-bottom: 3rem;
+  padding: 3rem 0;
   font-size: .5rem;
 
   h1 {
     text-align: center;
-    margin: 2rem 0;
   }
 
   .skills-container {
@@ -66,7 +65,10 @@ section.skills {
     fill: rgba(255, 255, 255, 0.8);
     font-size: .4rem;
     text-transform: capitalize;
-    transition: opacity .3s;
+    
+    .skill-scaler {
+      transition: opacity .3s;
+    }
   }
 
   .axis-label {
@@ -87,5 +89,9 @@ section.skills {
       left: -1.5rem;
       transform: rotate(-90deg);
     }
+  }
+
+  .microinfo {
+    font-size: .6rem;
   }
 }

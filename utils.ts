@@ -4,6 +4,13 @@ import "gist-embed/dist/gist-embed.min.js";
 
 export type CursorPosition = [number, number];
 export type BoundingRect = [number, number, number, number];
+export interface WidthChangeCallback {
+  (width: number): void;
+}
+export interface ModalOptions {
+  onShow?(): void;
+  onClose?(): void;
+}
 
 export function isBetween(
   number: number,
@@ -36,9 +43,12 @@ export function unpackTemplate(node: HTMLTemplateElement) {
   document.body.appendChild(node.content);
 }
 
-interface ModalOptions {
-  onShow?(): void;
-  onClose?(): void;
+export function updateGeneratedContent() {
+  mediumZoom("[data-zoomable]", {
+    background: "rgba(0, 0, 0, .5)",
+  });
+
+  (<any>window).GistEmbed.init();
 }
 
 export function showModal(id: string, options: ModalOptions = {}) {
@@ -57,11 +67,7 @@ export function showModal(id: string, options: ModalOptions = {}) {
     awaitCloseAnimation: true,
   });
 
-  mediumZoom("[data-zoomable]", {
-    background: "rgba(0, 0, 0, .5)",
-  });
-
-  (<any>window).GistEmbed.init();
+  updateGeneratedContent();
 }
 
 export function disableScroll() {
@@ -70,4 +76,16 @@ export function disableScroll() {
 
 export function enableScroll() {
   document.body.classList.remove("no-scroll");
+}
+
+export function qs(selector) {
+  return document.querySelector(selector);
+}
+
+export function isToday(date: Date) {
+  return date.toDateString() === new Date().toDateString();
+}
+
+export function formatDateRange(start: Date, end: Date) {
+  return `${start.toLocaleDateString()} - ${isToday(end) ? 'present' : end.toLocaleDateString()}`;
 }
