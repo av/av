@@ -16,6 +16,42 @@ section.career {
   .canvas-container {
     pointer-events: none;
     position: relative;
+
+    .pinch-and-zoom {
+      $duration: 15s;
+
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: .7rem;
+
+      width: 1rem;
+      height: 1rem;
+      position: relative;
+
+      .right-hand {
+        left: 50%;
+        position: absolute;
+        animation: pinchAndZoom $duration ease-in-out forwards;
+      }
+
+      .reflect-x {
+        right: 50%;
+        transform: scaleX(-1);
+        position: absolute;
+      }
+
+      .left-hand {
+        animation: pinchAndZoom $duration ease-in-out forwards;
+      }
+    }
+
+    &:hover {
+      .pinch-and-zoom {
+        opacity: 0;
+      }
+    }
   }
 
   .scroller {
@@ -39,7 +75,7 @@ section.career {
     .pointing-pill {
       font-size: 0.5rem;
       margin: 0 0.2rem;
-      color: rgba(0, 0, 0, 0.2);
+      color: rgba(0, 0, 0, 0.5);
     }
   }
 
