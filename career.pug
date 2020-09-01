@@ -1,15 +1,16 @@
 section.career
-  h1 Timeline
+  h1 Career &amp; Achievements
   .timeline-container
+    p.description Tap events for more details
     .canvas-container
       .scroller
       .pinch-and-zoom
         .reflect-x
           .left-hand 👆
         .right-hand 👆
-    .pills-container(flex-column flex-center)
+    .pills-container(flex-row flex-center)
       .pills(flex-row flex-wrap flex-center)
-        .pill.list-pill
+        .pill.inverse.list-pill
           i.gg-list
           span View as list
         .pill.inverse.life
@@ -18,12 +19,10 @@ section.career
         .pill.inverse.career
           i.gg-assign
           span Zoom Career
-      .pointing-pill
-        span 👆
-    p.microinfo.github-link
-      a(href="https://github.com/av/av/blob/master/career/TimelineVisualisation.ts" target="_blank") 
-        span View on GitHub
-        include ./images/github.svg
+        a(href="https://github.com/av/av/blob/master/career/TimelineVisualisation.ts" target="_blank") 
+          .pill.inverse
+            include ./images/github.svg
+            span View on GitHub
   .list-container
     .pill.inverse.timeline-pill
       i.gg-align-center

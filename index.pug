@@ -6,7 +6,7 @@ html(lang='en')
     meta(http-equiv='X-UA-Compatible', content='ie=edge')
     title AV
     link(rel='stylesheet', href='main.scss')
-    link(rel='stylesheet' href="https://css.gg/css")
+    link(rel='stylesheet' href="https://unpkg.com/css.gg/icons/all.css")
     script(src='scrollbars.js')
 
   body
@@ -15,16 +15,13 @@ html(lang='en')
     include filters
 
     include tldr
-    //- include logo
     +splitter('bg-primary')
-    //- include profile
     include career
-    //- include intro
+    +splitter('bg-darken-sm')
     include skills
     include contacts
     +splitter('bg-white')
     include footer
-    //- include debug
     
     //- Google analytics
     script(async src='https://www.googletagmanager.com/gtag/js?id=UA-143258835-1')

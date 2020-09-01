@@ -2,12 +2,12 @@ import TimelineEvent from "./TimelineEvent";
 import chroma from "chroma-js";
 
 export const tagColors = {
-  general: 0xf0f0f0,
+  general: chroma('darkorange').alpha(.5),
   education: chroma('#ffc000').alpha(1),
   career: chroma(0x0000dd).alpha(1),
   project: chroma(0x296315).alpha(0.5),
   cool: chroma(0xff1f8f).alpha(0.8),
-  hobby: chroma(0xaaffaa).alpha(0.2),
+  hobby: chroma('lime').alpha(0.5),
   deliverable: 0x51eaff,
 };
 

@@ -1,9 +1,15 @@
-mixin shape(size='2rem', variation=50, animations=['shaking', 'rotating'], colors=['tertiary', 'amber'])
+mixin shape(size='2rem', variation=50, animations=['shaking', 'rotating'], colors=['tertiary', 'amber'], borderRadius='100rem', duration=25)
+  -
+    var [width, height] = size.split(' ');
+    if (!height) {
+      height = width;
+    }
+
   div.morphing-shape(
     style={
       'position': 'relative',
-      'height': size,
-      'width': size,
+      'height': height,
+      'width': width,
     }
   )
     div.goo(
@@ -15,7 +21,7 @@ mixin shape(size='2rem', variation=50, animations=['shaking', 'rotating'], color
       }
     )
       -
-        var randomDelay = () => `-${Math.random() * 25}s`;
+        var randomDelay = () => `-${Math.random() * duration}s`;
         var any = (arr) => arr[Math.floor(Math.random() * arr.length)];
         var colorName = (i) => colors[i % colors.length];
         var animationName = () => any(animations);
@@ -28,11 +34,12 @@ mixin shape(size='2rem', variation=50, animations=['shaking', 'rotating'], color
           var width = randomSize();
           var topOffset = (100 - height) / 2;
           var leftOffset = (100 - width) / 2;
+          var background = colorName(count);
 
         .shape(
           style={
             'position': 'absolute',
-            'animation-duration': '25s',
+            'animation-duration': `${duration}s`,
             'animation-iteration-count': 'infinite',
             'animation-direction': 'alternate',
             'animation-delay': randomDelay(),
@@ -41,8 +48,8 @@ mixin shape(size='2rem', variation=50, animations=['shaking', 'rotating'], color
             'width': `${width}%`,
             'top': `${topOffset}%`,
             'left': `${leftOffset}%`,
-            'background': `var(--${colorName(count)})`,
-            'border-radius': `${randomSize()}%`,
+            'background': background.startsWith('--') ? `var(${background})` : background,
+            'border-radius': borderRadius,
           }
         )
         - count--

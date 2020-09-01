@@ -1,8 +1,8 @@
 import * as d3 from "d3";
-import events, { tags, tagColors } from "./timelineEvents";
+import events, { tags } from "./timelineEvents";
 import SelectablePills from "./SelectablePills";
 import TimelineVisualisation from "./TimelineVisualisation";
-import { formatDateRange, updateGeneratedContent, qs } from "../utils";
+import { qs } from "../utils";
 import ListVisualisation from "./ListVisualisation";
 
 export default class CareerSection {

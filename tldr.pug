@@ -2,56 +2,54 @@ include mixins/shape
 
 section.tldr(
   fullscreen
-  bg-primary
 )
-  //- h1 Computer Operator, lvl 120.
-  //- h1 Software Writer
-  //- h1 Ivan
-  //- h1 AV
-  //- h1 iamfrontender
-  //- h1 frontengineer
-  //- h1 backengineer
-  //- h1 fullstack
+
   .content
     h2 Ivan Cherepanov
     h6 Senior Software Engineer (Fullstack, JavaScript)
     h1 
       span TLDR;
     
-    
     .tldr-items
-    
-      div.tldr-item
-        +shape('3rem')
-          i.gg-timer
-        span 6+ years in the field
-      
-      div.tldr-decoration
-        +shape('3rem', 70, ['stronger-shaking'], ['amber', 'tertiary'])
 
-      div.tldr-item
-        +shape('3rem')
-          i.gg-terminal
+      .tldr-container
+        +shape('100%', 100, ['stronger-shaking'], ['--primary', 'white'], '10vh', 100)
         span Delivered code for Browsers, Servers, Mobile, Desktops and Microcontrollers
 
-      div.tldr-item
-        +shape('3rem')
-          i.gg-user-list
-        span Can live with 
-        span(text-fuzzy) fuzzy 
-        span requirements and/or 
-        b(text-underline) strict
-        span  deadlines
+      .tldr-decoration
+        +shape('4rem', 50, ['stronger-shaking'], ['--amber', '--tertiary'])
 
-      div.tldr-decoration
-        +shape('3rem', 70, ['stronger-shaking'], ['amber', 'tertiary'])
+      .tldr-decoration
+        +shape('3rem', 50, ['stronger-shaking'], ['--amber', '--tertiary'])
 
-      div.tldr-item
-        +shape('3rem')
-          i.gg-layout-pin
-        span Best fitted for small independent team 🤝
+      .tldr-container
+        +shape('100%', 100, ['stronger-shaking'], ['--primary', 'white'], '10vh', 100)
+        span
+          span Can live with 
+          span(text-fuzzy) fuzzy 
+          span requirements and/or 
+          b(text-underline) strict
+          span  deadlines
 
-    div.tldr-more
+      .tldr-container
+        +shape('100%', 100, ['stronger-shaking'], ['--primary', 'white'], '10vh', 100)
+        span Best fitted for small independent teams 🤝
+
+      .tldr-decoration
+        +shape('2rem', 50, ['stronger-shaking'], ['--amber', '--tertiary'])
+
+      .tldr-container
+        +shape('100%', 100, ['stronger-shaking'], ['--primary', 'white'], '10vh', 100)
+        span 6+ years in the field
+
+      a.download-pdf(href="/pdf/Ivan Cherepanov.pdf" download="Ivan Cherepanov")
+        .tldr-container
+          +shape('100%', 100, ['stronger-shaking'], ['--tertiary', '--amber'], '5vh', 100)
+          i.gg-software-download
+          span Get PDF version
+
+    .tldr-more
+      span learn more
       i.gg-mouse
       
 

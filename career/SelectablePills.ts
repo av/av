@@ -4,6 +4,9 @@ interface SelectablePillsConfig {
   container: HTMLElement;
   pills: Array<string>;
   onChange(selected: Array<string>): void;
+  content?(
+    pills: d3.Selection<HTMLDivElement, string, HTMLElement, unknown>
+  ): void;
 }
 
 export default class SelectablePills {
@@ -16,22 +19,26 @@ export default class SelectablePills {
 
     this.pills = d3
       .select(this.config.container)
-      .selectAll(".pill")
+      .selectAll(".pill.tag")
       .data(this.config.pills)
       .enter()
       .append("div")
       .on("click", (pill) => {
-        this.pills.each(function (otherPill) {
-          if (otherPill !== pill) {
-            this.classList.toggle("selected", false);
-          }
-        });
+        const otherPills = this.pills.filter((otherPill) => otherPill !== pill);
+        const targetPill = this.pills.filter((otherPill) => otherPill === pill);
+        
+        otherPills.classed("selected", false);
+        targetPill.classed("selected", !targetPill.classed("selected"));
 
-        d3.event.target.classList.toggle("selected");
         this.toggle(pill);
       })
-      .attr("class", "pill")
-      .text((d) => d);
+      .attr("class", "pill tag");
+
+    if (config.content) {
+      config.content(this.pills);
+    } else {
+      this.pills.text((d) => d);
+    }
   }
 
   toggle(pill: string) {

@@ -1,9 +1,11 @@
 import * as d3 from "d3";
 import { qs } from "../utils";
 import skillList, { skillTypes } from "./skillList";
+import SelectablePills from "../career/SelectablePills";
 
 export const selectors = {
   container: "section.skills > .skills-container",
+  pills: "section.skills > .pills",
 };
 
 export function init(selectors) {
@@ -19,6 +21,7 @@ export function init(selectors) {
 
   const svg = getSvg(container, width, height).call(zoom);
   const chartContainer = svg.append("g");
+  let selectedSkill = null;
 
   const skills = chartContainer
     .append("g")
@@ -60,43 +63,34 @@ export function init(selectors) {
     .delay((_, i) => i * 10)
     .attr("r", (d) => z(d.importance));
 
-  const legend = d3
-    .select("section.skills .legend-container")
-    .append("p")
-    .attr("class", "legend")
-    .selectAll(".skill-type")
-    .data(skillTypes)
-    .enter();
+  new SelectablePills({
+    container: qs(selectors.pills),
+    pills: skillTypes,
+    onChange: ([type]) => {
+      if (type) {
+        skills.style("opacity", d => d.type === type ? 1 : .1);
+      } else {
+        skills.style("opacity", 1);
+      }
+    },
+    content: (pills) => {
+      pills
+        .append("div")
+        .attr("class", "color")
+        .attr("style", (d) => `background: ${color(d)};`);
 
-  const skillType = legend
-    .append("div")
-    .attr("class", "skill-type")
-    .on("mouseenter touchstart", (d) => {
-      skills.style("opacity", 0.1);
-      skills
-        .filter((skill) => skill.type === d)
-        .raise()
-        .style("opacity", 1);
-    })
-    .on("mouseleave", () => {
-      skills.style("opacity", 1).style("z-index", 0);
-    });
-
-  skillType
-    .append("div")
-    .attr("class", "color")
-    .attr("style", (d) => `background: ${color(d)};`);
-
-  skillType
-    .append("span")
-    .attr("class", "name")
-    .text((d) => d);
+      pills
+        .append("span")
+        .attr("class", "name")
+        .text((d) => d);
+    },
+  });
 }
 
 function getVisualisationParams(container: HTMLElement) {
   return [
     container.getBoundingClientRect().width,
-    window.innerHeight * 0.6,
+    window.innerHeight * .5,
     50,
   ];
 }

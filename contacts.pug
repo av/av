@@ -1,5 +1,5 @@
 section.contacts
-  h1(text-center) Let's connect!
+  h1(text-center) And let's connect!
   ul.links(flex-row flex-wrap flex-center)
     li
       a(href="https://www.linkedin.com/in/ivan-cherepanov" target="_blank")
@@ -28,7 +28,7 @@ section.contacts
     
     script.
       Array.from(
-        document.currentScript.closest('ul.links').querySelectorAll('svg')
+        document.querySelectorAll('section.contacts ul.links svg')
       )
         .map(svg => svg.setAttribute('viewBox', '-6 -6 36 36'))
 

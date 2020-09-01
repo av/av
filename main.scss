@@ -115,25 +115,10 @@ card-bg {
 
 section {
   position: relative;
-  content-visibility: auto;
 }
 
-.no-transition {
-  transition: none;
-}
-
-p.microinfo {
-  font-size: .6em;
-  opacity: .6;
-
-  &.github-link {
-    text-align: right;
-    padding: .25rem;
-
-    svg {
-      height: 1em;
-      margin: 0 .25rem;
-      transform: translateY(.1em);
-    }
-  }
+p.description {
+  text-align: center;
+  font-size: 0.7em;
+  color: rgba(0, 0, 0, 0.6);
 }

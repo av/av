@@ -4,9 +4,27 @@ section.tldr {
   background: linear-gradient(210deg, lighten($secondary, 20%), $primary 40%);
   padding: 1rem;
 
+  @include media(sm) {
+    padding: .5rem;
+  }
+
   h2 {
     @include media(sm) {
       font-size: 1em;
+    }
+  }
+
+  h1 {
+    opacity: .2;
+  }
+
+  a.download-pdf {
+    color: $secondary;
+    text-decoration: none;
+
+    i {
+      margin-right: .5rem;
+      transform: translateY(.1rem) scale(1.4);
     }
   }
 
@@ -17,26 +35,29 @@ section.tldr {
   }
 
   .tldr-more {
+    font-size: .7rem;
+    opacity: .7;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin-top: 2rem;
-  }
 
-  i.gg-mouse {
-    --ggs: 2;
-
-    &:after {
-      animation: lining-down 2s infinite;
-    }
+    i.gg-mouse {
+      margin-top: .5rem;
+      --ggs: 1.5;
+  
+      &:after {
+        animation: lining-down 2s infinite;
+      }
+    }  
   }
 
   .tldr-items {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-auto-flow: dense;
-    margin-top: 2rem;
+    margin-bottom: 1rem;
+
     gap: 2rem;
 
     @media (max-width: $md) {
@@ -46,41 +67,40 @@ section.tldr {
   }
 
   .tldr-decoration {
-    display: grid;
-    place-items: center;
-
     @include media(lt-md) {
       display: none;
     }
+
+    &:nth-of-type(2n + 1) {
+      text-align: right;
+    }
   }
 
-  .tldr-item {
-    background: white;
+  .tldr-container {
+    z-index: 1;
     position: relative;
     padding: 1rem;
-    border-radius: 0.5rem;
-    font-size: 0.7rem;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1),
-      0 0.1rem 0.2rem rgba(0, 0, 0, 0.2);
+    font-size: .7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 
     .morphing-shape {
-      flex-shrink: 0;
+      z-index: -1;
       position: absolute !important;
       top: 0;
       left: 0;
-      transform: translate(-50%, -50%);
-
-      @include media (lt-md) {
-        transform: translate(-50%, -50%) scale(.7);
-      }
+      right: 0;
+      bottom: 0;
     }
 
-    @media (max-width: $sm) {
-      flex-direction: column;
+    span {
+      z-index: 1;
     }
 
-    b {
-      opacity: .7;
+    @include media(sm) {
+      padding: .5rem;
     }
   }
 
@@ -92,41 +112,5 @@ section.tldr {
     @include media(sm) {
       --ggs: 2;
     }
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(.5) translateY(10%);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes lining-down {
-  0% {
-    opacity: 0;
-    transform-origin: top;
-    transform: scaleY(0);
-  }
-
-  48% {
-    opacity: 1;
-    transform-origin: top;
-    transform: scaleY(1);
-  }
-
-  70% {
-    transform-origin: bottom;
-    transform: scaleY(1);
-  }
-
-  100% {
-    transform-origin: bottom;
-    transform: scaleY(0);
   }
 }

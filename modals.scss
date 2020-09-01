@@ -1,5 +1,4 @@
 @import "./vars";
-@import "./animations";
 
 .modal {
   display: none;
@@ -127,12 +126,6 @@
   ul {
     list-style-type: "- ";
     padding-left: 1rem;
-  }
-
-  p.description {
-    text-align: center;
-    font-size: 0.7em;
-    color: rgba(0, 0, 0, 0.6);
   }
 
   .twitter-tweet {
