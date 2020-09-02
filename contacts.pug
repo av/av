@@ -26,10 +26,4 @@ section.contacts
       a(href="mailto:av@av.codes" target="_blank")
         include ./images/gmail.svg
     
-    script.
-      Array.from(
-        document.querySelectorAll('section.contacts ul.links svg')
-      )
-        .map(svg => svg.setAttribute('viewBox', '-6 -6 36 36'))
-
 link(rel="stylesheet" href="./contacts.scss")

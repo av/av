@@ -40,7 +40,7 @@ export function overflowCanvasText(ctx, str, maxWidth): string {
 }
 
 export function unpackTemplate(node: HTMLTemplateElement) {
-  document.body.appendChild(node.content);
+  document.body.appendChild(node.content.cloneNode(true));
 }
 
 export function updateGeneratedContent() {
@@ -52,14 +52,21 @@ export function updateGeneratedContent() {
 }
 
 export function showModal(id: string, options: ModalOptions = {}) {
-  unpackTemplate(document.querySelector(`#modal-${id}-template`));
+  const modalId = `#modal-${id}`;
+  const modalTemplateId = `#modal-${id}-template`;
+
+  if (!isPresent(modalId)) {
+    unpackTemplate(qs(modalTemplateId) as HTMLTemplateElement);
+  }
 
   micromodal.show(`modal-${id}`, {
     onShow: () => {
+      addQueryParam("modal", id);
       disableScroll();
       options.onShow?.();
     },
     onClose: () => {
+      removeQueryParam("modal");
       enableScroll();
       options.onClose?.();
     },
@@ -78,7 +85,7 @@ export function enableScroll() {
   document.body.classList.remove("no-scroll");
 }
 
-export function qs(selector) {
+export function qs(selector: string) {
   return document.querySelector(selector);
 }
 
@@ -87,5 +94,43 @@ export function isToday(date: Date) {
 }
 
 export function formatDateRange(start: Date, end: Date) {
-  return `${start.toLocaleDateString()} - ${isToday(end) ? 'present' : end.toLocaleDateString()}`;
+  return `${start.toLocaleDateString()} - ${
+    isToday(end) ? "present" : end.toLocaleDateString()
+  }`;
+}
+
+export function addQueryParam(name: string, value: string) {
+  const qs = new URLSearchParams(window.location.search);
+  qs.set(name, value);
+  setQueryString(qs);
+}
+
+export function removeQueryParam(name: string) {
+  const qs = new URLSearchParams(window.location.search);
+  qs.delete(name);
+  setQueryString(qs);
+}
+
+export function setQueryString(qs: URLSearchParams) {
+  window.history.replaceState(
+    {},
+    document.title,
+    `${window.location.pathname}?${qs.toString()}`
+  );
+}
+
+export function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(value, max));
+}
+
+export function map(
+  value: number,
+  [from, to]: [number, number],
+  [min, max]: [number, number]
+) {
+  return clamp(min + ((max - min) * (value - from)) / (to - from), min, max);
+}
+
+export function isPresent(selector: string) {
+  return qs(selector) !== null;
 }

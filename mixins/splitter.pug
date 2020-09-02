@@ -57,19 +57,3 @@ mixin splitter(top, bottom)
           }
         )&attributes({ [top]: top })
         - count--
-      
-      script.
-        const splitter = document.currentScript.closest('section.splitter');
-        const circles = Array.from(splitter.querySelectorAll('.circle'));
-        const clamp = (value, min, max) => Math.max(min, Math.min(value, max));
-        const map = (value, [from, to], [min, max]) => clamp(
-          min + (max - min) * (value - from) / (to - from), min, max
-        );
-        const desiredCount = Math.floor(map(window.innerWidth, [400, 1000], [10, 30]));
-        let difference = circles.length - desiredCount;
-
-        while (difference > 0) {
-          const circle = circles.pop();
-          circle.parentNode.removeChild(circle);
-          difference--;
-        }

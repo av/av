@@ -7,7 +7,6 @@ html(lang='en')
     title AV
     link(rel='stylesheet', href='main.scss')
     link(rel='stylesheet' href="https://unpkg.com/css.gg/icons/all.css")
-    script(src='scrollbars.js')
 
   body
     include mixins/splitter
@@ -23,6 +22,7 @@ html(lang='en')
     +splitter('bg-white')
     include footer
     
+    script(src="./postprocess.ts")
     //- Google analytics
     script(async src='https://www.googletagmanager.com/gtag/js?id=UA-143258835-1')
     script.
