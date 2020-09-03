@@ -1,9 +1,11 @@
 import { map } from "./utils";
 
-window.addEventListener("DOMContentLoaded", () => {
-  reduceSplitterContents();
-  redrawSVGViewBoxes();
-});
+export function run() {
+  window.addEventListener("DOMContentLoaded", () => {
+    reduceSplitterContents();
+    redrawSVGViewBoxes();
+  });  
+}
 
 function reduceSplitterContents() {
   const splitters = Array.from(document.querySelectorAll("section.splitter"));
