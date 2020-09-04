@@ -1,0 +1,12 @@
+<svg class="logo" height="500" width="500" viewBox="0 0 500 500">
+  <g class="bottom">
+    <polygon class="a" points="100,300 300,300 200,130"></polygon>
+    <polygon class="a accent" points="100,300 300,300 200,130"></polygon>
+    <polygon class="v accent" points="200,200 300,370 400,200"></polygon>
+    <polygon class="v" points="200,200 300,370 400,200"></polygon>
+  </g>
+  <g class="top">
+    <polygon class="a" points="100,300 300,300 200,130"></polygon>
+    <polygon class="v" points="200,200 300,370 400,200"></polygon>
+  </g>
+</svg>

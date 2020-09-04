@@ -89,6 +89,22 @@ export function qs(selector: string) {
   return document.querySelector(selector);
 }
 
+export function qsa(selector: string): HTMLElement[] {
+  return Array.from(document.querySelectorAll(selector));
+}
+
+export function throttle(fn, delay) {
+  let last = 0;
+
+  return function () {
+    const now = Date.now();
+    if (now - last > delay) {
+      last = now;
+      fn(...arguments);
+    }
+  };
+}
+
 export function isToday(date: Date) {
   return date.toDateString() === new Date().toDateString();
 }
@@ -133,4 +149,12 @@ export function map(
 
 export function isPresent(selector: string) {
   return qs(selector) !== null;
+}
+
+export function scrollTo(selector: string) {
+  const target = qs(selector);
+
+  if (target) {
+    target.scrollIntoView() ;
+  }
 }

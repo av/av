@@ -1,16 +1,4 @@
-@import './vars';
-
-@mixin md {
-  @media (max-width: $md) {
-    @content;
-  }
-}
-
-@mixin sm {
-  @media (max-width: $sm) {
-    @content;
-  }
-}
+@import "./vars";
 
 [bg-white] {
   background: white;
@@ -45,7 +33,7 @@
 }
 
 [bg-gray] {
-  background: rgba(0, 0, 0, .1);
+  background: rgba(0, 0, 0, 0.1);
 }
 
 [bg-red] {
@@ -57,7 +45,12 @@
 }
 
 [bg-secondary-to-white] {
-  background: linear-gradient(to top, white 0%, whitesmoke 10%, $secondary 120%);
+  background: linear-gradient(
+    to top,
+    white 0%,
+    whitesmoke 10%,
+    $secondary 120%
+  );
 }
 
 [bg-gradient-primary-tip] {
@@ -129,7 +122,7 @@
 }
 
 [shadow-diffuse] {
-  box-shadow: 0 1rem 2rem 0 $secondary; 
+  box-shadow: 0 1rem 2rem 0 $secondary;
 }
 
 [flex-row] {
@@ -137,7 +130,7 @@
   flex-direction: row;
 
   &[responsive] {
-    @include md {
+    @include media(lt-md) {
       flex-direction: column;
     }
   }
@@ -206,7 +199,9 @@
 }
 
 [text-fuzzy] {
-  text-shadow: -4px 0 #00000022, 4px 0 #00000022, -2px 0 #00000055, 2px 0 #00000055;
+  text-shadow: -4px 0 transparentize($primary, 0.9),
+    4px 0 transparentize($primary, 0.9), -2px 0 transparentize($primary, 0.6),
+    2px 0 transparentize($primary, 0.6);
 }
 
 [text-red] {
@@ -219,4 +214,61 @@
 
 [one-liner] {
   height: 1em;
+}
+
+.offscreen {
+  position: fixed;
+  left: -9999px;
+}
+
+section[fullscreen] {
+  min-height: 70vh;
+  width: 100%;
+}
+
+section[card] {
+  position: relative;
+  max-width: 20rem;
+  @extend [padding];
+  @extend [margin];
+
+  border-radius: 1rem;
+
+  box-shadow: 0 1rem 2rem -0.5rem rgba(0, 0, 0, 0.2),
+    0 0 0.2rem 0.1rem rgba(0, 0, 0, 0.05);
+
+  card-bg {
+    z-index: -1;
+  }
+
+  @include media(lt-md) {
+    max-width: 90vw;
+  }
+}
+
+card-bg {
+  @extend [fill];
+}
+
+section {
+  position: relative;
+}
+
+p.description {
+  text-align: center;
+  font-size: 0.7em;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.section-header {
+  text-align: center;
+  font-size: 2rem;
+
+  @include media(sm) {
+    font-size: 1.3rem;
+  }
+
+  @include media(md) {
+    font-size: 1.5rem;
+  }
 }

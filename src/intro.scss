@@ -1,0 +1,90 @@
+@import './vars.scss';
+
+section.intro {
+  @include adaptive-padding;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(transparent -100%, $secondary 90%), url(images/bg.jpeg);
+  background-size: cover;
+  color: white;
+
+  @include media(sm) {
+    font-size: .7rem;
+  }
+
+  .content {
+    overflow: visible;
+    z-index: 1;
+    max-width: 30rem;
+    min-height: 45vh;
+    margin: 0 auto;
+    position: relative;
+
+    @include media(lt-md) {
+      max-width: 15rem;
+    }
+
+    .raised {
+      z-index: 1;
+    }
+
+    .pills {
+      margin: 1em 0;
+
+      @include media(md) {
+        margin: .5em 0;
+      }
+
+      @include media(sm) {
+        margin: .25em 0;
+      }
+    }
+  }
+
+  .decoration {
+    position: absolute;
+    transition: transform .5s linear;
+
+    &:nth-child(1) {
+      left: -10%;
+      top: 0;
+    }
+
+    &:nth-child(2) {
+      right: 0;
+      top: 40%;
+    }
+
+    &:nth-child(3) {
+      right: 40%;
+      bottom: 10%;
+    }
+  }
+
+  .intro-name {
+    margin: 0;
+    font-size: 3em;
+
+    @include media (md) {
+      font-size: 1.6em;
+    }
+
+    @include media (sm) {
+      font-size: 1.5em;
+    }
+  }
+
+  .intro-hero {
+    margin-bottom: 0;
+  }
+
+  a.download-pdf {
+    color: $secondary;
+    text-decoration: none;
+
+    i {
+      margin-right: .2rem;
+      transform: translateY(.05rem) scale(1);
+    }
+  }
+}

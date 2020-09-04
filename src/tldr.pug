@@ -1,0 +1,45 @@
+include mixins/shape
+
+section.tldr(
+  fullscreen
+)
+
+  .content
+    .tldr-items
+      .tldr-container
+        +shape('100%', 90, ['stronger-shaking'], ['--secondary'], '10vh', 100)
+        span Delivered code for Browsers, Servers, Mobile, Desktops and Microcontrollers
+
+      .tldr-decoration
+        +shape('4rem', 50, ['stronger-shaking'], ['--amber', '--tertiary'])
+
+      .tldr-decoration
+        +shape('3rem', 50, ['stronger-shaking'], ['--amber', '--tertiary'])
+
+      .tldr-container
+        +shape('100%', 90, ['stronger-shaking'], ['--secondary'], '10vh', 100)
+        span
+          span Not afraid of 
+          span(text-fuzzy) fuzzy 
+          span requirements and/or 
+          b(text-underline) strict
+          span  deadlines
+
+      .tldr-container
+        +shape('100%', 90, ['stronger-shaking'], ['--secondary'], '10vh', 100)
+        span Best fitted for small independent teams 🤝
+
+      .tldr-decoration
+        +shape('2rem', 50, ['stronger-shaking'], ['--amber', '--tertiary'])
+
+      .tldr-container.tldr-summary
+        +shape('100%', 100, ['shaking'], ['--secondary'], '10vh', 100)
+        h1.tldr-header TLDR;
+        p Full-Stack Software Engineer with focus on JavaScript ecosystem. Capable of a full-cycle software delivery. I’ve produced Web Apps, microservices, ETL tools, engineering and business tooling, physics-based visualizations, custom DSLs, Voice-controlled UIs, AR 3D apps and much more. 
+
+    .tldr-more
+      span learn more
+      i.gg-mouse
+      
+
+link(rel="stylesheet" href="./tldr.scss")

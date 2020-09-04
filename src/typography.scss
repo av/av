@@ -1,0 +1,29 @@
+body {
+  font-family: "Red Hat Text", sans-serif;
+  color: $secondary;
+}
+
+html {
+  font-size: $font-size-min;
+
+  @include media (sm) {
+    font-size: $font-size-min + ($font-size-max - $font-size-min) * 0.5;
+  }
+
+  @include media (lt-md) {
+    font-size: $font-size-min + ($font-size-max - $font-size-min) * 0.5;
+  }
+
+  @include media (lg) {
+    font-size: $font-size-min;
+  }
+}
+
+h1, h2, h3, h4, h5, h6, h7 {
+  font-family: "Red Hat Display", "Red Hat Text", sans-serif;
+}
+
+a:active,
+a:focus {
+  outline: none;
+}

@@ -3,15 +3,12 @@
 .splitter {
   $size: 20rem;
   $circle-size: $size / 2;
-  $animation-duration: 20s;
+  $animation-duration: 50s;
 
   z-index: 1;
-  filter: url(#fancy-goo);
+  filter: url(#fancy-goo-lg);
 
   .circle-container {
-    flex: 1;
-    width: $circle-size;
-    height: $circle-size;
     overflow: visible;
   }
 

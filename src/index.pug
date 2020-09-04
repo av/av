@@ -6,14 +6,20 @@ html(lang='en')
     meta(http-equiv='X-UA-Compatible', content='ie=edge')
     meta(name="description" content="Home page of Ivan Cherepanov (@av on GitHub), Sr. Full-Stack Engineer specializing on JavaScript.")
     title Ivan Cherepanov
+
     link(rel='stylesheet', href='main.scss')
     link(rel='stylesheet' href="https://unpkg.com/css.gg/icons/all.css")
+
+    link(rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Red+Hat+Text&display=swap")
+    link(rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@700;900&display=swap")
 
   body
     include mixins/splitter
     include mixins/modal
     include filters
 
+    include intro
+    +splitter('bg-secondary')
     include tldr
     +splitter('bg-primary')
     include career

@@ -1,0 +1,43 @@
+.pill {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  text-transform: capitalize;
+  cursor: pointer;
+  font-size: 0.6rem;
+  background: white;
+  color: $text;
+  box-shadow: 0 0.25rem 0.5rem 0 rgba(0, 0, 0, 0.1);
+  border-radius: 100rem;
+  margin: 0.2rem;
+  padding: 0.25rem 0.5rem;
+  transition: all 0.15s ease-in-out;
+
+  @include media(lt-md) {
+    font-size: 0.4rem;
+    margin: .1rem;
+  }
+
+  &.selected {
+    transform: translateY(10%);
+    box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.15);
+  }
+
+  &.inverse {
+    background: lighten($secondary, 10%);
+    color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0.25rem 0.5rem 0 rgba(0, 0, 0, 0.3);
+  }
+
+  svg {
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+    margin-right: 0.25rem;
+  }
+
+  i {
+    margin-right: 0.4rem;
+  }
+}

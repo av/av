@@ -1,7 +1,7 @@
 @import './vars';
 
 .floater {
-  @include md {
+  @include media(lt-md) {
     display: none;
   }
 

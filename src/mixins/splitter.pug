@@ -1,7 +1,7 @@
 mixin splitter(top, bottom)
   - var topAttrs = { [top]: top };
 
-  section(
+  section.background(
     style=`
       height: 5vh;
     `
@@ -28,7 +28,7 @@ mixin splitter(top, bottom)
         return rangeLower + (range * valuePercentage);
       }
 
-    section(
+    section.background(
       style=`
         height: 10vh;
         margin-bottom: 0vh;

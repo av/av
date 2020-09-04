@@ -1,7 +1,7 @@
 {
   "name": "av.codes",
   "scripts": {
-    "dev": "parcel index.pug",
+    "dev": "parcel src/index.pug",
     "deploy": "./scripts/deploy.sh"
   },
   "devDependencies": {

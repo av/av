@@ -1,0 +1,107 @@
+// Palette
+$primary: #69E2E0;
+$secondary: #332148;
+$tertiary: #ff1f8f;
+$lime: #bfff00;
+$amber: #ffc000;
+$red: red;
+
+// Pallete tints
+$darken-sm: whitesmoke;
+
+// Main typography
+$text: $secondary;
+$text-inverse: whitesmoke;
+
+// Adaptive font sizes
+$font-size-min: 32px;
+$font-size-max: 48px;
+
+// Using hard pixel values to avoid rem
+// rescaling with the screen size
+$sm: 400px;
+$md: 1000px;
+$md-mid: $sm + ($md - $sm) / 2;
+
+// Simple but robust media queries
+// sm -> gt-sm | lt-md -> md -> gt-md | lg
+// 
+// gt-x breakpoints are non-inclusive on purpose
+@mixin media($breakpoint) {
+  @if $breakpoint == sm {
+    @media screen and (max-width: $sm) {
+      @content;
+    }
+  }
+
+  @if $breakpoint == gt-sm {
+    @media screen and (min-width: $sm + 1px) {
+      @content;
+    }
+  }
+
+  @if $breakpoint == lt-md {
+    @media screen and (max-width: $md) {
+      @content;
+    }
+  }
+
+  @if $breakpoint == md {
+    @media screen and (min-width: $sm) and (max-width: $md) {
+      @content;
+    }
+  }
+
+  @if $breakpoint == gt-md {
+    @media screen and (min-width: $md + 1px) {
+      @content;
+    }
+  }
+
+  @if $breakpoint == lt-md-mid {
+    @media screen and (max-width: $md-mid) {
+      @content;
+    }
+  }
+
+  @if $breakpoint == gt-md-mid {
+    @media screen and (min-width: $md-mid) and (max-width: $md) {
+      @content;
+    }
+  }
+
+  @if $breakpoint == lg {
+    @media screen and (min-width: $md) {
+      @content;
+    }
+  }
+}
+
+// Make it centered without interfering with
+// the rest of the block content
+@mixin center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+// Padding adapting to smaller screens
+@mixin adaptive-padding {
+  padding: 1rem;
+
+  @include media(lt-md) {
+    padding: .5rem;
+  }
+
+  @include media(sm) {
+    padding: .25rem;
+  }
+}
+
+// Slides the content under 
+// the forthplaced splitter.
+@mixin splitter-glide {
+  padding-top: 15vh;
+  margin-top: -15vh;
+}

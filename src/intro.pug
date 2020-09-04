@@ -1,0 +1,28 @@
+include mixins/shape
+
+section.intro
+  .content(flex-column justify-center)
+    .decoration(data-force=10)
+      +shape('12vmax', 80, ['stronger-shaking'], ['--amber', '--tertiary'])
+
+    .decoration(data-force=30)
+      +shape('8vmax', 80, ['stronger-shaking'], ['--amber', '--tertiary'])
+    
+    .decoration(data-force=120)
+      +shape('4vmax', 80, ['stronger-shaking'], ['--amber', '--tertiary'])
+
+    .raised
+      h1.intro-name Ivan Cherepanov
+      p.intro-hero
+        span Senior Full-Stack Engineer
+
+      .pills(flex-row flex-wrap)
+        .pill(data-target="section.career") Career
+        .pill(data-target="section.skills") Skills
+        .pill(data-target="section.contacts") Contacts
+        a.download-pdf(href="/pdf/Ivan Cherepanov.pdf" download="Ivan Cherepanov")
+          .pill 
+            i.gg-software-download
+            span Resume
+
+link(rel="stylesheet" href="./intro.scss")

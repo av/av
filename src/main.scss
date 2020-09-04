@@ -1,0 +1,52 @@
+@import "./base";
+@import "./vars";
+@import "./util";
+@import "./animations";
+@import "./floater";
+@import "./splitter";
+@import "./modals";
+@import "./buttons";
+@import "./pills";
+@import "./typography";
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  --primary: #{$primary};
+  --secondary: #{$secondary};
+  --tertiary: #{$tertiary};
+  --amber: #{$amber};
+  --lime: #{$lime};
+
+  &.no-scroll {
+    overflow: hidden;
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body::-webkit-scrollbar {
+  width: 0.25rem;
+  height: 0.25rem;
+}
+
+body::-webkit-scrollbar-track {
+  background: $secondary;
+}
+
+body::-webkit-scrollbar-thumb {
+  background: $primary;
+}

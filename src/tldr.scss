@@ -1,13 +1,9 @@
 @import "./vars.scss";
 
 section.tldr {
-  background: linear-gradient(210deg, lighten($secondary, 20%), $primary 40%);
-  padding: 1rem;
-
-  @include media(sm) {
-    padding: .5rem;
-  }
-
+  background: linear-gradient($tertiary -50%, $primary 50%);
+  @include splitter-glide;
+  
   h2 {
     @include media(sm) {
       font-size: 1em;
@@ -20,22 +16,9 @@ section.tldr {
     }
   }
 
-  .tldr-header {
-    opacity: .3;
-    margin: 0;
-  }
-
-  a.download-pdf {
-    color: $secondary;
-    text-decoration: none;
-
-    i {
-      margin-right: .5rem;
-      transform: translateY(.1rem) scale(1.4);
-    }
-  }
-
   .content {
+    @include adaptive-padding;
+
     max-width: 30rem;
     margin: 0 auto;
     border-radius: 1vw;
@@ -68,8 +51,12 @@ section.tldr {
 
     gap: 2rem;
 
-    @include media (lt-md) {
-      margin-top: 1rem;
+    @include media (gt-md-mid) {
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @include media (lt-md-mid) {
       grid-template-columns: 1fr;
       gap: 0;
     }
@@ -94,7 +81,7 @@ section.tldr {
     align-items: center;
     justify-content: center;
     text-align: center;
-    color: $secondary;
+    color: white;
 
     .morphing-shape {
       z-index: -1;
@@ -105,6 +92,9 @@ section.tldr {
       bottom: 0;
 
       .shape {
+        border-radius: 0 !important;
+
+
         @include media (lt-md) {
           border-radius: 1rem !important;
         }
@@ -134,20 +124,18 @@ section.tldr {
   .tldr-summary {
     text-align: left;
     grid-column: span 2;
-    width: 100%;
-    color: black;
-    padding: 1rem;
-    border-radius: .25rem;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-start;
-    color: $secondary;
-    opacity: .7;
-    font-size: .7em;
+    @include adaptive-padding;
 
-    @include media (lt-md) {
-      padding: 0;
+    .tldr-header {
+      font-size: 3em;
+      margin: 0;
+    }  
+
+    @include media (lt-md-mid) {
       grid-column: span 1;
     }
 
