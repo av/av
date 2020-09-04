@@ -1,15 +1,16 @@
-@import './vars.scss';
+@import "./vars.scss";
 
 section.intro {
   @include adaptive-padding;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(transparent -100%, $secondary 90%), url(images/bg.jpeg);
+  background: linear-gradient(transparent -100%, $secondary 90%),
+    url(images/bg.jpeg);
   background-size: cover;
   color: white;
 
   @include media(sm) {
-    font-size: .7rem;
+    font-size: 0.7rem;
   }
 
   .content {
@@ -22,9 +23,11 @@ section.intro {
 
     @include media(lt-md) {
       max-width: 15rem;
+      min-height: 60vh;
     }
 
     .raised {
+      margin-top: 1rem;
       z-index: 1;
     }
 
@@ -32,18 +35,18 @@ section.intro {
       margin: 1em 0;
 
       @include media(md) {
-        margin: .5em 0;
+        margin: 0.5em 0;
       }
 
       @include media(sm) {
-        margin: .25em 0;
+        margin: 0.25em 0;
       }
     }
   }
 
   .decoration {
     position: absolute;
-    transition: transform .5s linear;
+    transition: transform 0.5s linear;
 
     &:nth-child(1) {
       left: -10%;
@@ -65,11 +68,11 @@ section.intro {
     margin: 0;
     font-size: 3em;
 
-    @include media (md) {
+    @include media(md) {
       font-size: 1.6em;
     }
 
-    @include media (sm) {
+    @include media(sm) {
       font-size: 1.5em;
     }
   }
@@ -83,8 +86,23 @@ section.intro {
     text-decoration: none;
 
     i {
-      margin-right: .2rem;
-      transform: translateY(.05rem) scale(1);
+      margin-right: 0.2rem;
+      transform: translateY(0.05rem) scale(1);
+    }
+  }
+
+  .scroll-invitation {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    i.gg-mouse {
+      margin-top: 1rem;
+      opacity: 0.5;
+      --ggs: 1.5;
+
+      &:after {
+        animation: lining-down 2s infinite;
+      }
     }
   }
 }

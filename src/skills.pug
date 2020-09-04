@@ -1,17 +1,18 @@
 section.skills
-  h1.section-header Glance through my skills
-  p.description Strongest skills on the top
+  .content
+    h1.section-header Glance through my skills
+    p.description Zoom. Pan.
 
-  .skills-container
-    .axis-x.axis-label
-      h5 Interest →
-    .axis-y.axis-label
-      h5 Experience →
-  
-  .pills.legend-container(flex-row flex-wrap flex-center)
-    a(href="https://github.com/av/av/blob/master/skills/skillsSection.ts" target="_blank") 
-      .pill.inverse 
-        include ./images/github.svg
-        span View on GitHub
+    .skills-container
+      .axis-x.axis-label
+        h5 Interest →
+      .axis-y.axis-label
+        h5 Experience →
+    
+    .pills.legend-container(flex-row flex-wrap flex-center)
+      a(href="https://github.com/av/av/blob/master/skills/skillsSection.ts" target="_blank") 
+        .pill.inverse 
+          include ./images/github.svg
+          span View on GitHub
   
 link(rel="stylesheet" href="./skills.scss")

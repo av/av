@@ -6,10 +6,10 @@ import * as postprocess from "./postprocess";
 // Run post-processing of DOM
 postprocess.run();
 
+// Modules are written in procedural style
 IntroSection.init(IntroSection.selectors);
-
-// Module is written in procedural style
 SkillsSection.init(SkillsSection.selectors);
 
-// Module is written in "classical" style
+// Module is written in "classical" style,
+// hence slightly different init procedure
 new CareerSection().init();

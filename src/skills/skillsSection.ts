@@ -4,8 +4,8 @@ import skillList, { skillTypes } from "./skillList";
 import SelectablePills from "../career/SelectablePills";
 
 export const selectors = {
-  container: "section.skills > .skills-container",
-  pills: "section.skills > .pills",
+  container: "section.skills .skills-container",
+  pills: "section.skills .pills",
 };
 
 export function init(selectors) {
@@ -21,7 +21,6 @@ export function init(selectors) {
 
   const svg = getSvg(container, width, height).call(zoom);
   const chartContainer = svg.append("g");
-  let selectedSkill = null;
 
   const skills = chartContainer
     .append("g")
@@ -66,9 +65,9 @@ export function init(selectors) {
   new SelectablePills({
     container: qs(selectors.pills),
     pills: skillTypes,
-    onChange: ([type]) => {
+    onChange: (type) => {
       if (type) {
-        skills.style("opacity", d => d.type === type ? 1 : .1);
+        skills.style("opacity", (d) => (d.type === type ? 1 : 0.1));
       } else {
         skills.style("opacity", 1);
       }
@@ -90,7 +89,7 @@ export function init(selectors) {
 function getVisualisationParams(container: HTMLElement) {
   return [
     container.getBoundingClientRect().width,
-    window.innerHeight * .5,
+    window.innerHeight * 0.5,
     50,
   ];
 }

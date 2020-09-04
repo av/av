@@ -1,10 +1,10 @@
-import { map } from "./utils";
+import { map, any } from "./utils";
 
 export function run() {
   window.addEventListener("DOMContentLoaded", () => {
     reduceSplitterContents();
     redrawSVGViewBoxes();
-  });  
+  });
 }
 
 function reduceSplitterContents() {
@@ -19,8 +19,9 @@ function reduceSplitterContents() {
     let difference = circles.length - desiredCount;
 
     while (difference > 0) {
-      const circle = circles.pop();
+      const circle = any(circles);
       circle.parentNode.removeChild(circle);
+      circles.splice(circles.indexOf(circle), 1);
       difference--;
     }
   }

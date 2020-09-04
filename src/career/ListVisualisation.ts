@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { formatDateRange, updateGeneratedContent, qs } from "../utils";
+import { formatDateRange, initEmbeddables, qs } from "../utils";
 import TimelineEvent from "./TimelineEvent";
 
 interface ListVisualisationConfig {
@@ -73,7 +73,7 @@ export default class ListVisualisation {
     header.append("div").attr("class", "chevron").text("👈");
 
     list.append((d) => content.get(d.config.id).content);
-    updateGeneratedContent();
+    initEmbeddables();
     this.ready = true;
   }
 }

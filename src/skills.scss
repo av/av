@@ -1,14 +1,23 @@
 @import "./vars.scss";
 
 section.skills {
-  max-width: 30rem;
-  margin: 0 auto;
-  padding: 3rem 0;
+  @include splitter-glide;
+  background: linear-gradient(183deg, $primary, transparent 30%);
+
+  .content {
+    max-width: 30rem;
+    margin: 0 auto;
+    padding: 3rem 0;
+
+    p.description {
+      margin-bottom: .5rem;
+    }
+  }
 
   .skills-container {
     position: relative;
     background: darken($secondary, 10%);
-    border-radius: .5rem;
+    border-radius: 0.5rem;
     overflow: hidden;
   }
 
@@ -16,7 +25,7 @@ section.skills {
     padding: 1rem;
 
     @include media(lt-md) {
-      padding: .5rem;
+      padding: 0.5rem;
     }
 
     .color {
@@ -25,22 +34,22 @@ section.skills {
       width: $size;
       height: $size;
       border-radius: $size;
-      margin-right: .25rem;
+      margin-right: 0.25rem;
     }
   }
 
   .skill-node {
     fill: rgba(255, 255, 255, 0.8);
-    font-size: .4rem;
+    font-size: 0.4rem;
     text-transform: capitalize;
-    
+
     .skill-scaler {
-      transition: opacity .3s;
+      transition: opacity 0.3s;
     }
   }
 
   .axis-label {
-    font-size: .5rem;
+    font-size: 0.5rem;
     position: absolute;
     box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
     border-radius: 100rem;
@@ -48,7 +57,7 @@ section.skills {
     background: white;
 
     &.axis-x {
-      bottom: .2rem;
+      bottom: 0.2rem;
       left: 50%;
       transform: translateX(-50%);
     }

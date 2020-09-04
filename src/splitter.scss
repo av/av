@@ -8,6 +8,10 @@
   z-index: 1;
   filter: url(#fancy-goo-lg);
 
+  @include media(sm) {
+    filter: url(#fancy-goo);
+  }
+
   .circle-container {
     overflow: visible;
   }

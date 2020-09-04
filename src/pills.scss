@@ -27,7 +27,7 @@
   &.inverse {
     background: lighten($secondary, 10%);
     color: rgba(255, 255, 255, 0.6);
-    box-shadow: 0 0.25rem 0.5rem 0 rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0.25rem 0.5rem 0 transparentize($secondary, .65);
   }
 
   svg {

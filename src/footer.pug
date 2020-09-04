@@ -1,4 +1,4 @@
-section(
+section.footer(
   flex-row
   center
   padding
@@ -10,9 +10,10 @@ section(
     display: flex;
   `
 )
-    small(flex-column center style=`min-height: 10vh;`)
-      small 
-        span Built by <a href="https://github.com/av" target="_blank">@av</a>, 
-        span.current-year 2020
-    script.
-      document.querySelector('.current-year').textContent = (new Date()).getFullYear();
+  span Built by <b>@av</b>,
+  span &nbsp;
+  span.current-year 2020
+  script.
+    document.querySelector('.current-year').textContent = (new Date()).getFullYear();
+
+link(rel="stylesheet" href="./footer.scss")

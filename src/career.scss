@@ -4,15 +4,19 @@ section.career {
   max-width: 60rem;
   margin: 0 auto;
   padding-top: 2rem;
-  background: linear-gradient(transparent 95%, $darken-sm);
-
-  canvas {
-    background-color: $darken-sm;
-  }
+  @include splitter-glide;
 
   .canvas-container {
+    width: 90%;
+    margin: 0 auto;
     pointer-events: none;
     position: relative;
+
+    canvas {
+      border-radius: .5rem;
+      background: whitesmoke;
+      box-shadow: 0 0 2rem 0 rgba(0, 0, 0, .15), 0 .1rem .2rem 0 rgba(0, 0, 0, .1);
+    }
 
     .pinch-and-zoom {
       $duration: 15s;
@@ -62,7 +66,6 @@ section.career {
 
   .pills-container {
     position: relative;
-    background: $darken-sm;
     @include adaptive-padding;
 
     display: flex;
@@ -89,6 +92,12 @@ section.career {
       a {
         text-decoration: none;
       }
+    }
+  }
+
+  .timeline-container {
+    p.description {
+      margin-bottom: .5rem;
     }
   }
 

@@ -1,5 +1,5 @@
 import Drawable from "./Drawable";
-import { BoundingRect, overflowCanvasText } from "../utils";
+import { Rect } from "../utils";
 import SmoothTransform from "./SmoothTransform";
 import InterpolatedValue from "./InterpolatedValue";
 
@@ -13,14 +13,43 @@ interface TimelineEventConfig {
   tags: string[],
 }
 
+/**
+ * A component representing of the events
+ * for the {TimelineVisualisation}.
+ * 
+ * Holds necessary data points and could 
+ * be rendered to the given canvas context.
+ */
 export default class TimelineEvent implements Drawable {
+  /**
+   * Defines the rendered height of an event
+   */
+  static lineHeight = 50;
+
+  /**
+   * Defines how to render event names.
+   */
+  static fontConfig = {
+    font: '32px "Red Hat Display"',
+    fill: 'white'
+  };
+
   config: TimelineEventConfig;
   startX: number = 0;
   endX: number = 0;
   startY: number = 0;
   endY: number = 0;
-  lineHeight: number = 50;
+
+  /**
+   * Holds the instance of a transform applied 
+   * to the parent viewport of the event.
+   */
   transform: SmoothTransform;
+
+  /**
+   * Allows to transition between different
+   * event colors. 
+   */
   color: InterpolatedValue<string>;
 
   constructor(config: TimelineEventConfig) {
@@ -28,22 +57,37 @@ export default class TimelineEvent implements Drawable {
     this.color = new InterpolatedValue(this.config.color);
   }
 
+  /**
+   * Renders the event to the given canvas context.
+   * 
+   * @param ctx - canvas context
+   */
   draw(ctx: CanvasRenderingContext2D) {
+    // Advance the color transition
+    // if necessary.
     this.color.tick();
 
+    // Detect actual position of the event 
+    // based on the current transform of the viewport
     const startX = this.transform.currentTransform.applyX(this.startX);
     const endX = this.transform.currentTransform.applyX(this.endX);
     const length = endX - startX;
 
+    // Render event body.
     ctx.beginPath();
     ctx.fillStyle = this.color.value;
     ctx.save();
-    ctx.rect(startX, this.startY, length, this.lineHeight);
+    ctx.rect(startX, this.startY, length, TimelineEvent.lineHeight);
+
+    // Clip the drawn rect, so that event
+    // name doesn't overflow the boundary
     ctx.clip();
     ctx.fill();
     ctx.closePath();
-    ctx.fillStyle = "white";
-    ctx.font = '32px "Red Hat Display"';
+
+    // Render event name.
+    ctx.fillStyle = TimelineEvent.fontConfig.fill;
+    ctx.font = TimelineEvent.fontConfig.font;
     ctx.fillText(
       this.config.name,
       startX + 10,
@@ -52,14 +96,27 @@ export default class TimelineEvent implements Drawable {
     ctx.restore();
   }
 
+  /**
+   * Rescales the desired event position in the unit
+   * viewport, based on the given time scale instance.
+   * 
+   * @param scale - scale holding the viewport domain 
+   *   and chronological range of the visualisation. 
+   */
   applyScale(scale: d3.ScaleTime<number, number>) {
     this.startX = scale(this.config.start);
     this.endX = scale(this.config.end);
-    this.startY = this.config.depth * this.lineHeight;
-    this.endY = this.startY + this.lineHeight;
+    this.startY = this.config.depth * TimelineEvent.lineHeight;
+    this.endY = this.startY + TimelineEvent.lineHeight;
   }
 
-  get boundingRect(): BoundingRect {
+  /**
+   * Returns the current bounding rect for the event,
+   * with current scale applied.
+   * 
+   * Used for hit testing.
+   */
+  get boundingRect(): Rect {
     const startX = this.transform.currentTransform.applyX(this.startX);
     const endX = this.transform.currentTransform.applyX(this.endX);
 
