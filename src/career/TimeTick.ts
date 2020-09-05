@@ -43,8 +43,6 @@ export default class TimeTick implements Drawable, Transformable {
     const startYear = start.getFullYear();
     const endYear = end.getFullYear();
 
-    console.log(startYear, endYear);
-
     return Array(endYear - startYear + 1)
       .fill(0)
       .map((_, i) => {

@@ -2,7 +2,7 @@ include mixins/shape
 
 section.intro
   .content(flex-column justify-center)
-    .decoration(data-force=10)
+    .decoration(data-force=30)
       +shape('12vmax', 80, ['stronger-shaking'], ['--amber', '--tertiary'])
 
     .decoration(data-force=30)
@@ -12,15 +12,15 @@ section.intro
       +shape('4vmax', 80, ['stronger-shaking'], ['--amber', '--tertiary'])
 
     .raised
-      h1.intro-name Ivan Cherepanov
-      p.intro-hero
+      h1.intro-name(data-aos="fade-up") Ivan Cherepanov
+      p.intro-hero(data-aos="fade-up" data-aos-delay=150)
         span Senior Full-Stack Engineer
 
       .pills(flex-row flex-wrap)
-        .pill(data-target="section.career") Career
-        .pill(data-target="section.skills") Skills
-        .pill(data-target="section.contacts") Contacts
-        a.download-pdf(href="/pdf/Ivan Cherepanov.pdf" download="Ivan Cherepanov")
+        .pill(data-target="section.career" data-aos="fade-up" data-aos-delay=200) Career
+        .pill(data-target="section.skills" data-aos="fade-up" data-aos-delay=250) Skills
+        .pill(data-target="section.contacts" data-aos="fade-up" data-aos-delay=300) Contacts
+        a.download-pdf(href="/pdf/Ivan Cherepanov.pdf" download="Ivan Cherepanov"  data-aos="fade-up" data-aos-delay=350 data-aos-duration=500)
           .pill 
             i.gg-software-download
             span Resume

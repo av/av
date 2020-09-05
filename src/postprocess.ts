@@ -1,12 +1,24 @@
 import { map, any } from "./utils";
+import AOS from "aos";
+import "aos/dist/aos.css";
 
+/**
+ * Runs the postprocessing of the dom after DOMContentLoaded event.
+ */
 export function run() {
   window.addEventListener("DOMContentLoaded", () => {
     reduceSplitterContents();
     redrawSVGViewBoxes();
+    AOS.init({
+      duration: 300
+    });
   });
 }
 
+/**
+ * For smaller devices, reduces the amount of nodes
+ * used in section splitters to reduce the rasterisation load.
+ */
 function reduceSplitterContents() {
   const splitters = Array.from(document.querySelectorAll("section.splitter"));
 
@@ -27,6 +39,9 @@ function reduceSplitterContents() {
   }
 }
 
+/**
+ * Shrinks the viewboxes of contact icons replacing built-in values.
+ */
 function redrawSVGViewBoxes() {
   const icons = Array.from(
     document.querySelectorAll("section.contacts ul.links svg")
