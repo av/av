@@ -28,4 +28,6 @@ export default class Scene implements Drawable {
       component.draw(ctx);
     });
   }
+
+
 }

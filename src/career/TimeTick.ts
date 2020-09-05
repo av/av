@@ -33,25 +33,6 @@ export default class TimeTick implements Drawable, Transformable {
   static height = 8;
 
   /**
-   * Constructs an array of ticks to be used
-   * for the given range of dates
-   * 
-   * @param range - time range to build ticks for 
-   */
-  static yearTicks(range: Pair<Date, Date>) {
-    const [start, end] = range;
-    const startYear = start.getFullYear();
-    const endYear = end.getFullYear();
-
-    return Array(endYear - startYear + 1)
-      .fill(0)
-      .map((_, i) => {
-        return new Date(startYear + i, 1, 1);
-      })
-      .map(TimeTick.fromDate);
-  }
-
-  /**
    * Convenience helper to construct a Tick from
    * a given date
    * 

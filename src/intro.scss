@@ -68,6 +68,10 @@ section.intro {
     margin: 0;
     font-size: 3em;
 
+    span {
+      display: inline-block;
+    }
+
     @include media(md) {
       font-size: 1.6em;
     }
@@ -75,6 +79,7 @@ section.intro {
     @include media(sm) {
       font-size: 1.5em;
     }
+
   }
 
   .intro-hero {

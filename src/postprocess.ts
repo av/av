@@ -10,7 +10,8 @@ export function run() {
     reduceSplitterContents();
     redrawSVGViewBoxes();
     AOS.init({
-      duration: 300
+      duration: 400,
+      easing: 'ease-out-sine'
     });
   });
 }

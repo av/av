@@ -6,6 +6,7 @@ import SmoothTransform from "./SmoothTransform";
 import PointerTracker from "./PointerTracker";
 import { showModal, notifyVisibilityChange, Offset, Pair } from "../utils";
 import TimeTick from "./TimeTick";
+import { Ticks } from "./Ticks";
 
 interface TimelineVisualisationConfig {
   container: HTMLElement;
@@ -64,6 +65,12 @@ export default class TimelineVisualisation {
    * its value, instead of quantified steps.
    */
   smoothTransform: SmoothTransform;
+
+  /**
+   * Holds a reference to timeline ticks,
+   * denoting particular dates over X axis
+   */
+  ticks: Ticks;
 
   /**
    * Rendering context of the canvas of the visualisation.
@@ -146,13 +153,13 @@ export default class TimelineVisualisation {
       this.scene.add(event);
     });
 
-    // Adding ticks to the scene
-    TimeTick.yearTicks(domain).forEach((tick) => {
-      tick.applyScale(this.timeScale);
-      tick.transform = this.smoothTransform;
-      tick.y = this.height;
-      this.scene.add(tick);
-    });
+    // Generate date scale ticks
+    this.ticks = Ticks.forRange(domain)
+      .scale(this.timeScale)
+      .applyTransform(this.smoothTransform)
+      .baseline(this.height);
+
+    this.scene.add(this.ticks);
 
     this.canvas = d3
       .select(this.config.container)
