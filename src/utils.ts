@@ -188,7 +188,7 @@ export function enableScroll() {
  *
  * @param selector - any CSS compatible selector
  */
-export function qs(selector: string): HTMLElement {
+export function qs<T extends HTMLElement>(selector: string): T {
   return document.querySelector(selector);
 }
 

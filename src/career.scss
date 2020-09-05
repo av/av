@@ -13,8 +13,11 @@ section.career {
     position: relative;
 
     canvas {
+      $side-color: rgba(0, 0, 0, .04);
+      $side-offset: 2%;
+
       border-radius: .5rem;
-      background: whitesmoke;
+      background: linear-gradient(to left, $side-color 0%, transparent $side-offset, transparent (100% - $side-offset), $side-color 100%);
       box-shadow: 0 0 2rem 0 rgba(0, 0, 0, .15), 0 .1rem .2rem 0 rgba(0, 0, 0, .1);
     }
 
@@ -22,7 +25,7 @@ section.career {
       $duration: 15s;
 
       position: absolute;
-      bottom: 2rem;
+      bottom: 2.2rem;
       left: 50%;
       transform: translateX(-50%);
       font-size: .7rem;

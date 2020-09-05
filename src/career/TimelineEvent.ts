@@ -2,6 +2,7 @@ import Drawable from "./Drawable";
 import { Rect } from "../utils";
 import SmoothTransform from "./SmoothTransform";
 import InterpolatedValue from "./InterpolatedValue";
+import Transformable from "./Transformable";
 
 interface TimelineEventConfig {
   id: string,
@@ -20,7 +21,7 @@ interface TimelineEventConfig {
  * Holds necessary data points and could 
  * be rendered to the given canvas context.
  */
-export default class TimelineEvent implements Drawable {
+export default class TimelineEvent implements Drawable, Transformable {
   /**
    * Defines the rendered height of an event
    */

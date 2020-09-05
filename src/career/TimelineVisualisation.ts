@@ -4,7 +4,8 @@ import CanvasCursor from "./CanvasCursor";
 import TimelineEvent from "./TimelineEvent";
 import SmoothTransform from "./SmoothTransform";
 import PointerTracker from "./PointerTracker";
-import { showModal, notifyVisibilityChange, Offset } from "../utils";
+import { showModal, notifyVisibilityChange, Offset, Pair } from "../utils";
+import TimeTick from "./TimeTick";
 
 interface TimelineVisualisationConfig {
   container: HTMLElement;
@@ -34,11 +35,39 @@ export default class TimelineVisualisation {
    */
   static scaleExtent: [number, number] = [1, 100];
 
+  /**
+   * Holds the reference to the configuration
+   * of the component
+   */
   config: TimelineVisualisationConfig;
+
+  /**
+   * Rendering scene, holding drawable components
+   * of the visualisation and orchestrating the render pipeline
+   */
   scene: Scene;
+
+  /**
+   * Virtual cursor to track mouse position and perform
+   * the hit testing within the visualisation
+   */
   cursor: CanvasCursor;
+
+  /**
+   * A component allowing to detect the scroll
+   * attempt on mobile devices
+   */
   tracker: PointerTracker;
+
+  /**
+   * Interpolated zoom transform, smoothly changing
+   * its value, instead of quantified steps.
+   */
   smoothTransform: SmoothTransform;
+
+  /**
+   * Rendering context of the canvas of the visualisation.
+   */
   ctx: CanvasRenderingContext2D;
 
   /**
@@ -64,8 +93,19 @@ export default class TimelineVisualisation {
    */
   container: d3.Selection<HTMLElement, unknown, null, undefined>;
 
+  /**
+   * Flags whether rendering cycle is paused or running.
+   */
   paused = true;
+
+  /**
+   * Width of the available viewport in logical pixels.
+   */
   width = 0;
+
+  /**
+   * Height of the available viewport in logical pixels.
+   */
   height = 500;
 
   constructor(config: TimelineVisualisationConfig) {
@@ -84,12 +124,11 @@ export default class TimelineVisualisation {
     this.container = d3.select(this.config.container);
     this.width = this.config.container.getBoundingClientRect().width;
 
+    const domain: Pair<Date, Date> = [this.firstEvent.config.start, new Date()];
+
     // Range from the earliest event till now
     // mapped to the visualisation viewport.
-    this.timeScale = d3
-      .scaleTime()
-      .domain([this.firstEvent.config.start, new Date()])
-      .range([0, this.width]);
+    this.timeScale = d3.scaleTime().domain(domain).range([0, this.width]);
 
     this.zoom = d3
       .zoom()
@@ -100,10 +139,19 @@ export default class TimelineVisualisation {
       ])
       .on("zoom", this.onZoom.bind(this));
 
+    // Adding events to the scene
     this.config.events.forEach((event) => {
       event.applyScale(this.timeScale);
       event.transform = this.smoothTransform;
       this.scene.add(event);
+    });
+
+    // Adding ticks to the scene
+    TimeTick.yearTicks(domain).forEach((tick) => {
+      tick.applyScale(this.timeScale);
+      tick.transform = this.smoothTransform;
+      tick.y = this.height;
+      this.scene.add(tick);
     });
 
     this.canvas = d3
