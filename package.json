@@ -6,6 +6,7 @@
   },
   "devDependencies": {
     "cssnano": "^4.1.10",
+    "parcel-bundler": "^1",
     "pug": "^2.0.3",
     "sass": "^1.21.0",
     "typescript": "^3.9.7"
