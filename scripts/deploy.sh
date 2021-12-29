@@ -2,5 +2,5 @@
 set -e
 
 rm -rf dist
-parcel build src/index.pug
+yarn parcel build src/index.pug
 vercel --prod
