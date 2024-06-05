@@ -21,11 +21,11 @@ $font-size-max: 48px;
 // rescaling with the screen size
 $sm: 400px;
 $md: 1000px;
-$md-mid: $sm + ($md - $sm) / 2;
+$md-mid: $sm + calc(($md - $sm) / 2);
 
 // Simple but robust media queries
 // sm -> gt-sm | lt-md -> md -> gt-md | lg
-// 
+//
 // gt-x breakpoints are non-inclusive on purpose
 @mixin media($breakpoint) {
   @if $breakpoint == sm {
@@ -99,7 +99,7 @@ $md-mid: $sm + ($md - $sm) / 2;
   }
 }
 
-// Slides the content under 
+// Slides the content under
 // the forthplaced splitter.
 @mixin splitter-glide {
   padding-top: 15vh;

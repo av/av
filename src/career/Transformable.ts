@@ -1,4 +1,4 @@
-import SmoothTransform from "./SmoothTransform";
+import SmoothTransform from './SmoothTransform';
 
 /**
  * Represents an entity to be placed within a
@@ -15,7 +15,7 @@ export default interface Transformable {
    * Applies given time scale to the entity, so that
    * It can determine where its dimensions should exists
    * within a viewport
-   * 
+   *
    * @param scale - time scale to apply
    */
   applyScale(scale: d3.ScaleTime<number, number>): void;

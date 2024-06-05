@@ -1,4 +1,4 @@
-import Drawable from "./Drawable";
+import Drawable from './Drawable';
 
 /**
  * Basic scene container to host multiple

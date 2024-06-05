@@ -1,12 +1,12 @@
-import * as d3 from "d3";
-import Scene from "./Scene";
-import CanvasCursor from "./CanvasCursor";
-import TimelineEvent from "./TimelineEvent";
-import SmoothTransform from "./SmoothTransform";
-import PointerTracker from "./PointerTracker";
-import { showModal, notifyVisibilityChange, Offset, Pair } from "../utils";
-import TimeTick from "./TimeTick";
-import { Ticks } from "./Ticks";
+import * as d3 from 'd3';
+
+import Scene from './Scene';
+import CanvasCursor from './CanvasCursor';
+import TimelineEvent from './TimelineEvent';
+import SmoothTransform from './SmoothTransform';
+import PointerTracker from './PointerTracker';
+import { showModal, notifyVisibilityChange, Offset, Pair } from '../utils';
+import { Ticks } from './Ticks';
 
 interface TimelineVisualisationConfig {
   container: HTMLElement;
@@ -144,7 +144,7 @@ export default class TimelineVisualisation {
         [0, 0],
         [this.width, this.height],
       ])
-      .on("zoom", this.onZoom.bind(this));
+      .on('zoom', this.onZoom.bind(this));
 
     // Adding events to the scene
     this.config.events.forEach((event) => {
@@ -163,31 +163,31 @@ export default class TimelineVisualisation {
 
     this.canvas = d3
       .select(this.config.container)
-      .append("canvas")
+      .append('canvas')
       .lower()
-      .attr("width", this.width * this.dpr)
-      .attr("height", this.height * this.dpr)
-      .style("width", `${this.width}px`)
-      .style("height", `${this.height}px`);
+      .attr('width', this.width * this.dpr)
+      .attr('height', this.height * this.dpr)
+      .style('width', `${this.width}px`)
+      .style('height', `${this.height}px`);
 
     this.container
-      .on("pointermove", () => {
-        this.cursor.moveTo([d3.event.layerX, d3.event.layerY]);
+      .on('pointermove', (e) => {
+        this.cursor.moveTo([e.layerX, e.layerY]);
       })
-      .on("click", () => {
-        this.cursor.moveTo([d3.event.layerX, d3.event.layerY]);
+      .on('click', (e) => {
+        this.cursor.moveTo([e.layerX, e.layerY]);
         this.cursor.isDown = true;
       })
-      .on("mouseout touchend", () => {
+      .on('mouseout touchend', () => {
         this.cursor.hide();
       })
       .call(this.zoom)
-      .style("touch-action", "auto")
-      .style("height", `${this.height}px`)
-      .select(".scroller")
+      .style('touch-action', 'auto')
+      .style('height', `${this.height}px`)
+      .select('.scroller')
       .call(this.tracker.attach);
 
-    this.ctx = this.canvas.node().getContext("2d");
+    this.ctx = this.canvas.node().getContext('2d');
     this.ctx.scale(this.dpr, this.dpr);
     this.scene.add(this.cursor);
     this.draw();
@@ -245,7 +245,7 @@ export default class TimelineVisualisation {
 
   /**
    * Highlights event nodes with given tag,
-   * by "muting" the rest of the events.
+   * by 'muting' the rest of the events.
    *
    * @param tag - Tag to highlight.
    */
@@ -256,7 +256,7 @@ export default class TimelineVisualisation {
         event.color.setValue(event.config.color);
       } else {
         // Mute the color of other events
-        event.color.setValue("rgba(0, 0, 0, .05)");
+        event.color.setValue('rgba(0, 0, 0, .05)');
       }
     }
   }
@@ -265,8 +265,8 @@ export default class TimelineVisualisation {
    * Handles {this.zoom} events by propagating
    * desired new transform to the interpolated transform container.
    */
-  onZoom() {
-    this.smoothTransform.targetTransform = d3.event.transform;
+  onZoom(e) {
+    this.smoothTransform.targetTransform = e.transform;
   }
 
   /**

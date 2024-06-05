@@ -1,6 +1,6 @@
-import Drawable from "./Drawable";
-import { isBetween, Offset, Rect, PI2 } from "../utils";
-import InterpolatedValue from "./InterpolatedValue";
+import Drawable from './Drawable';
+import { isBetween, Offset, Rect, PI2 } from '../utils';
+import InterpolatedValue from './InterpolatedValue';
 
 /**
  * Implements a basic capture device
@@ -23,7 +23,7 @@ export default class CanvasCursor implements Drawable {
   /**
    * Cursor fill style when rendered.
    */
-  static fillStyle = "rgba(0, 0, 0, .05)";
+  static fillStyle = 'rgba(0, 0, 0, .05)';
 
   /**
    * Holds the interpolated cursor position, which tries to reach

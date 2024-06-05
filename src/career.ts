@@ -1,3 +1,3 @@
-import CareerSection from "./career/CareerSection";
+import CareerSection from './career/CareerSection';
 
 new CareerSection().init();

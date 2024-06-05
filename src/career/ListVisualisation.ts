@@ -1,6 +1,6 @@
-import * as d3 from "d3";
-import { formatDateRange, initEmbeddables, qs } from "../utils";
-import TimelineEvent from "./TimelineEvent";
+import * as d3 from 'd3';
+import { formatDateRange, initEmbeddables, qs } from '../utils';
+import TimelineEvent from './TimelineEvent';
 
 interface ListVisualisationConfig {
   container: HTMLElement;
@@ -18,9 +18,9 @@ export default class ListVisualisation {
    * Locators for the DOM nodes of the component
    */
   static selectors = {
-    modalTitle: ".modal-title",
-    modalContent: ".modal-content",
-    timelineEvent: ".timeline-event",
+    modalTitle: '.modal-title',
+    modalContent: '.modal-content',
+    timelineEvent: '.timeline-event',
   };
 
   /**
@@ -71,37 +71,37 @@ export default class ListVisualisation {
         )
       )
       .enter()
-      .append("div")
-      .attr("class", "timeline-event collapsed")
-      .style("border-left", (d) => {
+      .append('div')
+      .attr('class', 'timeline-event collapsed')
+      .style('border-left', (d) => {
         return `.25rem solid ${d.config.color}`;
       });
 
     const header = this.list
       .append((d) => content.get(d.config.id).header)
-      .on("click", (d) => {
+      .on('click', (d) => {
         const node = this.list
           .filter((item) => item.config.id === d.config.id)
           .node();
 
         const currentHeight = node.getBoundingClientRect().height;
-        node.style.height = "auto";
-        node.classList.add("no-transition");
-        node.classList.toggle("collapsed");
+        node.style.height = 'auto';
+        node.classList.add('no-transition');
+        node.classList.toggle('collapsed');
         const newHeight = node.getBoundingClientRect().height;
         node.style.height = `${currentHeight}px`;
-        node.classList.remove("no-transition");
+        node.classList.remove('no-transition');
         requestAnimationFrame(() => {
           node.style.height = `${newHeight}px`;
         });
       });
 
     header
-      .append("span")
-      .attr("class", "event-dates")
+      .append('span')
+      .attr('class', 'event-dates')
       .text((d) => `(${formatDateRange(d.config.start, d.config.end)})`);
 
-    header.append("div").attr("class", "chevron").text("👈");
+    header.append('div').attr('class', 'chevron').text('👈');
 
     this.list.append((d) => content.get(d.config.id).content);
 
@@ -125,14 +125,14 @@ export default class ListVisualisation {
 
     // Otain elements current height, to start transition
     const currentHeight = node.getBoundingClientRect().height;
-    node.style.height = "auto";
-    node.classList.add("no-transition");
-    node.classList.toggle("collapsed");
+    node.style.height = 'auto';
+    node.classList.add('no-transition');
+    node.classList.toggle('collapsed');
 
     // Prepare element for accepting new height
     const newHeight = node.getBoundingClientRect().height;
     node.style.height = `${currentHeight}px`;
-    node.classList.remove("no-transition");
+    node.classList.remove('no-transition');
 
     // Will not work without rAF
     requestAnimationFrame(() => {

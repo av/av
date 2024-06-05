@@ -1,8 +1,8 @@
-import Drawable from "./Drawable";
-import { Pair, isBetween } from "../utils";
-import TimeTick from "./TimeTick";
-import SmoothTransform from "./SmoothTransform";
-import { ScaleTime } from "d3";
+import Drawable from './Drawable';
+import { Pair, isBetween } from '../utils';
+import TimeTick from './TimeTick';
+import SmoothTransform from './SmoothTransform';
+import { ScaleTime } from 'd3';
 
 /**
  * Renders yearly ticks for a certain range,

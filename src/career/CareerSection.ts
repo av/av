@@ -1,27 +1,27 @@
-import events, { tags } from "./timelineEvents";
-import SelectablePills from "./SelectablePills";
-import TimelineVisualisation from "./TimelineVisualisation";
-import ListVisualisation from "./ListVisualisation";
-import { qs, showModal } from "../utils";
+import events, { tags } from './timelineEvents';
+import SelectablePills from './SelectablePills';
+import TimelineVisualisation from './TimelineVisualisation';
+import ListVisualisation from './ListVisualisation';
+import { qs, showModal } from '../utils';
 
 /**
- * Implements behavior of Career, or "Timeline" section.
+ * Implements behavior of Career, or 'Timeline' section.
  * Renders the visualisation and connects it to the selectable pills
  */
 export default class CareerSection {
   static selectors = {
-    container: "section.career",
-    timeline: ".canvas-container",
-    zoomCareer: ".zoom-pill.career",
-    zoomLife: ".zoom-pill.life",
-    listView: ".list-pill",
-    timelineContainer: ".timeline-container",
-    listContainer: ".list-container",
-    pills: ".pills",
-    lifePill: ".pill.life",
-    careerPill: ".pill.career",
-    listPill: ".list-pill",
-    timelinePill: ".timeline-pill",
+    container: 'section.career',
+    timeline: '.canvas-container',
+    zoomCareer: '.zoom-pill.career',
+    zoomLife: '.zoom-pill.life',
+    listView: '.list-pill',
+    timelineContainer: '.timeline-container',
+    listContainer: '.list-container',
+    pills: '.pills',
+    lifePill: '.pill.life',
+    careerPill: '.pill.career',
+    listPill: '.list-pill',
+    timelinePill: '.timeline-pill',
   };
 
   /**
@@ -88,8 +88,8 @@ export default class CareerSection {
   init() {
     this.timeline.start();
 
-    const careerEvent = events.find((e) => e.config.id === "career");
-    const lifeEvent = events.find((e) => e.config.id === "life");
+    const careerEvent = events.find((e) => e.config.id === 'career');
+    const lifeEvent = events.find((e) => e.config.id === 'life');
     const listeners = {
       [CareerSection.selectors.careerPill]: () => {
         this.timeline.zoomIn(careerEvent);
@@ -108,7 +108,7 @@ export default class CareerSection {
     for (const [selector, listener] of Object.entries(listeners)) {
       this.container
         .querySelector(selector)
-        .addEventListener("click", listener);
+        .addEventListener('click', listener);
     }
 
     this.processQueryParams();
@@ -118,8 +118,8 @@ export default class CareerSection {
    * Brings the timeline container to the view
    */
   showTimeline() {
-    this.timelineContainer.style.display = "block";
-    this.listContainer.style.display = "none";
+    this.timelineContainer.style.display = 'block';
+    this.listContainer.style.display = 'none';
   }
 
   /**
@@ -131,8 +131,8 @@ export default class CareerSection {
       this.list.init();
     }
 
-    this.timelineContainer.style.display = "none";
-    this.listContainer.style.display = "block";
+    this.timelineContainer.style.display = 'none';
+    this.listContainer.style.display = 'block';
   }
 
   /**
@@ -142,8 +142,8 @@ export default class CareerSection {
   processQueryParams() {
     const qs = new URLSearchParams(window.location.search);
 
-    if (qs.has("modal")) {
-      showModal(qs.get("modal"));
+    if (qs.has('modal')) {
+      showModal(qs.get('modal'));
     }
   }
 

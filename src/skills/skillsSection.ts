@@ -1,11 +1,11 @@
-import * as d3 from "d3";
-import { qs } from "../utils";
-import skillList, { skillTypes } from "./skillList";
-import SelectablePills from "../career/SelectablePills";
+import * as d3 from 'd3';
+import { qs } from '../utils';
+import skillList, { skillTypes } from './skillList';
+import SelectablePills from '../career/SelectablePills';
 
 export const selectors = {
-  container: "section.skills .skills-container",
-  pills: "section.skills .pills",
+  container: 'section.skills .skills-container',
+  pills: 'section.skills .pills',
 };
 
 export function init(selectors) {
@@ -14,73 +14,73 @@ export function init(selectors) {
   const [width, height, padding] = getVisualisationParams(container);
   const [x, y, z] = buildScales(width, height, padding);
 
-  const zoom = getZoom(width, height).on("zoom", () => {
-    chartContainer.attr("transform", d3.event.transform.toString());
-    skills.attr("transform", `scale(${1 / d3.event.transform.k})`);
+  const zoom = getZoom(width, height).on('zoom', (e) => {
+    chartContainer.attr('transform', e.transform.toString());
+    skills.attr('transform', `scale(${1 / e.transform.k})`);
   });
 
   const svg = getSvg(container, width, height).call(zoom);
-  const chartContainer = svg.append("g");
+  const chartContainer = svg.append('g');
 
   const skills = chartContainer
-    .append("g")
-    .selectAll(".skill-node")
+    .append('g')
+    .selectAll('.skill-node')
     .data(skillList)
     .enter()
-    .append("g")
-    .attr("class", "skill-node")
+    .append('g')
+    .attr('class', 'skill-node')
     .attr(
-      "transform",
+      'transform',
       (d) => `translate(${x(d.interest)}, ${y(d.level) + z(d.importance) + 2})`
     )
-    .append("g")
-    .attr("class", "skill-scaler");
+    .append('g')
+    .attr('class', 'skill-scaler');
 
   skills
-    .append("g")
-    .attr("transform", (d) => `translate(0, ${z(d.importance) + 4})`)
-    .append("text")
-    .attr("class", "skill-name")
-    .attr("text-anchor", "middle")
-    .attr("alignment-baseline", "hanging")
-    .style("pointer-events", "none")
+    .append('g')
+    .attr('transform', (d) => `translate(0, ${z(d.importance) + 4})`)
+    .append('text')
+    .attr('class', 'skill-name')
+    .attr('text-anchor', 'middle')
+    .attr('alignment-baseline', 'hanging')
+    .style('pointer-events', 'none')
     .text((d) => d.name);
 
   skills
-    .append("circle")
-    .on("mouseover", (d) => {
-      skills.filter((skill) => skill.name !== d.name).style("opacity", 0.1);
+    .append('circle')
+    .on('mouseover', (d) => {
+      skills.filter((skill) => skill.name !== d.name).style('opacity', 0.1);
       skills.filter((skill) => skill.name === d.name).raise();
     })
-    .on("mouseout", (d) => {
-      skills.style("opacity", 1);
+    .on('mouseout', (d) => {
+      skills.style('opacity', 1);
     })
-    .attr("data-type", (d) => d.type)
-    .style("fill", (d) => color(d.type))
+    .attr('data-type', (d) => d.type)
+    .style('fill', (d) => color(d.type))
     .transition()
     .duration(600)
     .delay((_, i) => i * 10)
-    .attr("r", (d) => z(d.importance));
+    .attr('r', (d) => z(d.importance));
 
   new SelectablePills({
     container: qs(selectors.pills),
     pills: skillTypes,
     onChange: (type) => {
       if (type) {
-        skills.style("opacity", (d) => (d.type === type ? 1 : 0.1));
+        skills.style('opacity', (d) => (d.type === type ? 1 : 0.1));
       } else {
-        skills.style("opacity", 1);
+        skills.style('opacity', 1);
       }
     },
     content: (pills) => {
       pills
-        .append("div")
-        .attr("class", "color")
-        .attr("style", (d) => `background: ${color(d)};`);
+        .append('div')
+        .attr('class', 'color')
+        .attr('style', (d) => `background: ${color(d)};`);
 
       pills
-        .append("span")
-        .attr("class", "name")
+        .append('span')
+        .attr('class', 'name')
         .text((d) => d);
     },
   });
@@ -117,10 +117,10 @@ function buildScales(width, height, padding) {
 function getSvg(container, width, height) {
   return d3
     .select(container)
-    .append("svg")
-    .attr("viewBox", [0, 0, width, height].join(", "))
-    .attr("width", width)
-    .attr("height", height);
+    .append('svg')
+    .attr('viewBox', [0, 0, width, height].join(', '))
+    .attr('width', width)
+    .attr('height', height);
 }
 
 function getZoom(width, height) {

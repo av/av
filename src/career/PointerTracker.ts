@@ -1,5 +1,5 @@
-import * as d3 from "d3";
-import { Offset, Pair } from "../utils";
+import * as d3 from 'd3';
+import { Offset, Pair } from '../utils';
 
 /**
  * D3 adds a couple of new properties to captured
@@ -33,7 +33,7 @@ type Detector<T> = Pair<PointerTypeDetector, T>[];
  */
 export class TrackedPointer {
   static idDetector: Detector<PointerIdDetector> = [
-    [TrackedPointer.isMouseEvent, () => "mouse"],
+    [TrackedPointer.isMouseEvent, () => 'mouse'],
     [
       TrackedPointer.isPointerEvent,
       (event: D3PointerEvent) => `pointer:${event.pointerId}`,
@@ -70,7 +70,7 @@ export class TrackedPointer {
    * @param e - event to process
    */
   static isMouseEvent(e: TrackedEvent) {
-    return e.type.includes("mouse");
+    return e.type.includes('mouse');
   }
 
   /**
@@ -78,7 +78,7 @@ export class TrackedPointer {
    * @param e - event to process
    */
   static isPointerEvent(e: TrackedEvent) {
-    return e.type.includes("pointer");
+    return e.type.includes('pointer');
   }
 
   /**
@@ -86,7 +86,7 @@ export class TrackedPointer {
    * @param e - event to process
    */
   static isTouchEvent(e: TrackedEvent) {
-    return e.type.includes("touch");
+    return e.type.includes('touch');
   }
 
   /**
@@ -102,7 +102,7 @@ export class TrackedPointer {
       }
     }
 
-    return "unknown";
+    return 'unknown';
   }
 
   static getEventPosition(event): Offset {
@@ -124,13 +124,13 @@ export class TrackedPointer {
   y = 0;
 
   /**
-   * Horizontal displacement from the 
+   * Horizontal displacement from the
    * initial recorded position
    */
   dx = 0;
 
   /**
-   * Horizontal displacement from the 
+   * Horizontal displacement from the
    * initial recorded position
    */
   dy = 0;
@@ -203,34 +203,34 @@ export default class PointerTracker {
     let scope = this;
 
     selection
-      .on("pointerdown mousedown touchstart", () => {
+      .on('pointerdown mousedown touchstart', (e) => {
         // Start tracking given pointer
         scope.pointers.set(
-          TrackedPointer.getEventId(d3.event),
-          new TrackedPointer(TrackedPointer.getEventPosition(d3.event))
+          TrackedPointer.getEventId(e),
+          new TrackedPointer(TrackedPointer.getEventPosition(e))
         );
       })
-      .on("pointermove mousemove touchmove", () => {
-        const pointer = scope.pointers.get(TrackedPointer.getEventId(d3.event));
+      .on('pointermove mousemove touchmove', (e) => {
+        const pointer = scope.pointers.get(TrackedPointer.getEventId(e));
 
         if (pointer) {
           // If we're aware of this pointer, track it
-          pointer.track(TrackedPointer.getEventPosition(d3.event));
+          pointer.track(TrackedPointer.getEventPosition(e));
 
           if (pointer.isVertical && pointer.tracked > 5) {
             scope.isScrolling = true;
 
             // Prevents the event from
             // bubbling over to parent element
-            d3.event.stopPropagation();
+            e.stopPropagation();
           } else if (pointer.tracked > 5) {
             scope.isScrolling = false;
           }
         }
       })
-      .on("pointerup mouseup touchend", () => {
+      .on('pointerup mouseup touchend', (e) => {
         // Release the pointer
-        scope.pointers.delete(TrackedPointer.getEventId(d3.event));
+        scope.pointers.delete(TrackedPointer.getEventId(e));
 
         // Releasing last pointer would mean
         // we definitely not in a scrolling state anymore

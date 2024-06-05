@@ -1,4 +1,4 @@
-import * as d3 from "d3";
+import * as d3 from 'd3';
 
 interface SelectablePillsConfig {
   /**
@@ -46,20 +46,20 @@ export default class SelectablePills {
     // Render given pills to the DOM and assign
     this.pills = d3
       .select(this.config.container)
-      .selectAll(".pill.tag")
+      .selectAll('.pill.tag')
       .data(this.config.pills)
       .enter()
-      .append("div")
-      .on("click", (pill) => {
+      .append('div')
+      .on('click', (e, pill) => {
         const otherPills = this.pills.filter((otherPill) => otherPill !== pill);
         const targetPill = this.pills.filter((otherPill) => otherPill === pill);
 
-        otherPills.classed("selected", false);
-        targetPill.classed("selected", !targetPill.classed("selected"));
+        otherPills.classed('selected', false);
+        targetPill.classed('selected', !targetPill.classed('selected'));
 
         this.toggle(pill);
       })
-      .attr("class", "pill tag");
+      .attr('class', 'pill tag');
 
     // Postprocess the pills, adding ability for
     // an outside

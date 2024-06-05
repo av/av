@@ -1,10 +1,10 @@
-import micromodal from "micromodal";
-import mediumZoom from "medium-zoom";
+import micromodal from 'micromodal';
+import mediumZoom from 'medium-zoom';
 
 // Unfortunately the package dosn't have
 // a better import option for ESM or TS,
 // so picking from dist directly.
-import "gist-embed/dist/gist-embed.min.js";
+import 'gist-embed/dist/gist-embed.min.js';
 
 /**
  * Denotes a pair of typed entities, smashed into an array.
@@ -90,7 +90,7 @@ export function overflowCanvasText(
   maxWidth: number
 ): string {
   let width = ctx.measureText(str).width;
-  const ellipsis = "...";
+  const ellipsis = '...';
   const ellipsisWidth = ctx.measureText(ellipsis).width;
 
   if (width <= maxWidth || width <= ellipsisWidth) {
@@ -123,8 +123,8 @@ export function unpackTemplate(node: HTMLTemplateElement) {
  * this code needs to be re-run to reinitialise newly added elements.
  */
 export function initEmbeddables() {
-  mediumZoom("[data-zoomable]", {
-    background: "rgba(0, 0, 0, .5)",
+  mediumZoom('[data-zoomable]', {
+    background: 'rgba(0, 0, 0, .5)',
   });
 
   // GistEmbed doesn't play nice and pollutes globals.
@@ -150,12 +150,12 @@ export function showModal(id: string, options: ModalOptions = {}) {
 
   micromodal.show(`modal-${id}`, {
     onShow: () => {
-      addQueryParam("modal", id);
+      addQueryParam('modal', id);
       disableScroll();
       options.onShow?.();
     },
     onClose: () => {
-      removeQueryParam("modal");
+      removeQueryParam('modal');
       enableScroll();
       options.onClose?.();
     },
@@ -172,14 +172,14 @@ export function showModal(id: string, options: ModalOptions = {}) {
  * Disables scrolling on the topmost level on the page.
  */
 export function disableScroll() {
-  document.body.classList.add("no-scroll");
+  document.body.classList.add('no-scroll');
 }
 
 /**
  * Re-enables scrolling on the topmost level on the page.
  */
 export function enableScroll() {
-  document.body.classList.remove("no-scroll");
+  document.body.classList.remove('no-scroll');
 }
 
 /**
@@ -234,14 +234,14 @@ export function isToday(date: Date) {
 /**
  * For a given start and end dates, formats them to locale
  * readable date range.
- * If the end of the range is today, replaces it with "present".
+ * If the end of the range is today, replaces it with 'present'.
  *
  * @param start - start of the range
  * @param end - end of the range
  */
 export function formatDateRange(start: Date, end: Date) {
   return `${start.toLocaleDateString()} - ${
-    isToday(end) ? "present" : end.toLocaleDateString()
+    isToday(end) ? 'present' : end.toLocaleDateString()
   }`;
 }
 

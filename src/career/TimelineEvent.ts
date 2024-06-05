@@ -1,8 +1,8 @@
-import Drawable from "./Drawable";
-import { Rect } from "../utils";
-import SmoothTransform from "./SmoothTransform";
-import InterpolatedValue from "./InterpolatedValue";
-import Transformable from "./Transformable";
+import Drawable from './Drawable';
+import { Rect } from '../utils';
+import SmoothTransform from './SmoothTransform';
+import InterpolatedValue from './InterpolatedValue';
+import Transformable from './Transformable';
 
 interface TimelineEventConfig {
   id: string,
@@ -17,8 +17,8 @@ interface TimelineEventConfig {
 /**
  * A component representing of the events
  * for the {TimelineVisualisation}.
- * 
- * Holds necessary data points and could 
+ *
+ * Holds necessary data points and could
  * be rendered to the given canvas context.
  */
 export default class TimelineEvent implements Drawable, Transformable {
@@ -42,14 +42,14 @@ export default class TimelineEvent implements Drawable, Transformable {
   endY: number = 0;
 
   /**
-   * Holds the instance of a transform applied 
+   * Holds the instance of a transform applied
    * to the parent viewport of the event.
    */
   transform: SmoothTransform;
 
   /**
    * Allows to transition between different
-   * event colors. 
+   * event colors.
    */
   color: InterpolatedValue<string>;
 
@@ -60,7 +60,7 @@ export default class TimelineEvent implements Drawable, Transformable {
 
   /**
    * Renders the event to the given canvas context.
-   * 
+   *
    * @param ctx - canvas context
    */
   draw(ctx: CanvasRenderingContext2D) {
@@ -68,7 +68,7 @@ export default class TimelineEvent implements Drawable, Transformable {
     // if necessary.
     this.color.tick();
 
-    // Detect actual position of the event 
+    // Detect actual position of the event
     // based on the current transform of the viewport
     const startX = this.transform.currentTransform.applyX(this.startX);
     const endX = this.transform.currentTransform.applyX(this.endX);
@@ -100,9 +100,9 @@ export default class TimelineEvent implements Drawable, Transformable {
   /**
    * Rescales the desired event position in the unit
    * viewport, based on the given time scale instance.
-   * 
-   * @param scale - scale holding the viewport domain 
-   *   and chronological range of the visualisation. 
+   *
+   * @param scale - scale holding the viewport domain
+   *   and chronological range of the visualisation.
    */
   applyScale(scale: d3.ScaleTime<number, number>) {
     this.startX = scale(this.config.start);
@@ -114,7 +114,7 @@ export default class TimelineEvent implements Drawable, Transformable {
   /**
    * Returns the current bounding rect for the event,
    * with current scale applied.
-   * 
+   *
    * Used for hit testing.
    */
   get boundingRect(): Rect {

@@ -1,12 +1,12 @@
-import { map, any } from "./utils";
-import AOS from "aos";
-import "aos/dist/aos.css";
+import { map, any } from './utils';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 /**
  * Runs the postprocessing of the dom after DOMContentLoaded event.
  */
 export function run() {
-  window.addEventListener("DOMContentLoaded", () => {
+  window.addEventListener('DOMContentLoaded', () => {
     reduceSplitterContents();
     redrawSVGViewBoxes();
     AOS.init({
@@ -21,10 +21,10 @@ export function run() {
  * used in section splitters to reduce the rasterisation load.
  */
 function reduceSplitterContents() {
-  const splitters = Array.from(document.querySelectorAll("section.splitter"));
+  const splitters = Array.from(document.querySelectorAll('section.splitter'));
 
   for (const splitter of splitters) {
-    const circles = Array.from(splitter.querySelectorAll(".circle"));
+    const circles = Array.from(splitter.querySelectorAll('.circle'));
     const desiredCount = Math.floor(
       map(window.innerWidth, [400, 1000], [10, 30])
     );
@@ -45,8 +45,8 @@ function reduceSplitterContents() {
  */
 function redrawSVGViewBoxes() {
   const icons = Array.from(
-    document.querySelectorAll("section.contacts ul.links svg")
+    document.querySelectorAll('section.contacts ul.links svg')
   );
 
-  icons.map((svg) => svg.setAttribute("viewBox", "-6 -6 36 36"));
+  icons.map((svg) => svg.setAttribute('viewBox', '-6 -6 36 36'));
 }

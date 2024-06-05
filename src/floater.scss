@@ -20,15 +20,15 @@
   @mixin element-size($width, $height: $width) {
     width: $width;
     height: $height;
-    left: -$width / 2;
-    top: -$height / 2;
+    left: $width * -0.5;
+    top: $height * -0.5;
   }
 
   .element {
     position: absolute;
     @include element-size($size);
   }
-  
+
   &.lg .element {
     @include element-size($size * $lg-multiplier);
   }
@@ -42,10 +42,10 @@
   .shape-square {
     // Nothing to add :)
   }
-  
+
   .shape-large-square {
     @include element-size($size-large);
-    
+
     .floater.lg & {
       @include element-size($size-large * $lg-multiplier);
     }

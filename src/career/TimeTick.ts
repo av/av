@@ -1,7 +1,7 @@
-import Drawable from "./Drawable";
-import Transformable from "./Transformable";
-import SmoothTransform from "./SmoothTransform";
-import { Pair } from "../utils";
+import Drawable from './Drawable';
+import Transformable from './Transformable';
+import SmoothTransform from './SmoothTransform';
+import { Pair } from '../utils';
 
 /**
  * Represents a time tick on a time scale of the visualisation.
@@ -19,7 +19,7 @@ export default class TimeTick implements Drawable, Transformable {
   /**
    * Line stroke style
    */
-  static strokeStyle = "rgba(0, 0, 0, .1)";
+  static strokeStyle = 'rgba(0, 0, 0, .1)';
 
   /**
    * Width of the line stroke
@@ -35,7 +35,7 @@ export default class TimeTick implements Drawable, Transformable {
   /**
    * Convenience helper to construct a Tick from
    * a given date
-   * 
+   *
    * @param date - date to use for the tick
    */
   static fromDate(date: Date) {
@@ -68,7 +68,7 @@ export default class TimeTick implements Drawable, Transformable {
 
   /**
    * Renders this component to the given canbas context
-   * 
+   *
    * @param ctx - canvas context to use for render
    */
   draw(ctx: CanvasRenderingContext2D) {
@@ -96,7 +96,7 @@ export default class TimeTick implements Drawable, Transformable {
   /**
    * Applies given time scale to the component,
    * helping to determine correct viewport position.
-   * 
+   *
    * @param scale - d3 scale representing the viewport
    */
   applyScale(scale: d3.ScaleTime<number, number>) {

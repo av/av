@@ -1,11 +1,11 @@
-import * as d3 from "d3";
-import { qs, qsa, scrollTo } from "../utils";
-import InterpolatedValue from "../career/InterpolatedValue";
+import * as d3 from 'd3';
+import { qs, qsa, scrollTo } from '../utils';
+import InterpolatedValue from '../career/InterpolatedValue';
 
 export const selectors = {
-  container: "section.intro",
-  decorations: "section.intro .decoration",
-  pills: "section.intro .pill[data-target]",
+  container: 'section.intro',
+  decorations: 'section.intro .decoration',
+  pills: 'section.intro .pill[data-target]',
 };
 
 export function init(selectors) {
@@ -14,12 +14,12 @@ export function init(selectors) {
   const pills = qsa(selectors.pills);
   const mousePosition = new InterpolatedValue([0, 0]);
 
-  d3.select(selectors.container).on("pointermove", () => {
-    mousePosition.setValue([d3.event.pageX, d3.event.pageY]);
+  d3.select(selectors.container).on('pointermove', (e) => {
+    mousePosition.setValue([e.pageX, e.pageY]);
   });
 
   pills.forEach((pill) => {
-    pill.addEventListener("click", () => {
+    pill.addEventListener('click', () => {
       scrollTo(pill.dataset.target);
     });
   });

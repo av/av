@@ -2,7 +2,7 @@
 
 .splitter {
   $size: 20rem;
-  $circle-size: $size / 2;
+  $circle-size: $size * 0.5;
   $animation-duration: 30s;
 
   z-index: 1;
