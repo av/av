@@ -8,11 +8,11 @@
   font-size: 0.6rem;
   background: white;
   color: $text;
-  box-shadow: 0 0.25rem 0.5rem 0 rgba(0, 0, 0, 0.1);
   border-radius: 100rem;
   margin: 0.2rem;
   padding: 0.25rem 0.5rem;
   transition: all 0.15s ease-in-out;
+  box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.15);
 
   @include media(lt-md) {
     font-size: 0.4rem;
@@ -20,14 +20,14 @@
   }
 
   &.selected {
-    transform: translateY(10%);
-    box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.15);
+    transform: translateY(5%);
+    box-shadow: 0 0.05rem 0.125rem 0 rgba(0, 0, 0, 0.1);
   }
 
   &.inverse {
     background: lighten($secondary, 10%);
     color: rgba(255, 255, 255, 0.6);
-    box-shadow: 0 0.25rem 0.5rem 0 transparentize($secondary, .65);
+    box-shadow: 0 0.1rem 0.2rem transparentize($secondary, .65);
   }
 
   svg {

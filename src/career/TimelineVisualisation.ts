@@ -140,10 +140,7 @@ export default class TimelineVisualisation {
     this.zoom = d3
       .zoom()
       .scaleExtent(TimelineVisualisation.scaleExtent)
-      .translateExtent([
-        [0, 0],
-        [this.width, this.height],
-      ])
+      .translateExtent(this.translateExtent)
       .on('zoom', this.onZoom.bind(this));
 
     // Adding events to the scene

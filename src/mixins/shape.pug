@@ -1,6 +1,7 @@
 mixin shape(size='2rem', variation=50, animations=['shaking', 'rotating'], colors=['tertiary', 'amber'], borderRadius='100rem', duration=25)
   -
     var [width, height] = size.split(' ');
+
     if (!height) {
       height = width;
     }
@@ -21,20 +22,21 @@ mixin shape(size='2rem', variation=50, animations=['shaking', 'rotating'], color
       }
     )
       -
-        var randomDelay = () => `-${Math.random() * duration}s`;
-        var any = (arr) => arr[Math.floor(Math.random() * arr.length)];
-        var colorName = (i) => colors[i % colors.length];
-        var animationName = () => any(animations);
-        var randomSize = () => Math.random() * (100 - variation) + variation;
-        var count = 4;
-      
+        const randomDelay = () => `-${Math.random() * duration}s`;
+        const any = (arr) => arr[Math.floor(Math.random() * arr.length)];
+        const colorName = (i) => colors[i % colors.length];
+        const animationName = () => any(animations);
+        const randomSize = () => Math.random() * (100 - variation) + variation;
+
+        let count = 4;
+
       while count > 0
         -
-          var height = randomSize();
-          var width = randomSize();
-          var topOffset = (100 - height) / 2;
-          var leftOffset = (100 - width) / 2;
-          var background = colorName(count);
+          const height = randomSize();
+          const width = randomSize();
+          const topOffset = (100 - height) / 2;
+          const leftOffset = (100 - width) / 2;
+          const background = colorName(count);
 
         .shape(
           style={

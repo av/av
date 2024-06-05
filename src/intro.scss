@@ -4,8 +4,7 @@ section.intro {
   @include adaptive-padding;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(transparent -100%, $secondary 90%),
-    url(images/bg.jpeg);
+  background: linear-gradient(black -100%, $secondary 90%);
   background-size: cover;
   color: white;
 

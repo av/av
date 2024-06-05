@@ -3,13 +3,13 @@ include mixins/shape
 section.intro
   .content(flex-column justify-center)
     .decoration(data-force=30)
-      +shape('12vmax', 80, ['stronger-shaking'], ['--amber', '--tertiary'])
+      +shape('8rem', 80, ['stronger-shaking'], ['--amber', '--tertiary'])
+
+    .decoration(data-force=120)
+      +shape('2rem', 80, ['stronger-shaking'], ['--primary', '--tertiary'])
 
     .decoration(data-force=30)
-      +shape('8vmax', 80, ['stronger-shaking'], ['--amber', '--tertiary'])
-    
-    .decoration(data-force=120)
-      +shape('4vmax', 80, ['stronger-shaking'], ['--amber', '--tertiary'])
+      +shape('1.5rem', 80, ['stronger-shaking'], ['--amber', '--tertiary'])
 
     .raised
       h1.intro-name
@@ -24,7 +24,7 @@ section.intro
         .pill(data-target="section.skills" data-aos="fade-up" data-aos-delay=250) Skills
         .pill(data-target="section.contacts" data-aos="fade-up" data-aos-delay=300) Contacts
         a.download-pdf(href="/pdf/Ivan Cherepanov.pdf" download="Ivan Cherepanov"  data-aos="fade-up" data-aos-delay=350 data-aos-duration=500)
-          .pill 
+          .pill
             i.gg-software-download
             span Resume
 

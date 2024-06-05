@@ -14,7 +14,7 @@ export function init(selectors) {
   const pills = qsa(selectors.pills);
   const mousePosition = new InterpolatedValue([0, 0]);
 
-  d3.select(selectors.container).on('pointermove', (e) => {
+  d3.select(selectors.container).on('pointermove', (e: MouseEvent) => {
     mousePosition.setValue([e.pageX, e.pageY]);
   });
 
