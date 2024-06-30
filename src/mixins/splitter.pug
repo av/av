@@ -14,7 +14,7 @@ mixin splitter(top, bottom)
       margin-top: -5vh;
     `
   )
-    - 
+    -
       var animations = ['shaking', 'stronger-shaking', 'sliding', 'rotating'];
       var randomDelay = () => `-${Math.random() * 25}s`;
       var randomRadius = () => `${Math.random() * 100}%`;
@@ -42,7 +42,7 @@ mixin splitter(top, bottom)
         height: 10vh;
       `
     )
-      - 
+      -
         var count = 30;
         var total = count;
 
@@ -55,5 +55,5 @@ mixin splitter(top, bottom)
             'height': randomHeight() * Math.sin(map(count, [0, total], [Math.PI * .1, Math.PI * .9])) + '%',
             'flex': '1'
           }
-        )&attributes({ [top]: top })
+        )&attributes(topAttrs)
         - count--

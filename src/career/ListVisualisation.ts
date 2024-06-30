@@ -74,12 +74,12 @@ export default class ListVisualisation {
       .append('div')
       .attr('class', 'timeline-event collapsed')
       .style('border-left', (d) => {
-        return `.25rem solid ${d.config.color}`;
+        return `0.5rem solid ${d.config.color}`;
       });
 
     const header = this.list
       .append((d) => content.get(d.config.id).header)
-      .on('click', (d) => {
+      .on('click', (e, d) => {
         const node = this.list
           .filter((item) => item.config.id === d.config.id)
           .node();
@@ -101,7 +101,7 @@ export default class ListVisualisation {
       .attr('class', 'event-dates')
       .text((d) => `(${formatDateRange(d.config.start, d.config.end)})`);
 
-    header.append('div').attr('class', 'chevron').text('👈');
+    header.append('div').attr('class', 'chevron').text('<');
 
     this.list.append((d) => content.get(d.config.id).content);
 

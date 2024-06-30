@@ -1,4 +1,4 @@
-mixin shape(size='2rem', variation=50, animations=['shaking', 'rotating'], colors=['tertiary', 'amber'], borderRadius='100rem', duration=25)
+mixin shape(size='2rem', variation=50, animations=['shaking', 'rotating'], colors=['--tertiary', '--amber'], borderRadius='100rem', duration=25)
   -
     var [width, height] = size.split(' ');
 
@@ -37,6 +37,7 @@ mixin shape(size='2rem', variation=50, animations=['shaking', 'rotating'], color
           const topOffset = (100 - height) / 2;
           const leftOffset = (100 - width) / 2;
           const background = colorName(count);
+          const borderRadiusMultiplier = Math.random();
 
         .shape(
           style={
@@ -51,7 +52,7 @@ mixin shape(size='2rem', variation=50, animations=['shaking', 'rotating'], color
             'top': `${topOffset}%`,
             'left': `${leftOffset}%`,
             'background': background.startsWith('--') ? `var(${background})` : background,
-            'border-radius': borderRadius,
+            'border-radius':`calc(${borderRadius} * ${borderRadiusMultiplier})`,
           }
         )
         - count--

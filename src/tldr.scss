@@ -1,9 +1,10 @@
 @import "./vars.scss";
 
 section.tldr {
-  background: linear-gradient($tertiary -50%, $primary 50%);
+  background: linear-gradient($tertiary -50%, $primary 60%);
+
   @include splitter-glide;
-  
+
   h2 {
     @include media(sm) {
       font-size: 1em;
@@ -31,15 +32,17 @@ section.tldr {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    margin-top: 5rem;
+    margin-bottom: 1rem;
 
     i.gg-mouse {
       margin-top: .5rem;
       --ggs: 1.5;
-  
+
       &:after {
         animation: lining-down 2s infinite;
       }
-    }  
+    }
   }
 
   .tldr-items {
@@ -91,9 +94,6 @@ section.tldr {
       bottom: 0;
 
       .shape {
-        border-radius: 0 !important;
-
-
         @include media (lt-md) {
           border-radius: 1rem !important;
         }
@@ -132,7 +132,7 @@ section.tldr {
     .tldr-header {
       font-size: 3em;
       margin: 0;
-    }  
+    }
 
     @include media (lt-md-mid) {
       grid-column: span 1;

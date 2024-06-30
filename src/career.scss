@@ -6,6 +6,10 @@ section.career {
   padding-top: 2rem;
   @include splitter-glide;
 
+  .section-header {
+    margin-top: 4rem;
+  }
+
   .canvas-container {
     width: 90%;
     margin: 0 auto;

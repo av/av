@@ -17,6 +17,8 @@
   }
 
   .circle {
-    animation: $animation-duration alternate infinite;
+    animation-direction: alternate;
+    animation-iteration-count: infinite;
+    animation-duration: $animation-duration;
   }
 }

@@ -4,7 +4,7 @@ section.intro {
   @include adaptive-padding;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(black -100%, $secondary 90%);
+  background: linear-gradient(black -50%, $secondary 90%);
   background-size: cover;
   color: white;
 
@@ -26,7 +26,7 @@ section.intro {
     }
 
     .raised {
-      margin-top: 1rem;
+      margin: 1rem 1rem;
       z-index: 1;
     }
 
@@ -99,6 +99,7 @@ section.intro {
     position: absolute;
     bottom: 0;
     left: 50%;
+
     i.gg-mouse {
       margin-top: 1rem;
       opacity: 0.5;
