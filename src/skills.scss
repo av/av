@@ -19,6 +19,7 @@ section.skills {
     background: darken($secondary, 10%);
     border-radius: 0.5rem;
     overflow: hidden;
+    box-shadow: 0 0 2rem 0 rgba(0, 0, 0, .35), 0 .1rem .2rem 0 rgba(0, 0, 0, .3);
   }
 
   .legend-container {

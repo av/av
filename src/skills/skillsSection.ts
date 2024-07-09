@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+
 import { qs } from '../utils';
 import skillList, { skillTypes } from './skillList';
 import SelectablePills from '../career/SelectablePills';
@@ -48,11 +49,11 @@ export function init(selectors) {
 
   skills
     .append('circle')
-    .on('mouseover', (d) => {
+    .on('mouseover', (e, d) => {
       skills.filter((skill) => skill.name !== d.name).style('opacity', 0.1);
       skills.filter((skill) => skill.name === d.name).raise();
     })
-    .on('mouseout', (d) => {
+    .on('mouseout', (e, d) => {
       skills.style('opacity', 1);
     })
     .attr('data-type', (d) => d.type)
