@@ -1,0 +1,52 @@
+//- This file is for quick local testing or the screenshots
+
+include mixins/shape
+
+.playground
+  table(style="width: 100%;")
+    thead
+      tr
+        th Count
+        th Noop
+        th Blur
+        th Fancy Goo
+
+    tr
+      td 1
+      td
+        +shape({ size: '4rem', variation: 30, count: 1, colors: ['--amber', '--tertiary'], filter: 'url(#noop)' })
+      td
+        +shape({ size: '4rem', variation: 30, count: 1, colors: ['--amber', '--tertiary'], filter: 'url(#blur)' })
+      td
+        +shape({ size: '4rem', variation: 30, count: 1, colors: ['--amber', '--tertiary'], filter: 'url(#fancy-goo-sm)' })
+
+    tr
+      td 2
+      td
+        +shape({ size: '4rem', variation: 30, count: 2, colors: ['--amber', '--tertiary'], filter: 'url(#noop)' })
+      td
+        +shape({ size: '4rem', variation: 30, count: 2, colors: ['--amber', '--tertiary'], filter: 'url(#blur)' })
+      td
+        +shape({ size: '4rem', variation: 30, count: 2, colors: ['--amber', '--tertiary'], filter: 'url(#fancy-goo-sm)' })
+
+    tr
+      td 4
+      td
+        +shape({ size: '4rem', variation: 30, count: 4, colors: ['--amber', '--tertiary'], filter: 'url(#noop)' })
+      td
+        +shape({ size: '4rem', variation: 30, count: 4, colors: ['--amber', '--tertiary'], filter: 'url(#blur)' })
+      td
+        +shape({ size: '4rem', variation: 30, count: 4, colors: ['--amber', '--tertiary'], filter: 'url(#fancy-goo-sm)' })
+
+style.
+  .playground {
+    min-height: 50vh;
+  }
+
+  td {
+    & > * {
+      display: inline-block;
+    }
+
+    text-align: center;
+  }
