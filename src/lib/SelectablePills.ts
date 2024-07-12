@@ -18,7 +18,7 @@ interface SelectablePillsConfig {
    *
    * @param selected - selected pill
    */
-  onChange(selected: string): void;
+  onChange(selected: string | null): void;
 
   /**
    * If specified, will allow to tweak the contents
@@ -51,12 +51,6 @@ export default class SelectablePills {
       .enter()
       .append('div')
       .on('click', (e, pill) => {
-        const otherPills = this.pills.filter((otherPill) => otherPill !== pill);
-        const targetPill = this.pills.filter((otherPill) => otherPill === pill);
-
-        otherPills.classed('selected', false);
-        targetPill.classed('selected', !targetPill.classed('selected'));
-
         this.toggle(pill);
       })
       .attr('class', 'pill tag');
@@ -81,6 +75,12 @@ export default class SelectablePills {
     } else {
       this.selected = pill;
     }
+
+    const otherPills = this.pills.filter((otherPill) => otherPill !== pill);
+    const targetPill = this.pills.filter((otherPill) => otherPill === pill);
+
+    otherPills.classed('selected', false);
+    targetPill.classed('selected', !targetPill.classed('selected'));
 
     this.config.onChange(this.selected);
   }

@@ -1,10 +1,11 @@
 import * as d3 from 'd3';
+import Updatable from './Updatable';
 
 /**
  * Represents an interpolated transform which
  * could be changed smoothly over time.
  */
-export default class SmoothTransform {
+export default class SmoothTransform implements Updatable {
   /**
    * Holds the current transform which should be used
    * for all the dependent computations to be smooth

@@ -8,7 +8,6 @@ enum SkillType {
   tool = 'tool',
   cloud = 'cloud',
   database = 'database',
-  unknown = 'unknown',
 }
 
 export interface Skill {
@@ -25,10 +24,6 @@ function parseSkills(skillsCsv: string): Skill[] {
     .splice(1)
     .map((line) => {
       let [type, name, level, interest, importance] = line.split(',');
-
-      if (!(type in SkillType)) {
-        type = SkillType.unknown;
-      }
 
       return {
         name,

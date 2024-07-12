@@ -1,7 +1,7 @@
-import Drawable from './Drawable';
+import Drawable from '../lib/Drawable';
 import { Pair, isBetween } from '../utils';
 import TimeTick from './TimeTick';
-import SmoothTransform from './SmoothTransform';
+import SmoothTransform from '../lib/SmoothTransform';
 import { ScaleTime } from 'd3';
 
 /**

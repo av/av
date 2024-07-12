@@ -140,4 +140,8 @@ export default class ListVisualisation {
       node.style.height = `${newHeight}px`;
     });
   }
+
+  highlight(type: string | null) {
+    this.list.classed('hidden', (d) => type === null ? false : !d.config.tags.includes(type));
+  }
 }

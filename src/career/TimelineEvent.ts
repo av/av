@@ -1,8 +1,8 @@
-import Drawable from './Drawable';
+import Drawable from '../lib/Drawable';
 import { Rect } from '../utils';
-import SmoothTransform from './SmoothTransform';
-import InterpolatedValue from './InterpolatedValue';
-import Transformable from './Transformable';
+import SmoothTransform from '../lib/SmoothTransform';
+import InterpolatedValue from '../lib/InterpolatedValue';
+import Transformable from '../lib/Transformable';
 
 interface TimelineEventConfig {
   id: string,
@@ -31,8 +31,8 @@ export default class TimelineEvent implements Drawable, Transformable {
    * Defines how to render event names.
    */
   static fontConfig = {
-    font: '32px "Red Hat Display"',
-    fill: 'white'
+    font: '24px "Red Hat Display"',
+    fill: '#ffffffda'
   };
 
   config: TimelineEventConfig;
@@ -77,6 +77,7 @@ export default class TimelineEvent implements Drawable, Transformable {
     // Render event body.
     ctx.beginPath();
     ctx.fillStyle = this.color.value;
+    ctx.strokeStyle = this.color.value;
     ctx.save();
     ctx.rect(startX, this.startY, length, TimelineEvent.lineHeight);
 
@@ -84,6 +85,7 @@ export default class TimelineEvent implements Drawable, Transformable {
     // name doesn't overflow the boundary
     ctx.clip();
     ctx.fill();
+    ctx.stroke();
     ctx.closePath();
 
     // Render event name.

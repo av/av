@@ -1,11 +1,11 @@
 import * as d3 from 'd3';
 
-import Scene from './Scene';
-import CanvasCursor from './CanvasCursor';
+import Scene from '../lib/Scene';
+import CanvasCursor from '../lib/CanvasCursor';
 import TimelineEvent from './TimelineEvent';
-import SmoothTransform from './SmoothTransform';
-import PointerTracker from './PointerTracker';
-import { showModal, notifyVisibilityChange, Offset, Pair } from '../utils';
+import SmoothTransform from '../lib/SmoothTransform';
+import PointerTracker from '../lib/PointerTracker';
+import { showModal, notifyVisibilityChange, Offset, Pair, throttle } from '../utils';
 import { Ticks } from './Ticks';
 
 interface TimelineVisualisationConfig {
@@ -194,6 +194,8 @@ export default class TimelineVisualisation {
       this.container.node(),
       this.onVisibilityChanged.bind(this)
     );
+
+    window.addEventListener('resize', throttle(this.onResize.bind(this), 500));
   }
 
   /**
@@ -246,15 +248,13 @@ export default class TimelineVisualisation {
    *
    * @param tag - Tag to highlight.
    */
-  highlight(tag: string): void {
+  highlight(tag: string | null): void {
     for (const event of this.config.events) {
-      if (event.config.tags.includes(tag)) {
-        // Set event color to its initial desired value
-        event.color.setValue(event.config.color);
-      } else {
-        // Mute the color of other events
-        event.color.setValue('rgba(0, 0, 0, .05)');
-      }
+      const hasTag = event.config.tags.includes(tag) || tag === null;
+      // Initial/mute based on the selection
+      const color = hasTag ? event.config.color : 'rgba(0, 0, 0, .05)';
+
+      event.color.setValue(color);
     }
   }
 
@@ -306,6 +306,25 @@ export default class TimelineVisualisation {
     showModal(event.config.id, {
       onClose: () => (this.paused = false),
     });
+  }
+
+  onResize() {
+    this.width = this.config.container.getBoundingClientRect().width;
+
+    this.canvas
+      .attr('width', this.width * this.dpr)
+      .attr('height', this.height * this.dpr)
+      .style('width', `${this.width}px`)
+      .style('height', `${this.height}px`);
+
+    this.ctx.scale(this.dpr, this.dpr);
+    this.zoom.translateExtent(this.translateExtent);
+
+    this.timeScale.range([0, this.width]);
+    this.ticks.scale(this.timeScale).baseline(this.height);
+    this.config.events.forEach((event) => event.applyScale(this.timeScale));
+
+    this.container.call(this.zoom.transform, d3.zoomIdentity);
   }
 
   /**

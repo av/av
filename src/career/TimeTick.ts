@@ -1,6 +1,6 @@
-import Drawable from './Drawable';
-import Transformable from './Transformable';
-import SmoothTransform from './SmoothTransform';
+import Drawable from '../lib/Drawable';
+import Transformable from '../lib/Transformable';
+import SmoothTransform from '../lib/SmoothTransform';
 import { Pair } from '../utils';
 
 /**

@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import { qs, qsa, scrollTo } from '../utils';
-import InterpolatedValue from '../career/InterpolatedValue';
+import InterpolatedValue from '../lib/InterpolatedValue';
 
 export const selectors = {
   container: 'section.intro',

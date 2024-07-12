@@ -1,6 +1,11 @@
 import * as d3 from 'd3';
+import Updatable from './Updatable';
 
-export default class InterpolatedValue<T extends Object> {
+/**
+ * LERPs encapsulated value to target value with elasticity
+ * on every tick.
+ */
+export default class InterpolatedValue<T extends Object> implements Updatable {
   value: T;
   target: T;
   elasticity: number = 0.2;

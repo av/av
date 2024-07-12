@@ -212,12 +212,22 @@ export function qsa(selector: string): HTMLElement[] {
  */
 export function throttle(fn, delay) {
   let last = 0;
+  let timeout;
 
   return function () {
     const now = Date.now();
-    if (now - last > delay) {
+    const sinceLast = now - last;
+
+    clearTimeout(timeout);
+
+    if (sinceLast > delay) {
       last = now;
       fn(...arguments);
+    } else {
+      timeout = setTimeout(() => {
+        last = Date.now();
+        fn(...arguments);
+      }, delay - sinceLast);
     }
   };
 }
@@ -240,9 +250,8 @@ export function isToday(date: Date) {
  * @param end - end of the range
  */
 export function formatDateRange(start: Date, end: Date) {
-  return `${start.toLocaleDateString()} - ${
-    isToday(end) ? 'present' : end.toLocaleDateString()
-  }`;
+  return `${start.toLocaleDateString()} - ${isToday(end) ? 'present' : end.toLocaleDateString()
+    }`;
 }
 
 /**
@@ -367,4 +376,14 @@ export function notifyVisibilityChange(
   );
 
   observer.observe(el);
+}
+
+export function toggleDisplay(els: HTMLElement | HTMLElement[], isVisible: boolean) {
+  if (!Array.isArray(els)) {
+    els = [els];
+  }
+
+  for (const el of els) {
+    el.style.display = isVisible ? null : 'none';
+  }
 }
