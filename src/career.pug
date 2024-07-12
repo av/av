@@ -8,25 +8,25 @@ section.career
         .reflect-x
           .left-hand 👆
         .right-hand 👆
-    .pills-container(flex-row flex-center)
-      .pills(flex-row flex-wrap flex-center)
-        .pill.inverse.list-pill
-          i.gg-list
-          span View as list
-        .pill.inverse.life
-          i.gg-maximize
-          span Reset zoom
-        .pill.inverse.career
-          i.gg-assign
-          span Zoom Career
-        a(href="https://github.com/av/av/blob/master/src/career/TimelineVisualisation.ts" target="_blank")
-          .pill.inverse
-            include ./images/github.svg
-            span View on GitHub
+  .pills-container(flex-row flex-center)
+    .pills(flex-row flex-wrap flex-center)
+      .pill.inverse.timeline-pill
+        i.gg-align-center
+        span View as timeline
+      .pill.inverse.list-pill
+        i.gg-list
+        span View as list
+      .pill.inverse.life
+        i.gg-maximize
+        span Reset zoom
+      .pill.inverse.career
+        i.gg-assign
+        span Zoom Career
+      a(href="https://github.com/av/av/blob/master/src/career/TimelineVisualisation.ts" target="_blank")
+        .pill.inverse
+          include ./images/github.svg
+          span View on GitHub
   .list-container
-    .pill.inverse.timeline-pill
-      i.gg-align-center
-      span View as timeline
 
 include modals/life
 include modals/school

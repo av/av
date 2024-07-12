@@ -10,7 +10,7 @@
   color: $text;
   border-radius: 100rem;
   margin: 0.2rem;
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.5rem;
   transition: all 0.15s ease-in-out;
   box-shadow: 0 0.1rem 0.2rem rgba(0, 0, 0, 0.15);
 
@@ -21,6 +21,7 @@
 
   &.selected {
     transform: translateY(5%);
+    font-weight: bolder;
     box-shadow: 0 0.05rem 0.125rem 0 rgba(0, 0, 0, 0.1);
   }
 

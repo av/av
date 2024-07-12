@@ -23,6 +23,7 @@ section.career {
       border-radius: .5rem;
       background: linear-gradient(to left, $side-color 0%, transparent $side-offset, transparent (100% - $side-offset), $side-color 100%);
       box-shadow: 0 0 2rem 0 rgba(0, 0, 0, .15), 0 .1rem .2rem 0 rgba(0, 0, 0, .1);
+      transition: width 0.3s ease;
     }
 
     .pinch-and-zoom {
@@ -109,7 +110,6 @@ section.career {
   }
 
   .list-container {
-    display: none;
     max-width: 30rem;
     margin: 0 auto;
 
@@ -177,6 +177,10 @@ section.career {
         .chevron {
           transform: rotateZ(0deg);
         }
+      }
+
+      &.hidden {
+        display: none;
       }
 
       .event-dates {

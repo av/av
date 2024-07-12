@@ -1,6 +1,7 @@
 // Palette
-$primary: #69E2E0;
+$primary: darken(#69E2E0, 15%);
 $secondary: #332148;
+$secondary-tint: lighten($secondary, 10%);
 $tertiary: #ff1f8f;
 $lime: #bfff00;
 $amber: #ffc000;

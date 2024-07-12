@@ -1,3 +1,3 @@
-import { init, selectors } from './skills/skillsSection';
+import SkillsSection from './skills/SkillsSection';
 
-init(selectors);
+new SkillsSection().init();

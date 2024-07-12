@@ -28,8 +28,8 @@
   background: lighten($tertiary, 25%);
 }
 
-[bg-secondary-light] {
-  background: lighten($secondary, 25%);
+[bg-secondary-tint] {
+  background: $secondary-tint;
 }
 
 [bg-gray] {

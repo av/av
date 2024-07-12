@@ -3,13 +3,28 @@ include mixins/shape
 section.intro
   .content(flex-column justify-center)
     .decoration(data-force=30)
-      +shape('8rem', 80, ['stronger-shaking'], ['--amber', '--tertiary'])
+      +shape({
+        size: '8rem',
+        variation: 80,
+        animations: ['stronger-shaking'],
+        colors: ['--amber', '--tertiary'],
+      })
 
     .decoration(data-force=120)
-      +shape('2rem', 80, ['stronger-shaking'], ['--primary', '--tertiary'])
+      +shape({
+        size: '2rem',
+        variation: 80,
+        animations: ['stronger-shaking'],
+        colors: ['--primary', '--tertiary'],
+      })
 
     .decoration(data-force=30)
-      +shape('1.5rem', 80, ['stronger-shaking'], ['--amber', '--tertiary'])
+      +shape({
+        size: '1.5rem',
+        variation: 80,
+        animations: ['stronger-shaking'],
+        colors: ['--amber', '--tertiary'],
+      })
 
     .raised
       h1.intro-name

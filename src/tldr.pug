@@ -6,17 +6,41 @@ section.tldr(
   .content
     .tldr-items
       .tldr-container(data-aos="fade-up" data-aos-delay=50)
-        +shape('100%', 90, ['stronger-shaking'], ['--secondary'], '10vh', 100)
-        span Delivered code for Browsers, Servers, Mobile, Desktops and Microcontrollers
+        +shape({
+          size: '100%',
+          variation: 90,
+          animations: ['stronger-shaking'],
+          colors: ['--secondary'],
+          borderRadius: '10vh',
+          duration: 100
+        })
+        span Delivered code for Servers, Browsers, Mobile, Desktops and Microcontrollers
 
       .tldr-decoration(data-aos="fade-up" data-aos-delay=100)
-        +shape('4rem', 50, ['stronger-shaking'], ['--amber', '--tertiary'])
+        +shape({
+          size: '4rem',
+          variation: 50,
+          animations: ['stronger-shaking'],
+          colors: ['--amber', '--tertiary'],
+        })
 
       .tldr-decoration(data-aos="fade-up" data-aos-delay=150)
-        +shape('3rem', 50, ['stronger-shaking'], ['--amber', '--tertiary'])
+        +shape({
+          size: '3rem',
+          variation: 50,
+          animations: ['stronger-shaking'],
+          colors: ['--amber', '--tertiary'],
+        })
 
       .tldr-container(data-aos="fade-up" data-aos-delay=200)
-        +shape('100%', 90, ['stronger-shaking'], ['--secondary'], '10vh', 100)
+        +shape({
+          size: '100%',
+          variation: 90,
+          animations: ['stronger-shaking'],
+          colors: ['--secondary'],
+          borderRadius: '10vh',
+          duration: 100
+        })
         span
           span="Not afraid of "
           span(text-fuzzy) fuzzy
@@ -25,14 +49,33 @@ section.tldr(
           span  deadlines
 
       .tldr-container(data-aos="fade-up" data-aos-delay=250)
-        +shape('100%', 90, ['stronger-shaking'], ['--secondary'], '10vh', 100)
+        +shape({
+          size: '100%',
+          variation: 90,
+          animations: ['stronger-shaking'],
+          colors: ['--secondary'],
+          borderRadius: '10vh',
+          duration: 100
+        })
         span Best fitted for small independent teams 🤝
 
       .tldr-decoration(data-aos="fade-up" data-aos-delay=300)
-        +shape('2rem', 50, ['stronger-shaking'], ['--amber', '--tertiary'])
+        +shape({
+          size: '2rem',
+          variation: 50,
+          animations: ['stronger-shaking'],
+          colors: ['--amber', '--tertiary']
+        })
 
       .tldr-container.tldr-summary(data-aos="fade-up" data-aos-delay=350)
-        +shape('100%', 110, ['stronger-shaking'], ['--secondary'], '30vh', 20)
+        +shape({
+          size: '100%',
+          variation: 110,
+          animations: ['stronger-shaking'],
+          colors: ['--secondary'],
+          borderRadius: '30vh',
+          duration: 20,
+        })
         h1.tldr-header TLDR;
         p Full-Stack Software Engineer with focus on TypeScript/JavaScript ecosystem. Capable of full-cycle of the software delivery.<br/><br/>
         p I’ve produced Web Apps, Services, LLM integrations, ETL pipelines, Infrastructure modules, engineering and business tooling, Admin UIs, physics-based visualizations, custom DSLs, Voice-controlled UIs, AR 3D apps and much more.
@@ -40,6 +83,5 @@ section.tldr(
     .tldr-more(data-aos="zoom-in-up" data-aos-duration=500 data-aos-easing="ease-out-quart")
       span learn more
       i.gg-mouse
-
 
 link(rel="stylesheet" href="./tldr.scss")

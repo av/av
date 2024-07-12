@@ -1,7 +1,7 @@
 @import "./vars.scss";
 
 section.tldr {
-  background: linear-gradient($tertiary -50%, $primary 60%);
+  background: linear-gradient($tertiary -50%, $secondary-tint 60%);
 
   @include splitter-glide;
 
@@ -34,6 +34,7 @@ section.tldr {
     justify-content: center;
     margin-top: 5rem;
     margin-bottom: 1rem;
+    color: $text-inverse;
 
     i.gg-mouse {
       margin-top: .5rem;
