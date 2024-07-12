@@ -78,7 +78,9 @@ export default class SkillsSection extends PageSection<typeof SkillsSection.conf
       .attr('class', 'skill-node')
       .attr(
         'transform',
-        (d) => `translate(${this.x(d.interest)}, ${this.y(d.level) + this.z(d.importance) + 2})`
+        (d) => {
+          return `translate(${this.x(d.interest)}, ${this.y(d.level) + this.z(d.importance) + 2})`;
+        }
       )
       .append('g')
       .attr('class', 'skill-scaler');

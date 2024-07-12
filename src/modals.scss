@@ -35,12 +35,12 @@
     }
 
     @include media(md) {
-      max-width: 80wv;
+      max-width: 80vw;
       padding: 0.5rem;
     }
 
     @include media(lg) {
-      max-width: 60vw;
+      max-width: min(80vw, 1024px);
       padding: 1rem;
     }
   }
@@ -51,6 +51,10 @@
 
     @include media(lt-md) {
       padding: 0;
+    }
+
+    & > *:first-child {
+      margin-top: 1.5rem;
     }
   }
 

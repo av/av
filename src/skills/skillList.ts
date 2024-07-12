@@ -1,4 +1,5 @@
 import skillsCsv from 'bundle-text:./skills.csv';
+import { parseCsv } from '../utils';
 
 enum SkillType {
   lang = 'lang',
@@ -37,7 +38,15 @@ function parseSkills(skillsCsv: string): Skill[] {
   return skills;
 }
 
-const skills = parseSkills(skillsCsv);
+const skills = parseCsv(skillsCsv).map(([type, name, level, interest, importance]) => {
+  return {
+    name,
+    level: parseFloat(level),
+    interest: parseFloat(interest),
+    importance: parseFloat(importance),
+    type,
+  };
+});
 
 export default skills;
 export const skillTypes = Object.values(SkillType);

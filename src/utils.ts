@@ -387,3 +387,25 @@ export function toggleDisplay(els: HTMLElement | HTMLElement[], isVisible: boole
     el.style.display = isVisible ? null : 'none';
   }
 }
+
+export function parseCsv(csv: string): string[][] {
+  const rows = csv.split('\n').splice(1);
+
+  return rows
+    .filter((row) => !!row.trim())
+    .map(
+      (row) => (row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) ?? [])
+        .map((cell) => {
+          const hasQuotes = cell.startsWith('"') && cell.endsWith('"');
+          return (hasQuotes ? cell.slice(1, -1) : cell).trim();
+        })
+    );
+}
+
+export function parseDate(date: string): Date {
+  if (date === 'now') {
+    return new Date();
+  }
+
+  return new Date(date);
+}
