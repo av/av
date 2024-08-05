@@ -5,7 +5,7 @@ html(lang='en')
     meta(name='viewport', content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0')
     meta(http-equiv='X-UA-Compatible', content='ie=edge')
     meta(name="description" content="Home page of Ivan Cherepanov (@av on GitHub), Full-Stack Engineer.")
-    title Ivan Cherepanov
+    title Kudos!
 
     link(rel='stylesheet', href='main.scss')
     link(rel='stylesheet' href="https://unpkg.com/css.gg@2.1.1/icons/icons.css")
@@ -13,32 +13,23 @@ html(lang='en')
     link(rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Red+Hat+Text&display=swap")
     link(rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@700;900&display=swap")
 
+    link(rel="stylesheet" href="./harbor-qr.scss")
+
   body
     include mixins/splitter
     include mixins/modal
     include filters
 
-    //- include playground
+    section.content
+      h1 An easter egg?
+      img(src="./images/mBBrDKV.gif" alt="Surprised Keanu Reeves")
+      br
+      h4 You just scanned a QR code from Harbor release v0.0.19! 🎉
+      p I'm grateful for you checking out the project and being curious!
+      br
+      p Feel free to reach out!
+      p Cheers, Ivan ✌️
 
-    include intro
-    +splitter('bg-secondary')
-    include tldr
-    +splitter('bg-secondary-tint')
-    include career
-    +splitter('bg-white')
-    include skills
     include contacts
     +splitter('bg-white')
     include footer
-
-    //- Postprocess DOM
-    script(src="./index.ts" type="module")
-
-    //- Google analytics
-    script(async src='https://www.googletagmanager.com/gtag/js?id=G-8L4SD34B6G')
-    script.
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'UA-143258835-1');
-

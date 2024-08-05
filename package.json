@@ -2,6 +2,7 @@
   "name": "av.codes",
   "scripts": {
     "dev": "parcel src/index.pug",
+    "dev:qr": "parcel src/harbor-qr.pug",
     "build": "parcel build src/index.pug",
     "deploy": "./scripts/deploy.sh",
     "cache:bust": "rm -rf ./.parcel-cache"
