@@ -2,6 +2,7 @@
 
 section.tldr {
   background: linear-gradient($tertiary -50%, $secondary-tint 60%);
+  overflow: hidden;
 
   @include splitter-glide;
 

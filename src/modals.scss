@@ -17,6 +17,12 @@
     background: rgba(0, 0, 0, 0.6);
     display: grid;
     place-items: center;
+    overflow: auto;
+    padding: 2rem;
+
+    @include media(sm) {
+      padding: 0.5rem;
+    }
   }
 
   .modal-container {
@@ -26,32 +32,29 @@
     background: white;
     max-width: 90vw;
     margin: 0 auto;
-    max-height: calc(100vh - 3rem);
     box-shadow: 0 1rem 2rem 0 rgba(0, 0, 0, 0.4);
+    padding: 1rem;
+
+    .modal-content {
+      margin: 0 -1rem;
+    }
 
     @include media(sm) {
-      max-width: 90vw;
-      padding: 0.25rem;
+      max-width: 95vw;
     }
 
     @include media(md) {
-      max-width: 80vw;
-      padding: 0.5rem;
+      max-width: 90vw;
     }
 
     @include media(lg) {
       max-width: min(80vw, 1024px);
-      padding: 1rem;
     }
   }
 
   .modal-content {
     overflow: auto;
-    padding: 0 0.5rem;
-
-    @include media(lt-md) {
-      padding: 0;
-    }
+    padding: 0 1rem;
 
     & > *:first-child {
       margin-top: 1.5rem;
@@ -62,8 +65,8 @@
     margin-bottom: 0.25rem;
 
     .modal-title {
-      flex-shrink: 1;
-      margin: 0 auto;
+      flex-grow: 1;
+      margin: 0;
     }
   }
 
@@ -164,7 +167,7 @@
   }
 
   ul {
-    list-style-type: "- ";
+    list-style-type: "🞄 ";
     padding-left: 1rem;
   }
 
