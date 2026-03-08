@@ -1,9 +1,10 @@
 {
   "name": "av.codes",
   "scripts": {
-    "dev": "parcel src/index.pug",
+    "dev": "npm run blog:generate && node scripts/blog/run-parcel.mjs serve",
     "dev:qr": "parcel src/harbor-qr.pug",
-    "build": "parcel build src/index.pug",
+    "blog:generate": "node scripts/blog/generate.mjs",
+    "build": "npm run blog:generate && node scripts/blog/run-parcel.mjs build && node scripts/copy-public.mjs",
     "deploy": "./scripts/deploy.sh",
     "cache:bust": "rm -rf ./.parcel-cache"
   },
@@ -23,7 +24,9 @@
     "aos": "^2.3.4",
     "chroma-js": "^2.1.0",
     "d3": "^7.9.0",
+    "gray-matter": "^4.0.3",
     "gist-embed": "^1.0.4",
+    "marked": "^15.0.12",
     "medium-zoom": "^1.0.6",
     "micromodal": "^0.4.6",
     "simple-parallax-js": "^5.1.0"

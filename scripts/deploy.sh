@@ -1,11 +1,9 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 rm -rf dist
-yarn parcel build src/index.pug
-yarn parcel build src/harbor-qr.pug
+npm run build
 
-cp -r public/* dist/
 cd dist
 
 vercel --prod

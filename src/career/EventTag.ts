@@ -1,4 +1,4 @@
-import chroma from 'chroma-js';
+import chroma, { type Color } from 'chroma-js';
 
 export enum EventTag {
   career = 'career',
@@ -10,7 +10,7 @@ export enum EventTag {
   general = 'general',
 };
 
-export const EventTagColor: Record<string, EventTag> = {
+export const EventTagColor: Record<EventTag, Color> = {
   [EventTag.career]: chroma(0x0000dd).alpha(1),
   [EventTag.project]: chroma(0x296315).alpha(0.5),
   [EventTag.cool]: chroma(0xff1f8f).alpha(0.8),

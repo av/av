@@ -17,9 +17,13 @@ export interface Skill {
   interest: number;
   importance: number;
   type: string;
+  opacity: number;
+  targetOpacity: number;
 }
 
-function parseSkills(skillsCsv: string): Skill[] {
+type ParsedSkill = Omit<Skill, 'opacity' | 'targetOpacity'>;
+
+function parseSkills(skillsCsv: string): ParsedSkill[] {
   const skills = skillsCsv
     .split('\n')
     .splice(1)
@@ -39,12 +43,17 @@ function parseSkills(skillsCsv: string): Skill[] {
 }
 
 const skills = parseCsv(skillsCsv).map(([type, name, level, interest, importance]) => {
+  const parsedImportance = parseFloat(importance);
+  const opacity = parsedImportance > 0.5 ? 1 : 0.2;
+
   return {
     name,
     level: parseFloat(level),
     interest: parseFloat(interest),
     importance: parseFloat(importance),
     type,
+    opacity,
+    targetOpacity: opacity,
   };
 });
 

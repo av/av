@@ -95,6 +95,18 @@ section.intro {
     }
   }
 
+  a.intro-blog-link {
+    text-decoration: none;
+
+    &:focus-visible {
+      outline: 0;
+
+      .pill {
+        box-shadow: 0 0 0 0.075rem $lime, 0 0.1rem 0.2rem transparentize($secondary, .65);
+      }
+    }
+  }
+
   .scroll-invitation {
     position: absolute;
     bottom: 0;

@@ -1,0 +1,189 @@
+@import "./vars.scss";
+
+.blog-page {
+  min-height: 100vh;
+  color: $text;
+  background: linear-gradient(180deg, lighten($secondary, 58%) 0%, white 45%, lighten($primary, 38%) 100%);
+}
+
+.blog-shell {
+  @include adaptive-padding;
+  width: min(100%, 22rem);
+  margin: 0 auto;
+  padding-top: 1.25rem;
+  padding-bottom: 1.5rem;
+
+  @include media(lt-md) {
+    width: min(100%, 18rem);
+    padding-top: 1rem;
+  }
+}
+
+.blog-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-bottom: 0.4rem;
+  padding: 0.14rem 0.45rem;
+  border-radius: 999rem;
+  font-size: 0.36rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $secondary;
+  background: transparentize($amber, 0.72);
+}
+
+.blog-title {
+  margin-bottom: 0.2rem;
+  font-size: 1.15rem;
+  line-height: 1.05;
+
+  @include media(lt-md) {
+    font-size: 0.92rem;
+  }
+}
+
+.blog-subtitle {
+  margin-bottom: 0.9rem;
+  color: transparentize($secondary, 0.2);
+  line-height: 1.4;
+}
+
+.blog-post-list {
+  list-style: none;
+}
+
+.blog-post-card {
+  display: block;
+  margin-bottom: 0.45rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 0.45rem;
+  border: 1px solid transparentize($secondary, 0.88);
+  background: transparentize(white, 0.08);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out, border-color 0.15s ease-in-out;
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-0.02rem);
+    border-color: transparentize($primary, 0.6);
+    box-shadow: 0 0.18rem 0.4rem transparentize($secondary, 0.88);
+    outline: 0;
+  }
+}
+
+.blog-post-card__title {
+  margin-bottom: 0.12rem;
+  font-size: 0.56rem;
+}
+
+.blog-post-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.18rem;
+  margin-bottom: 0.2rem;
+  font-size: 0.34rem;
+  color: transparentize($secondary, 0.32);
+}
+
+.blog-post-card__description {
+  margin: 0;
+  font-size: 0.44rem;
+  line-height: 1.45;
+  color: transparentize($secondary, 0.15);
+}
+
+.blog-post {
+  .blog-title {
+    margin-bottom: 0.35rem;
+  }
+}
+
+.blog-content {
+  line-height: 1.65;
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    margin-top: 0.85rem;
+    margin-bottom: 0.3rem;
+    line-height: 1.2;
+  }
+
+  h1 {
+    font-size: 0.92rem;
+  }
+
+  h2 {
+    font-size: 0.72rem;
+  }
+
+  p,
+  ul,
+  ol,
+  blockquote {
+    margin-bottom: 0.42rem;
+    font-size: 0.48rem;
+  }
+
+  ul,
+  ol {
+    padding-left: 0.8rem;
+  }
+
+  li {
+    margin-bottom: 0.18rem;
+  }
+
+  a {
+    color: darken($primary, 8%);
+    text-underline-offset: 0.08rem;
+  }
+
+  code {
+    padding: 0.02rem 0.14rem;
+    border-radius: 0.14rem;
+    background: transparentize($secondary, 0.93);
+    font-size: 0.42rem;
+  }
+
+  pre {
+    margin-bottom: 0.55rem;
+    padding: 0.38rem;
+    border-radius: 0.25rem;
+    background: $secondary;
+    color: $text-inverse;
+    overflow-x: auto;
+  }
+
+  pre code {
+    padding: 0;
+    background: transparent;
+    color: inherit;
+  }
+
+  blockquote {
+    padding-left: 0.35rem;
+    border-left: 0.08rem solid transparentize($primary, 0.35);
+    color: transparentize($secondary, 0.22);
+  }
+}
+
+.blog-back-link {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.65rem;
+  font-size: 0.4rem;
+  color: transparentize($secondary, 0.1);
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    color: $secondary;
+    text-decoration: underline;
+    text-underline-offset: 0.08rem;
+    outline: 0;
+  }
+}
