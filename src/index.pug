@@ -2,16 +2,46 @@ doctype html
 html(lang='en')
   head
     meta(charset='UTF-8')
-    meta(name='viewport', content='width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
     meta(http-equiv='X-UA-Compatible', content='ie=edge')
-    meta(name="description" content="Home page of Ivan Cherepanov (@av on GitHub), Full-Stack Engineer.")
-    title Ivan Charapanau
+    meta(name="description" content="Full-Stack Engineer with a decade of experience building web apps, services, and developer tooling. Explore my career, skills, and writing at av.codes.")
+    title Ivan Charapanau — Full-Stack Engineer | av.codes
+
+    link(rel='canonical', href='https://av.codes/')
+    link(rel='icon', href='../public/favicon.svg', type='image/svg+xml')
+
+    meta(property='og:type', content='website')
+    meta(property='og:url', content='https://av.codes/')
+    meta(property='og:title', content='Ivan Charapanau — Full-Stack Engineer')
+    meta(property='og:description', content='Full-Stack Engineer with a decade of experience building web apps, services, and developer tooling. Explore my career, skills, and writing.')
+    meta(property='og:image', content='https://av.codes/og-image.png')
+
+    meta(name='twitter:card', content='summary_large_image')
+    meta(name='twitter:url', content='https://av.codes/')
+    meta(name='twitter:title', content='Ivan Charapanau — Full-Stack Engineer')
+    meta(name='twitter:description', content='Full-Stack Engineer with a decade of experience building web apps, services, and developer tooling.')
+    meta(name='twitter:image', content='https://av.codes/og-image.png')
+
+    script(type='application/ld+json').
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Ivan Charapanau",
+        "url": "https://av.codes/",
+        "email": "av@av.codes",
+        "jobTitle": "Full-Stack Engineer",
+        "sameAs": [
+          "https://github.com/av",
+          "https://www.linkedin.com/in/ivan-cherepanov",
+          "https://medium.com/@av.codes",
+          "https://habr.com/users/everlier/"
+        ]
+      }
 
     link(rel='stylesheet', href='main.scss')
     link(rel='stylesheet' href="https://unpkg.com/css.gg@2.1.1/icons/icons.css")
 
-    link(rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Red+Hat+Text&display=swap")
-    link(rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@700;900&display=swap")
+    link(rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap")
 
   body
     include mixins/splitter
@@ -40,5 +70,4 @@ html(lang='en')
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'UA-143258835-1');
-
+      gtag('config', 'G-8L4SD34B6G');

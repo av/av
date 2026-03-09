@@ -31,7 +31,7 @@ export default class TimelineEvent implements Drawable, Transformable {
    * Defines how to render event names.
    */
   static fontConfig = {
-    font: '24px "Red Hat Display"',
+    font: '24px "Plus Jakarta Sans"',
     fill: '#ffffffda'
   };
 

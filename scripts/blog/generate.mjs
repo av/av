@@ -229,6 +229,7 @@ async function cleanupStaleSlugDirectories(previousSlugs, currentSlugs) {
 
 function renderBlogIndexPug(posts, siteUrl) {
   const canonicalUrl = new URL('/blog/', siteUrl).toString();
+  const ogImageUrl = new URL('/og-image.png', siteUrl).toString();
   const lines = [
     'doctype html',
     "html(lang='en')",
@@ -238,6 +239,16 @@ function renderBlogIndexPug(posts, siteUrl) {
     `    title ${escapePugText('Blog | av.codes')}`,
     "    meta(name='description', content='Engineering notes, implementation stories, and practical write-ups from av.codes.')",
     `    link(rel='canonical', href=${JSON.stringify(canonicalUrl)})`,
+    `    meta(property='og:type', content='website')`,
+    `    meta(property='og:url', content=${JSON.stringify(canonicalUrl)})`,
+    `    meta(property='og:title', content='Blog | av.codes')`,
+    `    meta(property='og:description', content='Engineering notes, implementation stories, and practical write-ups from av.codes.')`,
+    `    meta(property='og:image', content=${JSON.stringify(ogImageUrl)})`,
+    `    meta(name='twitter:card', content='summary_large_image')`,
+    `    meta(name='twitter:url', content=${JSON.stringify(canonicalUrl)})`,
+    `    meta(name='twitter:title', content='Blog | av.codes')`,
+    `    meta(name='twitter:description', content='Engineering notes, implementation stories, and practical write-ups from av.codes.')`,
+    `    meta(name='twitter:image', content=${JSON.stringify(ogImageUrl)})`,
     "    link(rel='stylesheet', href='../main.scss')",
     "    link(rel='stylesheet', href='../blog.scss')",
     '  body.blog-page',
@@ -264,6 +275,29 @@ function renderBlogIndexPug(posts, siteUrl) {
 
 function renderPostPug(post, siteUrl) {
   const canonicalUrl = new URL(`/blog/${post.slug}/`, siteUrl).toString();
+  const ogImageUrl = new URL('/og-image.png', siteUrl).toString();
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.description,
+    url: canonicalUrl,
+    datePublished: post.dateIso,
+    dateModified: post.dateIso,
+    author: {
+      '@type': 'Person',
+      name: 'Ivan Charapanau',
+      url: siteUrl,
+    },
+    publisher: {
+      '@type': 'Person',
+      name: 'Ivan Charapanau',
+      url: siteUrl,
+    },
+  };
+
+  const schemaJson = JSON.stringify(schema, null, 2);
 
   return [
     'doctype html',
@@ -274,6 +308,18 @@ function renderPostPug(post, siteUrl) {
     `    title ${escapePugText(`${post.title} | av.codes`)}`,
     `    meta(name='description', content=${JSON.stringify(post.description)})`,
     `    link(rel='canonical', href=${JSON.stringify(canonicalUrl)})`,
+    `    meta(property='og:type', content='article')`,
+    `    meta(property='og:url', content=${JSON.stringify(canonicalUrl)})`,
+    `    meta(property='og:title', content=${JSON.stringify(`${post.title} | av.codes`)})`,
+    `    meta(property='og:description', content=${JSON.stringify(post.description)})`,
+    `    meta(property='og:image', content=${JSON.stringify(ogImageUrl)})`,
+    `    meta(name='twitter:card', content='summary_large_image')`,
+    `    meta(name='twitter:url', content=${JSON.stringify(canonicalUrl)})`,
+    `    meta(name='twitter:title', content=${JSON.stringify(`${post.title} | av.codes`)})`,
+    `    meta(name='twitter:description', content=${JSON.stringify(post.description)})`,
+    `    meta(name='twitter:image', content=${JSON.stringify(ogImageUrl)})`,
+    `    script(type='application/ld+json').`,
+    ...schemaJson.split('\n').map((line) => `      ${line}`),
     "    link(rel='stylesheet', href='../../main.scss')",
     "    link(rel='stylesheet', href='../../blog.scss')",
     '  body.blog-page',
@@ -286,8 +332,14 @@ function renderPostPug(post, siteUrl) {
 }
 
 function renderSitemapXml(posts, siteUrl) {
-  const blogLastModified = posts[0]?.dateIso ?? '1970-01-01T00:00:00.000Z';
+  const buildDate = new Date().toISOString();
+  const blogLastModified = posts[0]?.dateIso ?? buildDate;
+
   const urls = [
+    {
+      loc: new URL('/', siteUrl).toString(),
+      lastmod: buildDate,
+    },
     {
       loc: new URL('/blog/', siteUrl).toString(),
       lastmod: blogLastModified,

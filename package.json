@@ -9,7 +9,9 @@
     "cache:bust": "rm -rf ./.parcel-cache"
   },
   "devDependencies": {
+    "@parcel/packager-raw-url": "^2.12.0",
     "@parcel/transformer-inline-string": "^2.12.0",
+    "@parcel/transformer-jsonld": "^2.12.0",
     "@parcel/transformer-pug": "^2.12.0",
     "@parcel/transformer-sass": "^2.12.0",
     "@types/chroma-js": "^2.4.4",
@@ -24,8 +26,8 @@
     "aos": "^2.3.4",
     "chroma-js": "^2.1.0",
     "d3": "^7.9.0",
-    "gray-matter": "^4.0.3",
     "gist-embed": "^1.0.4",
+    "gray-matter": "^4.0.3",
     "marked": "^15.0.12",
     "medium-zoom": "^1.0.6",
     "micromodal": "^0.4.6",

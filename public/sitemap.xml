@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://av.codes/</loc>
+    <lastmod>2026-03-09T20:47:08.846Z</lastmod>
+  </url>
+  <url>
     <loc>https://av.codes/blog/</loc>
-    <lastmod>1970-01-01T00:00:00.000Z</lastmod>
+    <lastmod>2026-03-09T20:47:08.846Z</lastmod>
   </url>
 </urlset>

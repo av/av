@@ -12,7 +12,7 @@ export default class TimeTick implements Drawable, Transformable {
    * Defines how to render event names.
    */
   static fontConfig = {
-    font: '12px "Red Hat Display"',
+    font: '12px "Plus Jakarta Sans"',
     fill: 'rgba(0, 0, 0, .1)'
   };
 

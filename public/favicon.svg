@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Background -->
+  <rect width="32" height="32" fill="#332148" rx="4"/>
+
+  <!--
+    Geometry derived from logo.svg (500×500 viewBox).
+    Original A triangle: 100,300  300,300  200,130
+    Original V triangle: 200,200  300,370  400,200
+
+    Bounding box of combined mark: x[100,400] w=300, y[130,370] h=240
+    Center of bounding box: x=250, y=250
+
+    Map to 32×32 with 3px inset padding (usable area 26×26, centered at 16,16):
+      scale = 26/300 ≈ 0.08667
+      tx = 16 - 250*scale = 16 - 21.667 = -5.667
+      ty = 16 - 250*scale = same = -5.667  (bbox center happens to be 250,250)
+
+    A triangle points (scale 0.08667, offset -5.667):
+      100*0.08667 + (-5.667) =  2.999 ≈  3.0
+      300*0.08667 + (-5.667) = 20.334 ≈ 20.3
+      200*0.08667 + (-5.667) = 11.667 ≈ 11.7
+      300*0.08667 + (-5.667) = 20.334 ≈ 20.3
+      130*0.08667 + (-5.667) =  5.600 ≈  5.6  (y for apex)
+      → (3, 20.3)  (20.3, 20.3)  (11.7, 5.6)
+
+    V triangle points:
+      200*0.08667 + (-5.667) = 11.667 ≈ 11.7
+      300*0.08667 + (-5.667) = 20.334 ≈ 20.3
+      370*0.08667 + (-5.667) = 26.400 ≈ 26.4  (y for nadir)
+      400*0.08667 + (-5.667) = 29.000 ≈ 29.0
+      200*0.08667 + (-5.667) = 11.667 ≈ 11.7  (y for left/right tops)
+      → (11.7, 11.7)  (20.3, 26.4)  (29.0, 11.7)
+
+    Overlap region creates the interlocking effect.
+    Render order: A behind (filled), V on top (filled), overlap clipped via clip-path.
+  -->
+
+  <defs>
+    <!-- Clip to the A triangle shape, used to cut V where it exits A -->
+    <clipPath id="clip-a">
+      <polygon points="3,20.3 20.3,20.3 11.7,5.6"/>
+    </clipPath>
+    <!-- Clip to the V triangle shape, used to cut A where it exits V -->
+    <clipPath id="clip-v">
+      <polygon points="11.7,11.7 20.3,26.4 29,11.7"/>
+    </clipPath>
+  </defs>
+
+  <!-- A triangle — white base layer -->
+  <polygon points="3,20.3 20.3,20.3 11.7,5.6" fill="white"/>
+
+  <!-- V triangle — amber base layer -->
+  <polygon points="11.7,11.7 20.3,26.4 29,11.7" fill="#ffc000"/>
+
+  <!-- A triangle portion that overlaps V — rendered amber (A peeks through V's color) -->
+  <polygon points="3,20.3 20.3,20.3 11.7,5.6" fill="#ffc000" clip-path="url(#clip-v)"/>
+
+  <!-- V triangle portion that overlaps A — rendered white (V peeks through A's color) -->
+  <polygon points="11.7,11.7 20.3,26.4 29,11.7" fill="white" clip-path="url(#clip-a)"/>
+</svg>
