@@ -3,13 +3,45 @@
 section.intro {
   @include adaptive-padding;
   position: relative;
-  overflow: hidden;
+  z-index: 2;
   background: linear-gradient(black -50%, $secondary 90%);
   background-size: cover;
   color: white;
 
   @include media(sm) {
     font-size: 0.7rem;
+  }
+
+  .decorations-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+
+    .decoration {
+      position: absolute;
+
+      // Override the vw size baked into the mixin with a max() clamp:
+      // the vw value wins on wide screens; the px floor (--sz-min) wins
+      // on narrow viewports so shapes stay legible at small screen widths.
+      .morphing-shape {
+        width:  max(var(--sz-vw), var(--sz-min)) !important;
+        height: max(var(--sz-vw), var(--sz-min)) !important;
+      }
+    }
+
+    @include media(lt-md) {
+      // Keep every other shape on mid-range screens (24 → 12).
+      .decoration:nth-child(even) {
+        display: none;
+      }
+    }
+
+    @include media(sm) {
+      // Keep only every 4th shape on small screens (24 → 6).
+      .decoration:not(:nth-child(4n+1)) {
+        display: none;
+      }
+    }
   }
 
   .content {
@@ -40,26 +72,6 @@ section.intro {
       @include media(sm) {
         margin: 0.25em 0;
       }
-    }
-  }
-
-  .decoration {
-    position: absolute;
-    transition: transform 0.5s linear;
-
-    &:nth-child(1) {
-      left: -10%;
-      top: 0;
-    }
-
-    &:nth-child(2) {
-      right: 0;
-      top: 40%;
-    }
-
-    &:nth-child(3) {
-      right: 40%;
-      bottom: 10%;
     }
   }
 
