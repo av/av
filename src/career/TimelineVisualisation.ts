@@ -130,6 +130,7 @@ export default class TimelineVisualisation {
   start() {
     this.container = d3.select(this.config.container);
     this.width = this.config.container.getBoundingClientRect().width;
+    this.height = (Math.max(...this.config.events.map(e => e.config.depth)) + 1) * TimelineEvent.lineHeight;
 
     const domain: Pair<Date, Date> = [this.firstEvent.config.start, new Date()];
 

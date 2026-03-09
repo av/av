@@ -1,0 +1,4 @@
++modal('jitera-long-running', "Long-Running Agent Tasks")
+  p Designed and implemented support for long-running agentic tasks in Jitera Boost.
+  p Standard LLM request-response cycles time out for tasks that take minutes — this work introduced a planner/mapper architecture where the agent decomposes a task, emits progress events, and the client polls for results.
+  p Implemented the use-router module, countdown-based task simulation for testing, and the full Jitera Chat polling integration.

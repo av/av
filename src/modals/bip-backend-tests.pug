@@ -1,0 +1,5 @@
++modal('bip-backend-tests', "Backend Integration Tests")
+  p Introduced a backend integration test suite for the Portal — the first of its kind in the codebase.
+  p Built on testcontainers, it spun up real database instances to test complex query behavior that was impossible to verify manually.
+  p Wrote 40+ tests covering Portfolios API edge cases, including multi-tenant scoping, ACL behavior, and index performance.
+  p Also reduced CI pipeline cost by 3× while keeping test execution time flat.
