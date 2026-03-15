@@ -1,5 +1,5 @@
 import Drawable from './Drawable';
-import { isBetween, Offset, Rect, PI2 } from '../utils';
+import { isBetween, Offset, Rect, PI2, cssVar } from '../utils';
 import InterpolatedValue from './InterpolatedValue';
 
 /**
@@ -23,7 +23,7 @@ export default class CanvasCursor implements Drawable {
   /**
    * Cursor fill style when rendered.
    */
-  static fillStyle = 'rgba(0, 0, 0, .05)';
+  static fillStyle = cssVar('--color-canvas-cursor') || 'rgba(0, 0, 0, .05)';
 
   /**
    * Holds the interpolated cursor position, which tries to reach

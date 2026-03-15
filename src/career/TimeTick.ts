@@ -1,7 +1,7 @@
 import Drawable from '../lib/Drawable';
 import Transformable from '../lib/Transformable';
 import SmoothTransform from '../lib/SmoothTransform';
-import { Pair } from '../utils';
+import { Pair, cssVar } from '../utils';
 
 /**
  * Represents a time tick on a time scale of the visualisation.
@@ -13,13 +13,13 @@ export default class TimeTick implements Drawable, Transformable {
    */
   static fontConfig = {
     font: '12px "Plus Jakarta Sans"',
-    fill: 'rgba(0, 0, 0, .1)'
+    fill: cssVar('--color-tick-label') || 'rgba(0, 0, 0, .1)'
   };
 
   /**
    * Line stroke style
    */
-  static strokeStyle = 'rgba(0, 0, 0, .1)';
+  static strokeStyle = cssVar('--color-tick-stroke') || 'rgba(0, 0, 0, .1)';
 
   /**
    * Width of the line stroke

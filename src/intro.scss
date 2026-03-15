@@ -4,7 +4,8 @@ section.intro {
   @include adaptive-padding;
   position: relative;
   z-index: 2;
-  background: linear-gradient(black -50%, $secondary 90%);
+  background: radial-gradient(ellipse 60% 60% at 0% 0%, transparentize($tertiary, 0.82) 0%, transparent 100%),
+              linear-gradient(black -50%, $secondary 90%);
   background-size: cover;
   color: white;
 
@@ -26,6 +27,13 @@ section.intro {
       .morphing-shape {
         width:  max(var(--sz-vw), var(--sz-min)) !important;
         height: max(var(--sz-vw), var(--sz-min)) !important;
+      }
+    }
+
+    @include media(gt-md) {
+      // Keep every other shape on large screens (24 → 12).
+      .decoration:nth-child(even) {
+        display: none;
       }
     }
 

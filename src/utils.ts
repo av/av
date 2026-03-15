@@ -409,3 +409,17 @@ export function parseDate(date: string): Date {
 
   return new Date(date);
 }
+
+/**
+ * Reads the resolved value of a CSS custom property from the document root.
+ *
+ * Canvas APIs cannot consume CSS custom properties directly, so this helper
+ * reads the computed value once (at call time) so it can be passed to
+ * canvas fill/stroke style setters.
+ *
+ * @param name - CSS custom property name, e.g. `'--color-tick-label'`
+ * @returns The trimmed computed value string, or an empty string if absent.
+ */
+export function cssVar(name: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}

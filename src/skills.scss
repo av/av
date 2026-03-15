@@ -1,5 +1,17 @@
 @import "./vars.scss";
 
+// CSS custom properties for the skills visualisation.
+// Read at runtime by SkillsSection to color skill-type nodes.
+:root {
+  --color-skill-lang:      #{$primary};
+  --color-skill-runtime:   #{$lime};
+  --color-skill-framework: #{$amber};
+  --color-skill-lib:       #{lighten($secondary, 50%)};
+  --color-skill-tool:      #{$tertiary};
+  --color-skill-cloud:     #{$red};
+  --color-skill-database:  #{lighten($secondary, 35%)};
+}
+
 section.skills {
   @include splitter-glide;
   background: linear-gradient(183deg, $primary, transparent 30%);

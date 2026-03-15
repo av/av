@@ -1,15 +1,15 @@
 // Palette — Aurora Borealis
 $primary: darken(#64ffda, 18%);  // aurora teal
-$secondary: #0a1628;             // arctic midnight navy
+$secondary: #2a1317;             // arctic midnight navy
 $secondary-tint: lighten($secondary, 12%);
-$tertiary: #bf5af2;              // aurora violet
-$lime: #32d74b;                  // polar green
+$tertiary: #c87fed;              // aurora violet
+$lime: #13ec33;                  // polar green
 $amber: #ffd60a;                 // polar gold
 $red: #ff375f;                   // northern lights red
 $white: white;
 
 // Pallete tints
-$darken-sm: #e8edf5;             // cool off-white instead of warm whitesmoke
+$darken-sm: #f0ece6;             // warm off-white — slight sand undertone
 
 // Main typography
 $text: $secondary;

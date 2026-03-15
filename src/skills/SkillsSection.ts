@@ -3,7 +3,7 @@ import * as d3 from "d3";
 import skillList, { skillTypes, Skill } from "./skillList";
 import { PageSection } from "../lib/PageSection";
 import SelectablePills from "../lib/SelectablePills";
-import { toggleDisplay } from "../utils";
+import { toggleDisplay, cssVar } from "../utils";
 
 export default class SkillsSection extends PageSection<
   typeof SkillsSection.config
@@ -43,7 +43,7 @@ export default class SkillsSection extends PageSection<
   init() {
     this.updateViewport();
     this.color = d3.scaleOrdinal(
-      skillTypes.map((_, i) => d3.interpolateCool(i / skillTypes.length))
+      skillTypes.map((type) => cssVar(`--color-skill-${type}`) || d3.interpolateCool(skillTypes.indexOf(type) / skillTypes.length))
     );
 
     this.x = d3

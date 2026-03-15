@@ -5,7 +5,7 @@ import CanvasCursor from '../lib/CanvasCursor';
 import TimelineEvent from './TimelineEvent';
 import SmoothTransform from '../lib/SmoothTransform';
 import PointerTracker from '../lib/PointerTracker';
-import { showModal, notifyVisibilityChange, Offset, Pair, throttle } from '../utils';
+import { showModal, notifyVisibilityChange, Offset, Pair, throttle, cssVar } from '../utils';
 import { Ticks } from './Ticks';
 
 interface TimelineVisualisationConfig {
@@ -253,7 +253,7 @@ export default class TimelineVisualisation {
     for (const event of this.config.events) {
       const hasTag = event.config.tags.includes(tag) || tag === null;
       // Initial/mute based on the selection
-      const color = hasTag ? event.config.color : 'rgba(0, 0, 0, .05)';
+      const color = hasTag ? event.config.color : (cssVar('--color-timeline-muted') || 'rgba(0, 0, 0, .05)');
 
       event.color.setValue(color);
     }

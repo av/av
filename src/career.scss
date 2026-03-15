@@ -1,5 +1,23 @@
 @import "./vars.scss";
 
+// CSS custom properties for the career visualisation.
+// Read at runtime by canvas components via getComputedStyle.
+:root {
+  --color-tag-career:      #{$primary};
+  --color-tag-education:   #{$amber};
+  --color-tag-deliverable: #{$lime};
+  --color-tag-cool:        #{$red};
+  --color-tag-project:     #{$tertiary};
+  --color-tag-hobby:       #{$lime};
+  --color-tag-general:     #{$tertiary};
+
+  --color-timeline-label:  rgba(255, 255, 255, 0.85);
+  --color-tick-label:      #{rgba($secondary, 0.35)};
+  --color-tick-stroke:     #{rgba($secondary, 0.35)};
+  --color-timeline-muted:  #{rgba($secondary, 0.05)};
+  --color-canvas-cursor:   #{rgba($secondary, 0.07)};
+}
+
 section.career {
   max-width: 60rem;
   margin: 0 auto;

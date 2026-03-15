@@ -1,5 +1,5 @@
 import Drawable from '../lib/Drawable';
-import { Rect } from '../utils';
+import { Rect, cssVar } from '../utils';
 import SmoothTransform from '../lib/SmoothTransform';
 import InterpolatedValue from '../lib/InterpolatedValue';
 import Transformable from '../lib/Transformable';
@@ -32,7 +32,7 @@ export default class TimelineEvent implements Drawable, Transformable {
    */
   static fontConfig = {
     font: '24px "Plus Jakarta Sans"',
-    fill: '#ffffffda'
+    fill: cssVar('--color-timeline-label') || '#ffffffda'
   };
 
   config: TimelineEventConfig;

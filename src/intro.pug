@@ -3,7 +3,7 @@ include mixins/shape
 section.intro
   -
     // Seeded PRNG so decorations are stable across builds
-    let _seed = 4;
+    let _seed = 1;
     const rng = () => { _seed = (_seed * 16807 + 0) % 2147483647; return (_seed - 1) / 2147483646; };
     const pick = (arr) => arr[Math.floor(rng() * arr.length)];
 
@@ -17,7 +17,7 @@ section.intro
       //- ['--lime',    '--tertiary'],
     ];
     const allAnimations = ['stronger-shaking', 'shaking'];
-    const COUNT = 24;
+    const COUNT = 12;
 
     const SIZE_MIN = 100, SIZE_MAX = 300;
     const FORCE_MIN = 20, FORCE_MAX = 150;
@@ -26,9 +26,9 @@ section.intro
     const decorations = Array.from({ length: COUNT }, () => {
       const sizePx = Math.round(Math.pow(rng(), 3) * (SIZE_MAX - SIZE_MIN) + SIZE_MIN);
       const sizeVw = (sizePx / REF_WIDTH * 100).toFixed(2);
-      // Invert size → force: small shapes move fast, large shapes move slow.
+      // Size → force: large shapes move fast, small shapes move slow.
       // A ±15% jitter keeps similarly-sized shapes from moving in lockstep.
-      const baseForce = FORCE_MAX - ((sizePx - SIZE_MIN) / (SIZE_MAX - SIZE_MIN)) * (FORCE_MAX - FORCE_MIN);
+      const baseForce = FORCE_MIN + ((sizePx - SIZE_MIN) / (SIZE_MAX - SIZE_MIN)) * (FORCE_MAX - FORCE_MIN);
       const force = Math.round(baseForce * (0.85 + rng() * 0.30));
       return {
         force,
@@ -37,7 +37,10 @@ section.intro
         animations: [pick(allAnimations)],
         colors:     pick(colorPairs),
         top:        Math.round(rng() * 110 - 5),
-        left:       Math.round(rng() * 110 - 5),
+        // Cap left so no shape escapes the right viewport edge and causes
+        // a horizontal scrollbar. Largest shape is ~19vw wide; left ≤ 80%
+        // ensures left + width stays within ~99% of the section width.
+        left:       Math.round(rng() * 85 - 5),
       };
     });
 
