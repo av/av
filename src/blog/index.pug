@@ -16,11 +16,25 @@ html(lang='en')
     meta(name='twitter:title', content='Blog | av.codes')
     meta(name='twitter:description', content='Engineering notes, implementation stories, and practical write-ups from av.codes.')
     meta(name='twitter:image', content="https://av.codes/og-image.png")
+    link(rel='preconnect', href='https://fonts.googleapis.com')
+    link(rel='preconnect', href='https://fonts.gstatic.com', crossorigin='')
+    link(rel='stylesheet', href='https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap')
     link(rel='stylesheet', href='../main.scss')
     link(rel='stylesheet', href='../blog.scss')
   body.blog-page
+    svg(style='position:absolute;width:0;height:0')
+      filter#noise(color-interpolation-filters='sRGB' x='0%' y='0%' width='100%' height='100%')
+        feTurbulence(type='fractalNoise' baseFrequency='0.7' numOctaves='1' stitchTiles='stitch' result='noiseOut')
+        feColorMatrix(type='saturate' values='0' in='noiseOut' result='grayNoise')
+        feBlend(in='SourceGraphic' in2='contrastedNoise' mode='overlay' result='blended')
+        feComposite(in='blended' in2='SourceGraphic' operator='in')
     main.blog-shell
-      p.blog-kicker Writing
-      h1.blog-title Blog
-      p.blog-subtitle Practical notes on building and shipping software.
+      div(style="padding: 1rem;")
+        a.blog-back-link(href='/') Back to home
+        h1.blog-title(data-text='Blog') Blog
       ul.blog-post-list
+        li
+          a.blog-post-card(href="/blog/local-llms-history/")
+            h2.blog-post-card__title A History of Local LLMs
+            p.blog-post-card__meta Mar 20, 2026 - llms, dossier
+            p.blog-post-card__description A detailed look at the timeline of local large language models.

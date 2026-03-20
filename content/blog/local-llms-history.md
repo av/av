@@ -1,0 +1,266 @@
+---
+title: "A History of Local LLMs"
+date: "2026-03-20"
+description: "A detailed look at the timeline of local large language models."
+slug: "local-llms-history"
+tags:
+  - llms
+  - dossier
+draft: false
+---
+
+Georgi Gerganov created llama.cpp on March 10, 2023, ten days after Meta released LLaMA, and showed that a 7-billion-parameter language model could run inference on a MacBook CPU without a GPU. First nobody had weights worth running. Then the weights existed but could not fit the hardware. Then the models fit but served too slowly. Then the serving was fast but only handled text. By now, the bottleneck is making local models actually reliable as agents.
+
+They say time moves too fast in AI space, and that is how it felt to me, so here is an overview of what actually happened with local LLMs month by month from 2023 to 2026, and a look at what could be next.
+
+# 2023
+
+## January
+
+January 2023 was still a pre-open-weights month for local LLMs, but it delivered one of the year's foundational ideas. Model compression was emerging as the path to personal hardware. SparseGPT appeared on arXiv on Jan. 2 and showed that GPT-family models as large as OPT-175B and BLOOM-176B could be pruned to roughly 50 percent sparsity in one shot, without retraining and with perplexity degradation under 1 percent, while also remaining compatible with quantization. The local-LLM boom that followed in spring and summer would depend not just on new open models, but on a growing toolkit for making large checkpoints fit consumer GPUs, laptops, and eventually phones. January did not yet put frontier-quality chat models on desktops, but it made clear that the bottleneck was shifting from pure model access to practical inference engineering.
+
+Sources: https://arxiv.org/abs/2301.00774 | https://github.com/IST-DASLab/sparsegpt | https://arxiv.org/abs/2210.17323
+
+## February
+
+February marked the effective birth of local LLMs. Meta introduced LLaMA on Feb. 24, releasing 7B, 13B, 33B, and 65B research models and arguing that carefully trained smaller models could rival or beat much larger systems. Even though the original release was gated and non-commercial, LLaMA reset the open-model frontier and gave the community a base model family that was both strong enough and small enough to matter on local hardware after quantization. Nearly every major local trend of the rest of 2023, from instruction tuning to CPU inference to low-bit packaging, built on this moment. The practical local-AI story did not begin with a polished desktop app. It began with a strong, compact base model that people suddenly wanted to run everywhere.
+
+Sources: https://arxiv.org/abs/2302.13971 | https://ai.meta.com/blog/large-language-model-llama-meta-ai/ | https://github.com/meta-llama/llama
+
+## March
+
+March turned LLaMA from a research artifact into a hands-on local movement. `llama.cpp` was created on Mar. 10 and quickly proved that LLaMA inference in plain C/C++ on commodity CPUs was viable. Stanford Alpaca followed on Mar. 13 with a replicable instruction-tuning recipe that claimed GPT-3.5-like behavior from a 7B LLaMA derivative for under $600. FastChat was created on Mar. 19, becoming the release vehicle for Vicuna, serving infrastructure, and later Chatbot Arena. Together these releases changed the center of gravity from "interesting paper" to "anyone can fine-tune, quantize, serve, and chat with this locally." March is when local LLMs became a software ecosystem rather than a licensing controversy.
+
+Sources: https://api.github.com/repos/ggerganov/llama.cpp | https://crfm.stanford.edu/2023/03/13/alpaca | https://api.github.com/repos/lm-sys/FastChat
+
+## April
+
+April narrowed the gap between impressive open weights and usable personal deployment. AutoGPTQ appeared on Apr. 13 as an easy-to-use GPTQ package, helping low-bit quantization move from paper code into something ordinary developers could apply to rapidly growing model catalogs, while MLC-LLM was created on Apr. 29 with the broader goal of compiling and deploying LLMs across GPUs, browsers, iPhone, Android, and edge targets through ML compilation. If March made local LLMs exciting, April made them portable and repeatable. The month's real milestone was the emergence of tooling that treated local inference as an engineering product surface rather than a lab demo.
+
+Sources: https://api.github.com/repos/AutoGPTQ/AutoGPTQ | https://arxiv.org/abs/2210.17323 | https://api.github.com/repos/mlc-ai/mlc-llm | https://llm.mlc.ai/
+
+## May
+
+May broke the sense that open local AI would remain a LLaMA monoculture. Databricks released MPT-7B on May 5 under a commercially usable Apache 2.0 license and emphasized long-context variants, Together released RedPajama-INCITE on May 9 as a serious fully open reproduction effort, and QLoRA hit arXiv on May 24 with the clearest recipe yet for fine-tuning 65B-class models on a single 48GB GPU. That combination delivered on all three fronts, with better base models, better licensing, and radically cheaper adaptation. By the end of May, the local ecosystem had a stronger answer to both "what can I build on?" and "how can I customize it without a cluster?"
+
+Sources: https://www.databricks.com/blog/introducing-mpt-7b-first-commercially-usable-open-source-llm | https://www.together.ai/blog/redpajama-models-v1 | https://arxiv.org/abs/2305.14314 | https://huggingface.co/mosaicml/mpt-7b
+
+## June
+
+June was the month the local stack got materially better on all three layers that matter (models, quantization, and serving). Falcon 40B and 7B landed on Jun. 5 and gave open users another strong base family. The AWQ repository had appeared on Jun. 1 and pushed activation-aware low-bit quantization forward. vLLM published its PagedAttention work on Jun. 20, showing that serving throughput could jump dramatically without wasting KV-cache memory. Local AI was no longer just about squeezing a single model onto one machine for curiosity's sake. It was becoming about fast, repeatable inference and multi-user serving. June is when the ecosystem started to look like infrastructure.
+
+Sources: https://huggingface.co/blog/falcon | https://api.github.com/repos/mit-han-lab/llm-awq | https://blog.vllm.ai/2023/06/20/vllm.html | https://huggingface.co/tiiuae/falcon-40b
+
+## July
+
+July reset the entire market when Meta released Llama 2 on Jul. 18. Compared with the original LLaMA drop, the key change was better quality and chat-tuned variants alongside mainstream distribution and a license that made commercial local deployment realistic for far more builders. Llama 2 immediately became the default foundation for laptops, home servers, coding assistants, and fine-tunes because it offered the rare combination of scale, familiarity, and legitimacy. The rest of 2023 local AI, from Code Llama to GGUF packaging to countless chat derivatives, makes more sense if July is treated as the moment open-weight local inference moved from a grey-area experiment into a standard development path.
+
+Sources: https://about.fb.com/news/2023/07/llama-2/ | https://huggingface.co/blog/llama2 | https://huggingface.co/meta-llama/Llama-2-7b-hf
+
+## August
+
+August was the densest tooling month of the year. NVIDIA created the TensorRT-LLM repository on Aug. 16, signaling a serious push toward optimized GPU inference. Meta announced Code Llama on Aug. 24, extending the local wave into coding-specialized models that could run even in the 7B size on a single GPU. `llama.cpp` spent late August rapidly hardening the new GGUF format and adding Code Llama-specific conversion support, including commits on Aug. 24 to 27 for `rope_freq_base`, automatic `n_ctx` handling, GGUF export, pip-installable GGUF tooling, and GGUF v2. exllamav2 then appeared on Aug. 30 as another speed-focused inference path for quantized LLaMA-family models. August was when local AI stopped being "run a chat model if you can" and became a serious race to standardize formats and optimize runtimes.
+
+Sources: https://about.fb.com/news/2023/08/code-llama-ai-for-coding/ | https://api.github.com/repos/NVIDIA/TensorRT-LLM | https://api.github.com/repos/ggml-org/llama.cpp/commits?since=2023-08-23T00:00:00Z&until=2023-08-28T00:00:00Z | https://api.github.com/repos/turboderp-org/exllamav2
+
+## September
+
+September shifted the local default from "largest quantized model you can cram onto hardware" to "smaller architecture, better design." Mistral AI released Mistral 7B on Sep. 27 and showed that a well-designed 7B dense model could punch above its weight, especially for local use where latency, VRAM, and packaging matter more than raw parameter count. At the application layer, Ollama's September posts on Code Llama prompting and local integrations such as Obsidian signaled that local models were already moving into everyday tooling rather than staying in benchmark dashboards. Mistral 7B quickly became the foundation for a flood of local chat and coding variants because it improved quality without demanding a bigger box.
+
+Sources: https://mistral.ai/news/announcing-mistral-7b/ | https://huggingface.co/mistralai/Mistral-7B-v0.1 | https://ollama.com/blog/how-to-prompt-code-llama | https://ollama.com/blog/llms-in-obsidian
+
+## October
+
+October was when the local ecosystem started to look developer-grade. Ollama announced an official Docker image on Oct. 5, removing a large chunk of local setup friction and making reproducible self-hosting much easier, then followed on Oct. 13 with a tutorial for building RAG-style web apps around local models. At the same time, the new small-model quality wave accelerated. Zephyr 7B beta was published on Hugging Face on Oct. 26 and quickly positioned itself as one of the strongest 7B chat models, while OpenHermes 2.5 on Mistral 7B appeared on Oct. 29 and explicitly shipped with ChatML and downstream GGUF, GPTQ, AWQ, and EXL2 packaging. October's story was the normalization of local deployment, packaging, and high-quality 7B chat fine-tunes rather than a single base-model breakthrough.
+
+Sources: https://ollama.com/blog/ollama-is-now-available-as-an-official-docker-image | https://ollama.com/blog/building-llm-powered-web-apps | https://huggingface.co/api/models/HuggingFaceH4/zephyr-7b-beta | https://huggingface.co/api/models/teknium/OpenHermes-2.5-Mistral-7B
+
+## November
+
+November expanded the field again. 01.AI published Yi-34B and Yi-6B on Nov. 1, then released Yi-34B-Chat and Yi-6B-Chat on Nov. 22, giving local users a strong new non-Llama family that scaled from modest consumer setups to higher-VRAM rigs while broadening the ecosystem's geographic and architectural diversity. Apple's MLX repository had also been created on Nov. 28, opening a new path for array programming and, soon after, model inference tuned for Apple silicon. The important shift was strategic. By late November, local AI was no longer a story about one dominant lineage plus its fine-tunes, but a genuinely plural ecosystem spanning Mistral, Llama, Yi, and increasingly hardware-specific runtimes.
+
+Sources: https://huggingface.co/api/models/01-ai/Yi-34B | https://huggingface.co/api/models/01-ai/Yi-6B | https://huggingface.co/api/models/01-ai/Yi-34B-Chat | https://huggingface.co/api/models/01-ai/Yi-6B-Chat | https://api.github.com/repos/ml-explore/mlx
+
+## December
+
+December closed 2023 with open local AI still climbing fast in architecture, not just packaging. Mistral announced Mixtral 8x7B on Dec. 11 and showed that sparse mixture-of-experts models could deliver much stronger quality while activating only a fraction of total parameters per token, a compelling tradeoff for serious local and small-server deployments. The next day, SOLAR-10.7B appeared on Hugging Face and demonstrated another route to strong compact models through depth up-scaling. By year's end, local inference was no longer defined merely by shrinking large dense models until they fit. The frontier had become smarter architectures, stronger small and mid-sized bases, and runtime diversity that made those models usable outside datacenters.
+
+Sources: https://mistral.ai/news/mixtral-of-experts/ | https://huggingface.co/mistralai/Mixtral-8x7B-v0.1 | https://huggingface.co/api/models/upstage/SOLAR-10.7B-v1.0 | https://arxiv.org/abs/2312.15166
+
+# 2024
+
+## January
+
+January 2024 stood out less for a headline model drop than for the local-inference plumbing that would shape the rest of the year. Intel opened AutoRound on Jan. 4 as an accuracy-first quantization toolkit, SGLang appeared on Jan. 8 as a serving framework for language and multimodal models, and SiLLM followed on Jan. 11 to make MLX-based training and inference on Apple Silicon less bespoke. Mid-month Hacker News discussion around SGLang's RadixAttention demos showed that the center of gravity was already moving from "can this model run?" to "can it serve efficiently, cache well, and stay usable on ordinary hardware?" That shift was important because 2024 local AI would be defined less by a single breakthrough model than by faster serving, lower-bit deployment, and Mac-native workflows becoming first-class. By the end of January, the practical stack around open models had started to mature in ways that made later releases easier to quantize, host, and integrate into real local tooling.
+
+Sources: https://github.com/intel/auto-round | https://github.com/sgl-project/sglang | https://news.ycombinator.com/item?id=39030452 | https://news.ycombinator.com/item?id=39055004 | https://github.com/armbues/SiLLM
+
+## February
+
+February brought Google's first major open-weight push of the year into the local market. Gemma's public launch on Feb. 21 put lightweight 2B and 7B models into circulation as serious open alternatives for laptops, CPUs, and small GPUs, while Google had already opened `gemma.cpp` on Feb. 13 as a dedicated standalone C++ inference engine instead of leaving desktop use entirely to third-party ports. That pairing was the point. Gemma was not just another checkpoint family. It arrived with an official story for compact inference and immediate downstream experimentation. By the end of the month, community work such as Gemma 2B code-generation fine-tuning was already appearing on Hacker News, which is a better signal of local relevance than raw benchmark tables alone. Gemma did not displace the Llama ecosystem overnight, but it widened the supply side of local inference and gave 2024 a second major open-weight family with a clear path onto ordinary hardware.
+
+Sources: https://huggingface.co/blog/gemma | https://github.com/google/gemma.cpp | https://huggingface.co/google/gemma-7b-it | https://huggingface.co/api/models/google/gemma-7b-it | https://news.ycombinator.com/item?id=39543056
+
+## March
+
+March's key local milestone was Databricks releasing DBRX on Mar. 27 and proving that open MoE models were immediate deployment targets rather than distant research artifacts. The official launch framed DBRX as a state-of-the-art open model, the Hugging Face release made weights accessible the same day, and Hacker News discussion instantly split between benchmark comparison and practical ports, including DBRX on Apple MLX. That reaction pattern said more than the raw parameter count. Local builders were no longer waiting weeks for a strong open model to trickle into hobby tooling. They expected same-week experiments on Macs, prosumer GPUs, and inference wrappers. March therefore reads less like a pure model month than like a workflow month for large open weights. The community's first question was increasingly not "is this open?" but "how fast can we get it running on local stacks, and what compromises does that require?"
+
+Sources: https://www.databricks.com/blog/introducing-dbrx-new-state-art-open-llm | https://huggingface.co/databricks/dbrx-instruct | https://news.ycombinator.com/item?id=39837966 | https://news.ycombinator.com/item?id=39841966 | https://news.ycombinator.com/item?id=39843644
+
+## April
+
+April reset the local default with Llama 3. Meta's Apr. 18 announcement and the near-simultaneous availability of the 8B instruct model on Hugging Face gave local users a stronger small-to-mid-size base than most open alternatives, and the community response was immediate. By month-end, Hacker News already had threads about running Llama 3 locally with extended context and building local coding copilots on top of it. The practical effect was larger than another routine checkpoint refresh. Llama 3 gave consumer GPUs, desktops, and home servers a new standard target, which in turn simplified decisions for quantizers, wrappers, and app builders who had spent 2023 juggling multiple partially satisfactory bases. For much of the local ecosystem, April was the point where "which open model should I optimize around?" stopped being an open question and became "the latest Llama 3 variant unless there is a specific reason not to."
+
+Sources: https://about.fb.com/news/2024/04/meta-ai-assistant-built-with-llama-3/ | https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct | https://huggingface.co/api/models/meta-llama/Meta-Llama-3-8B-Instruct | https://news.ycombinator.com/item?id=40215767 | https://news.ycombinator.com/item?id=40206183
+
+## May
+
+May linked compact open models to the first serious consumer-AI-PC cycle. Microsoft published Phi-3 Small and Phi-3 Medium model cards on May 7, then Phi-3 Vision on May 19, extending the Phi line beyond a single tiny text model and into multimodal local use cases. The next day Microsoft unveiled Copilot+ PCs, making NPUs and on-device execution a mass-market hardware story rather than a developer niche. Community packaging followed quickly. By May 23, pre-release Ollama builds were already advertising Phi-3 Medium support on Hacker News. That combination connected three layers that had often been discussed separately, namely small open weights, consumer hardware optimized for local inference, and packaging tools that could expose those models without bespoke setup. May did not create one dominant local stack, but it made on-device AI feel like a real product category instead of an enthusiast side project.
+
+Sources: https://huggingface.co/microsoft/Phi-3-small-8k-instruct | https://huggingface.co/microsoft/Phi-3-medium-4k-instruct | https://huggingface.co/microsoft/Phi-3-vision-128k-instruct | https://blogs.microsoft.com/blog/2024/05/20/introducing-copilot-pcs/ | https://news.ycombinator.com/item?id=40457762
+
+## June
+
+June compressed three different local-AI narratives into one month. Qwen2 arrived on Jun. 7 with a broader open family and immediate attention for instruct variants that were strong enough to matter both on servers and on serious local rigs. Apple followed on Jun. 10 with Apple Intelligence, making on-device and private-cloud execution a mainstream consumer-computing message. Google launched Gemma 2 on Jun. 27, raising the quality ceiling for compact open models without abandoning local-friendly sizes. The combination showed that local AI was no longer being advanced by one company or one hardware path. Open-weight model makers were shipping stronger multilingual and long-context families, platform vendors were reorganizing around hybrid local inference, and small-model quality was improving enough to keep laptops and single-GPU boxes relevant. June was a convergence month, bringing better open weights, clearer on-device product strategy, and a sharper sense that local inference was becoming part of mainstream computing rather than a side channel of the open-model scene.
+
+Sources: https://qwenlm.github.io/blog/qwen2/ | https://news.ycombinator.com/item?id=40599018 | https://www.apple.com/newsroom/2024/06/introducing-apple-intelligence-for-iphone-ipad-and-mac/ | https://blog.google/technology/developers/google-gemma-2/ | https://huggingface.co/google/gemma-2-9b-it
+
+## July
+
+July pushed the open local stack upward at both ends. Mistral released Mistral NeMo on Jul. 18 under Apache 2.0, giving local builders a 12B-class model with long context and better multilingual utility, and Hugging Face's Jul. 23 Llama 3.1 writeup marked Meta's much bigger family refresh, including the locally relevant 8B and 70B instruct variants even if the 405B model served mostly as a halo signal. Community reaction again centered on deployment, not just evals. By late Jul., Hacker News threads were already about running Llama 3.1 8B in the browser and on Raspberry Pi. Open local AI stopped looking like a compromise tier far below flagship work and started tracking major open releases much more closely. Stronger context windows, better licensing, and faster ports meant local inference could stay near the front of the open-model curve instead of trailing it by months.
+
+Sources: https://mistral.ai/news/mistral-nemo/ | https://huggingface.co/blog/llama31 | https://huggingface.co/meta-llama/Meta-Llama-3.1-8B-Instruct | https://news.ycombinator.com/item?id=41095169 | https://news.ycombinator.com/item?id=41112794
+
+## August
+
+August's clearest local milestone was polish rather than a new flagship base model. LM Studio 0.3.0 landed on Aug. 22 with built-in naive RAG, a Structured Outputs API, and the ability to serve on the network, which showed how far the desktop local-LLM experience had moved from "download a model and chat" toward "run a small local application platform." The other important August story was adoption speed. Early-month Hacker News threads about Google releasing Gemma 2 2B and about running it on a Mac showed how quickly sub-2B open models were being turned into practical local demos and tutorials. The dating matters here. Google's own Gemma 2 2B announcement page is stamped Jul. 31, so the August milestone is not the formal release itself but the immediate spread of that model into Mac-first examples and consumer tooling. What made August different was local UX catching up with model availability, with less raw novelty in base weights and more evidence that non-specialists could discover, download, serve, and embed them in everyday workflows.
+
+Sources: https://lmstudio.ai/blog/lmstudio-v0.3.0 | https://news.ycombinator.com/item?id=41323042 | https://developers.googleblog.com/en/smaller-safer-more-transparent-advancing-responsible-ai-with-gemma/ | https://news.ycombinator.com/item?id=41129685 | https://news.ycombinator.com/item?id=41132528
+
+## September
+
+September was a two-release month with direct local consequences. Alibaba announced Qwen2.5 on Sep. 19 and Meta followed on Sep. 25 with Llama 3.2, whose 1B and 3B models were explicitly positioned for on-device use while the larger vision models expanded the open multimodal local stack. Hacker News discussion reflected that split immediately. Some threads focused on browser and Android deployment of Llama 3.2, others on its vision capabilities and the practical implications of smaller on-device checkpoints. For local inference, this was more than a routine version bump. The month put stronger small models and open multimodal capability on the same timeline, which made phones, laptops, and browser runtimes more central to the conversation. By the end of September, local AI was no longer just about fitting a chat model on a desktop GPU. It increasingly meant choosing among serious small-device and multimodal open-weight options.
+
+Sources: https://qwenlm.github.io/blog/qwen2.5/ | https://huggingface.co/blog/llama32 | https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct | https://news.ycombinator.com/item?id=41651321 | https://news.ycombinator.com/item?id=41651126
+
+## October
+
+October was about broadening the range of models that were worth running locally. IBM's Granite 3.0 instruct models appeared on Hugging Face on Oct. 2 in 2B and 8B sizes, giving local builders an open family aimed more at practical enterprise tasks than at pure leaderboard chat. At the very end of the month, Hugging FaceTB published SmolLM2-1.7B-Instruct on Oct. 31, pushing the tiny-model frontier further for phones, browsers, and low-memory devices. October therefore registered less as a single-model breakthrough and more as a widening of what a useful local model could be. The month's releases suggested a productive split in open local AI. Sub-2B models served constrained devices, and mid-sized models tuned for private business workflows that cared about reproducibility and offline execution as much as benchmark position. That broadened the use cases local stacks had to support, from embedded assistants and offline tools to enterprise deployments that still wanted open weights.
+
+Sources: https://huggingface.co/ibm-granite/granite-3.0-2b-instruct | https://huggingface.co/api/models/ibm-granite/granite-3.0-2b-instruct | https://huggingface.co/ibm-granite/granite-3.0-8b-instruct | https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct | https://huggingface.co/api/models/HuggingFaceTB/SmolLM2-1.7B-Instruct
+
+## November
+
+November pushed local open models toward specialization in coding and reasoning. Qwen2.5-Coder 32B arrived in early November as a stronger open coding model that was still realistically deployable on prosumer hardware once quantized, and QwQ-32B-Preview followed on Nov. 27 and 28 as an explicit reasoning-oriented release aimed at the o1-style test-time-compute conversation without closing weights. Hacker News threads the same day were already treating QwQ as Alibaba's open attempt at a reasoning-first model rather than as a routine chat checkpoint. That specialization changed local workflows. Instead of picking one general chat model for everything, users increasingly had reason to mix dedicated coding and reasoning models into the same local stack, with one model for editor assistance and another for slower deliberate problem solving. Open local AI started fragmenting productively in November into purpose-built families rather than converging on a single default chat model.
+
+Sources: https://qwenlm.github.io/blog/qwen2.5-coder-family/ | https://huggingface.co/Qwen/Qwen2.5-Coder-32B-Instruct | https://qwenlm.github.io/blog/qwq-32b-preview/ | https://news.ycombinator.com/item?id=42259254 | https://news.ycombinator.com/item?id=42259184
+
+## December
+
+December closed the year with two signals pulling in opposite size directions. Public catalog pages and Hacker News discussion pegged Llama 3.3 70B to Dec. 6, showing that a 70B open model could still be the practical center of gravity for high-end local inference once quantized and served well. Later in the month, DeepSeek-V3 arrived on Dec. 26 with a much larger open model that was not a normal desktop target but immediately shaped local workflows through benchmarking, distillation discussions, and even clustered-Mac experiments. Hacker News on Dec. 27 already had posts about running DeepSeek-V3 on an M4 Mac mini cluster, which says a great deal about how fast "too large for local" was being reinterpreted. December therefore counted not because everyone could run the flagship weights unchanged, but because open releases at both 70B and much larger scales were still feeding the local ecosystem through quantization, derivative models, and increasingly ambitious home-lab hardware setups.
+
+Sources: https://openrouter.ai/models/meta-llama/llama-3.3-70b-instruct | https://news.ycombinator.com/item?id=42341388 | https://api-docs.deepseek.com/news/news1226 | https://huggingface.co/deepseek-ai/DeepSeek-V3 | https://news.ycombinator.com/item?id=42523192
+
+# 2025
+
+## January
+
+January opened with a sharp jump in what local open models could do, especially in reasoning and multimodal work. DeepSeek-R1 landed on Jan. 20 as the clearest proof that an openly released reasoning stack could compete with the best closed systems while still feeding the local ecosystem through MIT-licensed distilled checkpoints at 1.5B, 7B, 8B, 14B, 32B, and 70B. DeepSeek then followed with Janus-Pro at the end of the month, a unified multimodal model that handled both image understanding and generation through one autoregressive stack and was straightforward to run through Transformers. Mistral closed the month on Jan. 30 with Mistral Small 3, a 24B Apache-licensed general model explicitly positioned for private local inference on a single RTX 4090 or a 32GB MacBook. Taken together, January showed three different local trajectories advancing at once. Distilled reasoning that ordinary enthusiasts could quantize and run, practical mid-size general models tuned for private deployment, and open multimodal systems that no longer looked like research curiosities.
+
+Sources: https://api-docs.deepseek.com/news/news250120 | https://huggingface.co/deepseek-ai/DeepSeek-R1 | https://huggingface.co/deepseek-ai/Janus-Pro-7B | https://mistral.ai/news/mistral-small-3
+
+## February
+
+February was quieter in headline terms but important in retrospect because it centered on efficiency and pre-release positioning rather than mass adoption. Moonshot's Moonlight-16B-A3B arrived on Feb. 22, with its paper published on Feb. 24, and made a strong case that compact open MoE models could keep improving through optimizer and training-method advances rather than only through brute-force scale. Its architecture compatibility with DeepSeek-V3-style runtimes meant it slotted naturally into the same local inference tools, including vLLM and SGLang. On Feb. 25, Qwen published the QwQ-Max preview and framed it as a reasoning-first line with a forthcoming Apache 2.0 open release path and smaller local variants, a signal that open reasoning was about to become a sustained product category rather than a one-off DeepSeek event. Even Gemma 3's technical report appeared before public launch, reinforcing that March's releases were already forming. In retrospect, February was less an empty month than the staging ground where training efficiency, reasoning identity, and local-deployment expectations were reset for the rest of 2025.
+
+Sources: https://huggingface.co/moonshotai/Moonlight-16B-A3B | https://huggingface.co/moonshotai/Moonlight-16B-A3B-Instruct | https://huggingface.co/papers/2502.16982 | https://qwenlm.github.io/blog/qwq-max-preview/ | https://huggingface.co/papers/2502.21228
+
+## March
+
+March was the month when open local AI broadened from "good chat model" into a practical multimodal stack. Google publicly released Gemma 3 on Mar. 12 and made the point explicit. These multimodal open weights were designed to run on a single GPU or TPU while still offering 128K context, image input, and strong multilingual support. DeepSeek then shipped DeepSeek-V3-0324 on Mar. 24, keeping the post-R1 momentum alive for users who wanted a stronger general-purpose open base for local serving and derivative fine-tunes. Qwen closed the month on Mar. 27 with Qwen2.5-Omni-7B, an openly available end-to-end model that could process text, images, audio, and video while replying in both text and streaming speech. That combination had direct consequences for local workflows. Gemma 3 kept high-quality laptop and workstation deployments plausible, while Qwen2.5-Omni made "run my own multimodal voice stack" feel less hypothetical. March therefore marked the point when local inference stopped being mostly a text-generation hobby and started looking like a credible foundation for full multimodal applications.
+
+Sources: https://huggingface.co/google/gemma-3-27b-it | https://huggingface.co/papers/2502.21228 | https://huggingface.co/deepseek-ai/DeepSeek-V3-0324 | https://qwenlm.github.io/blog/qwen2.5-omni/
+
+## April
+
+April pushed the open local conversation upward in both capability and ambition. Meta released Llama 4 Scout and Maverick on Apr. 5, bringing native multimodality and MoE architecture into the center of the Llama ecosystem while also publishing deployment guidance around quantized operation. Scout could fit on a single H100 with on-the-fly int4 quantization, and Maverick's FP8 weights fit on a single H100 DGX host. That was not consumer-hardware local inference, but it widened the definition of "self-hostable" for serious labs and well-equipped teams. Then on Apr. 29, Qwen3 arrived with hybrid thinking and non-thinking modes, explicit agentic optimization, Apache 2.0 licensing, and direct recommendations for local tools such as Ollama, LM Studio, MLX, llama.cpp, and KTransformers. By month's end open models had stopped choosing between chat, reasoning, and multimodality. The flagship families started trying to combine all three, while local deployment guidance moved from community experimentation into the official launch narrative.
+
+Sources: https://huggingface.co/meta-llama/Llama-4-Scout-17B-16E-Instruct | https://huggingface.co/collections/meta-llama/llama-4 | https://qwenlm.github.io/blog/qwen3/ | https://huggingface.co/collections/Qwen/qwen3-67dd247413f0e2e4f653967f
+
+## May
+
+May shifted the center of gravity from desktops toward phones and coding agents. Google announced the Gemma 3n preview on May 20 as a mobile-first, privacy-first, offline-ready open model family with audio, image, and text understanding plus effective memory footprints of roughly 2GB and 3GB, a strong signal that "local AI" was no longer synonymous with a desktop GPU. The very next day, Mistral released Devstral, an Apache 2.0 coding agent model built with All Hands AI and explicitly marketed as light enough for a single RTX 4090 or a Mac with 32GB RAM. That pairing split the local ecosystem into two serious tracks, with on-device multimodal assistants for phones, tablets, and laptops on one side and code-native agent models that could stay inside private repos without sending source to third-party APIs. Local inference became more product-shaped in May. The question was no longer only which open model benchmarked best, but which one fit a device class, a workflow, and a privacy boundary.
+
+Sources: https://developers.googleblog.com/en/introducing-gemma-3n/ | https://ai.google.dev/gemma/docs/gemma-3n | https://mistral.ai/news/devstral | https://huggingface.co/mistralai/Devstral-Small-2505
+
+## June
+
+June was packed with releases that made the local ecosystem more modular and more deployable. Qwen opened the month on Jun. 5 with Qwen3 Embedding and Reranker models, extending the open stack beyond generation into retrieval and ranking components that local RAG pipelines had largely sourced from closed APIs. Mistral followed on Jun. 10 with Magistral, its first reasoning model, including an open 24B Magistral Small for self-deployment under Apache 2.0. Then late June became a surge of multimodal local tooling. Gemma 3n reached full release on Jun. 26 with broad support across llama.cpp, Ollama, MLX, Transformers.js, and other on-device frameworks, while Qwen VLo previewed a unified model that moved from visual understanding into image generation and instruction-based editing. June therefore moved local AI from isolated checkpoints toward a full toolkit. Retrieval, reasoning, on-device multimodality, and creative generation were all now showing up as open components that developers could compose into their own private systems.
+
+Sources: https://qwenlm.github.io/blog/qwen3-embedding/ | https://mistral.ai/news/magistral | https://developers.googleblog.com/en/introducing-gemma-3n-developer-guide/ | https://qwenlm.github.io/blog/qwen-vlo/
+
+## July
+
+July centered on agentic scale and voice-native local AI. Moonshot's Kimi K2 family appeared in early July, with the base model published Jul. 3 and the instruct version on Jul. 11, offering a one-trillion-parameter MoE system with only 32B activated parameters and a credible open path for long-context, tool-using agents. Mistral then released Voxtral on Jul. 15, framing voice as a first-class open interface rather than a bolt-on transcription service. Its 3B Mini variant was aimed directly at local and edge deployments, while the 24B model targeted heavier private workloads. Qwen added a coding-specific milestone on Jul. 22 with Qwen3-Coder and the Qwen Code CLI, explicitly pushing open agentic coding into repo-scale workflows with local and OpenAI-compatible deployment options. Local AI became decisively more interactive in July. Instead of merely serving chat completions, open models were increasingly expected to listen, call tools, navigate codebases, and act across long horizons without leaving the user's infrastructure.
+
+Sources: https://huggingface.co/moonshotai/Kimi-K2 | https://huggingface.co/moonshotai/Kimi-K2-Instruct | https://mistral.ai/news/voxtral | https://qwenlm.github.io/blog/qwen3-coder/
+
+## August
+
+August expanded the local frontier in two directions at once. Open reasoning models became easier to run, and open visual generation became far more usable. Qwen released Qwen-Image on Aug. 4, a 20B image foundation model focused on strong text rendering and precise editing, addressing a gap that had long bottlenecked local creative workflows, namely weak typography and brittle poster-generation results. On Aug. 5, OpenAI released gpt-oss-120b and gpt-oss-20b under Apache 2.0, explicitly describing them as optimized for efficient deployment on consumer hardware, with the 20B class fitting into 16GB memory and the larger model running within 80GB. Qwen then followed on Aug. 19 with Qwen-Image-Edit, extending the same text-rendering strengths into semantic and appearance editing. What made August distinct was that local open AI stopped being only about text reasoning and coding. The ecosystem gained stronger open image generation, stronger open image editing, and a major new family of self-hostable reasoning models from a lab that had previously stayed mostly closed.
+
+Sources: https://qwenlm.github.io/blog/qwen-image/ | https://openai.com/index/introducing-gpt-oss/ | https://huggingface.co/openai/gpt-oss-20b | https://qwenlm.github.io/blog/qwen-image-edit/
+
+## September
+
+September was about hardening the open local stack for real agent work rather than just publishing bigger checkpoints. Moonshot released Kimi-K2-Instruct-0905 on Sep. 3 with a longer 256K context window and stronger agentic coding performance, showing that the K2 line was already iterating toward sustained software-engineering use. OpenAI's gpt-oss-safeguard models then appeared mid-month as open safety-reasoning layers that still fit practical hardware, including a 20B class sized for 16GB VRAM. DeepSeek followed with V3.1-Terminus on Sep. 22 to improve code and search agent behavior, and Qwen shipped Qwen3Guard on Sep. 23 with real-time streaming safety detection. DeepSeek closed the month on Sep. 29 with V3.2-Exp, using sparse attention to pursue long-context efficiency without surrendering agentic performance. September therefore showed the ecosystem maturing beyond raw model quality. Guardrails, search-agent templates, efficiency tricks, and incremental agent updates were becoming launch-worthy products in their own right, which is exactly what a real local platform ecosystem eventually looks like.
+
+Sources: https://huggingface.co/moonshotai/Kimi-K2-Instruct-0905 | https://huggingface.co/openai/gpt-oss-safeguard-20b | https://huggingface.co/deepseek-ai/DeepSeek-V3.1-Terminus | https://qwenlm.github.io/blog/qwen3guard/ | https://huggingface.co/deepseek-ai/DeepSeek-V3.2-Exp
+
+## October
+
+October emphasized infrastructure efficiency and document-native local AI. DeepSeek-OCR emerged in mid-October as a serious open OCR and document-understanding model rather than a thin wrapper around generic vision-language prompting. Its model card and paper stressed Markdown conversion, table handling, PDF workflows, and then quickly added upstream vLLM support, which made it relevant not just for demos but for self-hosted document pipelines. At the end of the month, Moonshot released Kimi Linear, an experimental 48B total, 3B active MoE model built around hybrid linear attention and aimed squarely at long-context efficiency. The core claim was not just benchmark quality but materially lower KV-cache pressure and faster decoding at million-token-scale contexts, with deployment examples already wired for local serving. The month was less about a single model and more about making local systems cheaper and more specialized to operate. Instead of asking only how much intelligence open models had, launches increasingly asked how efficiently they could read documents, survive million-token contexts, and fit into real self-hosted inference budgets.
+
+Sources: https://huggingface.co/deepseek-ai/DeepSeek-OCR | https://huggingface.co/papers/2510.18234 | https://huggingface.co/moonshotai/Kimi-Linear-48B-A3B-Instruct | https://huggingface.co/papers/2510.26692
+
+## November
+
+November pushed open local reasoning toward longer-horizon and more self-checking forms. Moonshot released Kimi K2 Thinking on Nov. 4 as a tool-using reasoning model with native INT4 quantization, 256K context, and explicit support for long chains of tool calls, treating low-bit local deployment as a first-class design goal rather than a community afterthought. Late in the month, DeepSeek-Math-V2 focused the open frontier on self-verifiable mathematical reasoning, pushing beyond final-answer accuracy toward proof generation and verification loops. Around the same period, DeepSeek-V3.2-Speciale surfaced as the high-compute reasoning branch of the V3.2 line, with DeepSeek explicitly separating tool-using general models from a deeper reasoning-focused variant. November therefore felt like the month when open local AI leaned harder into specialized cognition instead of merely scaling general chat behavior. Quantized long-horizon agents, proof-oriented math models, and dedicated deep-reasoning branches all signaled that open development was starting to diversify by thinking style, not just by parameter count.
+
+Sources: https://huggingface.co/moonshotai/Kimi-K2-Thinking | https://moonshotai.github.io/Kimi-K2/thinking.html | https://huggingface.co/deepseek-ai/DeepSeek-Math-V2 | https://huggingface.co/deepseek-ai/DeepSeek-V3.2-Speciale
+
+## December
+
+December closed the year by consolidating two major themes. Stronger open reasoning backbones and more polished self-hosted coding agents. DeepSeek-V3.2 appeared on Dec. 1 as the full release of the V3.2 line, packaging sparse-attention efficiency, stronger reasoning, and better agentic performance into a single openly runnable family with updated local-running guidance. Around the same late-year window, Mistral's Devstral 2 family surfaced in both a larger 123B model and a 24B small variant, and the smaller one kept the same local promise that had defined Devstral earlier in the year, delivering serious software-engineering behavior while still being plausible on a single RTX 4090 or a 32GB Mac once served through the right stack. Mistral also paired the family with the Vibe CLI, showing how open coding models were increasingly shipping with opinionated tooling rather than weights alone. December felt like a synthesis month. By year's end, open local AI was no longer just a collection of benchmarks. It was an ecosystem of reasoning backbones, agent scaffolds, and specialized deployment paths.
+
+Sources: https://huggingface.co/deepseek-ai/DeepSeek-V3.2 | https://huggingface.co/mistralai/Devstral-Small-2-24B-Instruct-2512 | https://huggingface.co/mistralai/Devstral-2-123B-Instruct-2512 | https://github.com/mistralai/mistral-vibe
+
+# 2026
+
+## January
+
+January 2026 widened the open-model story beyond general chat by pushing compact, domain-specific multimodal systems into practical local workflows. Google published MedGemma 1.5 and described MedASR on Jan. 13, extending its open health stack with a 4B model small enough to run offline plus a medical speech-to-text model intended to feed local clinical prompting. The same day, TranslateGemma appeared on arXiv as Gemma-3-based open translation models that traded scale for better translation efficiency while keeping multimodal ability. Late in the month, DeepSeek-OCR 2 was posted to arXiv on Jan. 28 after a Jan. 27 Hugging Face model release, making document OCR and structured image understanding a more serious open-weight local target. Meanwhile the inference layer kept moving. vLLM shipped 0.14.0, 0.14.1, and 0.15.0 in January, and MLX-LM 0.30.x kept Apple-silicon local deployment on a rapid update cadence. January's pattern was clear. Smaller task-specific open models and faster runtimes were reducing the amount of bespoke engineering needed to run non-chat local AI.
+
+Sources: https://research.google/blog/next-generation-medical-image-interpretation-with-medgemma-15-and-medical-speech-to-text-with-medasr/ | https://huggingface.co/google/medgemma-1.5-4b-it | https://huggingface.co/google/medasr | https://arxiv.org/abs/2601.09012 | https://huggingface.co/deepseek-ai/DeepSeek-OCR-2 | https://arxiv.org/abs/2601.20552 | https://github.com/vllm-project/vllm/releases/tag/v0.15.0 | https://github.com/ml-explore/mlx-lm/releases/tag/v0.30.5
+
+## February
+
+February 2026 was shaped by two infrastructure moves and one major model-family launch. Mistral released Voxtral Transcribe 2 on Feb. 4, pairing a batch transcription model with Voxtral Realtime, a 4B Apache-2.0 streaming ASR model aimed at privacy-sensitive edge and on-prem deployments. Qwen then opened the Qwen3.5 cycle on Feb. 14 with Qwen3.5-397B-A17B, describing a native vision-language architecture that used sparse MoE and Gated Delta Networks to keep only 17B parameters active per token, then broadened the family across Feb. 24-28 with 122B-A10B, 35B-A3B, 9B, 4B, 2B, and 0.8B variants. On Feb. 20, Hugging Face announced that the ggml/llama.cpp team was joining HF, framing closer integration between Transformers model definitions and llama.cpp packaging as a long-term local-AI priority. The serving layer reflected the same consolidation. Ollama reached 0.17.0 on Feb. 21, vLLM shipped 0.16.0 on Feb. 25, and SGLang reached 0.5.9 on Feb. 24. February therefore tightened the link between open weights, speech-first local apps, and the runtimes that make them usable outside clouds.
+
+Sources: https://mistral.ai/news/voxtral-transcribe-2 | https://huggingface.co/mistralai/Voxtral-Mini-4B-Realtime-2602 | https://qwen.ai/blog?id=qwen3.5 | https://huggingface.co/Qwen/Qwen3.5-397B-A17B | https://huggingface.co/Qwen/Qwen3.5-122B-A10B | https://huggingface.co/blog/ggml-joins-hf | https://github.com/ollama/ollama/releases/tag/v0.17.0 | https://github.com/vllm-project/vllm/releases/tag/v0.16.0
+
+## March
+
+Qwen published GPTQ-Int4 checkpoints for Qwen3.5 on Mar. 3, including 27B, 35B-A3B, 122B-A10B, and 397B-A17B variants, which immediately reduced the barrier to running the new multimodal agent family on local GPU budgets while keeping compatibility with Transformers, vLLM, SGLang, and KTransformers. Microsoft followed on Mar. 4 with Phi-4-reasoning-vision-15B, an MIT-licensed compact multimodal reasoning model whose model card framed it as a 15B-class open release rather than a hosted-only API artifact. IBM then published Granite-4.0-1b-speech on Mar. 6, a smaller multilingual ASR and speech-translation model explicitly positioned for faster inference and resource-constrained devices. Runtime work stayed just as active. MLX-LM 0.31.0 landed Mar. 7 for Apple-silicon users, Ollama advanced to 0.17.7 by Mar. 5, and vLLM moved from 0.17.0 on Mar. 7 to 0.17.1 on Mar. 11.
+
+Sources: https://huggingface.co/Qwen/Qwen3.5-27B-GPTQ-Int4 | https://huggingface.co/Qwen/Qwen3.5-122B-A10B-GPTQ-Int4 | https://huggingface.co/microsoft/Phi-4-reasoning-vision-15B | https://huggingface.co/ibm-granite/granite-4.0-1b-speech | https://github.com/ml-explore/mlx-lm/releases/tag/v0.31.0 | https://github.com/ollama/ollama/releases/tag/v0.17.7 | https://github.com/vllm-project/vllm/releases/tag/v0.17.0 | https://news.ycombinator.com/item?id=43292450
+
+---
+
+The most consistent pattern across these 39 months is that predictions about what local hardware could not run were wrong within 6 to 12 months of being made. In March 2023, running a 7B model on a CPU was a surprise. By December 2023, people were running 70B quantized models on MacBooks. By mid-2025, trillion-parameter MoE models were loading on consumer GPUs with sparse activation. Every 6 to 12 months, a quantization method, a sparse architecture, or a runtime optimization pushed a model class onto local hardware that the prior consensus had written off as too large.
+
+The infrastructure survived better than the models. llama.cpp is three years old and still central. GGUF is two and a half years old and still the default packaging format. vLLM went from a research project to 17 major releases. The models that run on top of these systems turn over every few months, but the plumbing persists. Anyone building local AI tooling in 2027 should weigh runtime bets more heavily than model bets, because the runtimes compound and the models get replaced.
+
+The other durable lesson is that "local" stopped meaning "desktop" around mid-2025 and now means any hardware the user controls, from a phone to a Raspberry Pi to a single rented GPU to a Mac Mini cluster.
+
+The common thread across all of these was the decision to keep inference under the operator's control, on whatever hardware they happened to own. That decision turned out to be important for privacy, cost, latency, and reliability, and nothing suggests it will become less important.
