@@ -2,11 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://av.codes/</loc>
-    <lastmod>2026-03-20T21:59:17.626Z</lastmod>
+    <lastmod>2026-04-12T22:03:32.539Z</lastmod>
   </url>
   <url>
     <loc>https://av.codes/blog/</loc>
-    <lastmod>2026-03-20T00:00:00.000Z</lastmod>
+    <lastmod>2026-04-13T00:00:00.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://av.codes/blog/llamacpp-history/</loc>
+    <lastmod>2026-04-13T00:00:00.000Z</lastmod>
   </url>
   <url>
     <loc>https://av.codes/blog/local-llms-history/</loc>
