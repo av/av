@@ -6,7 +6,7 @@ slug: "llamacpp-history"
 tags:
   - llms
   - dossier
-draft: false
+draft: true
 ---
 
 On February 24, 2023, Meta published LLaMA as a gated research preview, access restricted to approved academics and labs. Within a week, the weights had leaked onto 4chan and spread across BitTorrent. The models rivaled OpenAI's GPT-3, but running them came with a severe limitation: they required datacenter GPUs. For the average developer, they were still untouchable — the Python ecosystem demanded tens of gigabytes of VRAM just to load the weights.
