@@ -6,4 +6,5 @@ npm run build
 
 cd dist
 
+vercel link --yes --project av-codes
 vercel --prod
