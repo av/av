@@ -1,0 +1,56 @@
+doctype html
+html(lang='en')
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    title On local inference | av.codes
+    meta(name='description', content="The unglamorous ongoing labor of keeping a private local inference rig running after the romance of self-hosting has worn thin.")
+    link(rel='canonical', href="https://av.codes/blog/on-local-inference/")
+    meta(property='og:type', content='article')
+    meta(property='og:url', content="https://av.codes/blog/on-local-inference/")
+    meta(property='og:title', content="On local inference | av.codes")
+    meta(property='og:description', content="The unglamorous ongoing labor of keeping a private local inference rig running after the romance of self-hosting has worn thin.")
+    meta(property='og:image', content="https://av.codes/og-image.png")
+    meta(name='twitter:card', content='summary_large_image')
+    meta(name='twitter:url', content="https://av.codes/blog/on-local-inference/")
+    meta(name='twitter:title', content="On local inference | av.codes")
+    meta(name='twitter:description', content="The unglamorous ongoing labor of keeping a private local inference rig running after the romance of self-hosting has worn thin.")
+    meta(name='twitter:image', content="https://av.codes/og-image.png")
+    script(type='application/ld+json').
+      {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": "On local inference",
+        "description": "The unglamorous ongoing labor of keeping a private local inference rig running after the romance of self-hosting has worn thin.",
+        "url": "https://av.codes/blog/on-local-inference/",
+        "datePublished": "2026-06-18T00:00:00.000Z",
+        "dateModified": "2026-06-18T00:00:00.000Z",
+        "author": {
+          "@type": "Person",
+          "name": "Ivan Charapanau",
+          "url": "https://av.codes"
+        },
+        "publisher": {
+          "@type": "Person",
+          "name": "Ivan Charapanau",
+          "url": "https://av.codes"
+        }
+      }
+    link(rel='preconnect', href='https://fonts.googleapis.com')
+    link(rel='preconnect', href='https://fonts.gstatic.com', crossorigin='')
+    link(rel='stylesheet', href='https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap')
+    link(rel='stylesheet', href='../../main.scss')
+    link(rel='stylesheet', href='../../blog.scss')
+  body.blog-page
+    .blog-canvas
+      canvas.blog-decor-canvas(aria-hidden='true'
+        data-decor-seed="on-local-inference"
+        data-decor-canvas="local-inference"
+        data-decor-color="tx")
+      main.blog-shell.blog-post
+        a.blog-back-link(href='/blog/') Back to blog
+        h1.blog-title(data-text="On local inference") On local inference
+        p.blog-post-card__meta Jun 18, 2026 - llms, local-inference
+        .blog-content!= "<p>I woke up at 2 a.m. because the fans were screaming. The sound was different from the soft whoosh of a GPU under load. It was the high-pitched panic of a model that had swallowed its own context and was eating the swap file. I sat up for a second, then walked to the other room and killed the process. The house was quiet again. I went back to bed angry but not surprised. That is local inference now. The romance of rebellion against the cloud wore off long ago, now it&#39;s mostly quiet labor of checking on a sick animal at night.</p>\n<p>For a couple of years it was a hobby. I downloaded weights the way some people &quot;download&quot; vinyl. I ran quants I barely understood and felt clever when a reply came back. Then agents arrived, and the model stopped being a toy I visit. It became the room my work lives in. OpenCode drafts here and Hermes listens here. When it breaks, the damage is immediate, my notes stop, my drafts stall, ideas do not validate themselves, and I have to decide whether to fix it now or in the morning.</p>\n<p>I do not think about the tools when things are good. I think about llama.cpp or a container frontend when I am staring at wrong quant at midnight, or when an update breaks two years of chat history. They are the broom and the bucket I use to clean up the mess.</p>\n<p>Last week the electricity bill arrived and I winced before opening it. I sometimes only notice a silent break when replies get dumb or when the bill is higher than expected.</p>\n<p>I keep it alive because the alternative is renting intelligence that forgets where it lives. My rig is slow and loud. The answers are sometimes dumb enough to laugh at (but mostly to be angry). When I type at 3 a.m. and the answer comes back in my own room, no one else is there. That is local inference in 2026, a room that is kept warm with a machine thinking. The work is invisible and the reward is smaller than I admit, but I keep the room warm anyway.</p>\n"
+      .grain-layer(aria-hidden='true')
+    script(src='../decor.ts' type='module')

@@ -2,6 +2,7 @@
 .parcel-cache/
 node_modules/
 dist/
+scripts/.verify-deps/
 .vercel
 .agents/
 skills-lock.json

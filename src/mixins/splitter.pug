@@ -1,19 +1,8 @@
 mixin splitter(top, bottom)
   - var topAttrs = { [top]: top };
 
-  section.background(
-    style=`
-      height: 5vh;
-    `
-  )&attributes(topAttrs)
-  section.splitter(
-    style=`
-      position: relative;
-      width: 100%;
-      overflow: hidden;
-      margin-top: -5vh;
-    `
-  )
+  section.splitter-cap.background&attributes(topAttrs)
+  section.splitter
     -
       var animations = ['shaking', 'stronger-shaking', 'sliding', 'rotating'];
       var randomDelay = () => `-${Math.random() * 25}s`;
@@ -28,32 +17,33 @@ mixin splitter(top, bottom)
         return rangeLower + (range * valuePercentage);
       }
 
-    section.background(
-      style=`
-        height: 10vh;
-        margin-bottom: 0vh;
-      `
-    )&attributes(topAttrs)
+    .splitter__goo
+      section.background(
+        style=`
+          height: 10vh;
+          margin-bottom: 0vh;
+        `
+      )&attributes(topAttrs)
 
-    section(
-      flex-row
-      style=`
-        margin-top: -2vh;
-        height: 10vh;
-      `
-    )
-      -
-        var count = 30;
-        var total = count;
+      section(
+        flex-row
+        style=`
+          margin-top: -2vh;
+          height: 10vh;
+        `
+      )
+        -
+          var count = 30;
+          var total = count;
 
-      while count > 0
-        .circle(
-          style={
-            'animation-delay': randomDelay(),
-            'animation-name': animationName(),
-            'border-radius': '100rem',
-            'height': randomHeight() * Math.sin(map(count, [0, total], [Math.PI * .1, Math.PI * .9])) + '%',
-            'flex': '1'
-          }
-        )&attributes(topAttrs)
-        - count--
+        while count > 0
+          .circle(
+            style={
+              'animation-delay': randomDelay(),
+              'animation-name': animationName(),
+              'border-radius': '100rem',
+              'height': randomHeight() * Math.sin(map(count, [0, total], [Math.PI * .1, Math.PI * .9])) + '%',
+              'flex': '1'
+            }
+          )&attributes(topAttrs)
+          - count--

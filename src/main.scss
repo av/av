@@ -16,7 +16,6 @@ html {
 html,
 body {
   width: 100%;
-  height: 100%;
 }
 
 body {
@@ -26,22 +25,18 @@ body {
   --amber: #{$amber};
   --lime: #{$lime};
 
-  // Static noise grain overlay across the entire page.
-  // pointer-events: none so it never blocks interaction.
-  &::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    pointer-events: none;
-    filter: url(#noise);
-    opacity: 1.0;
-    background: rgba(0, 0, 0, 0.3);
-  }
+  position: relative;
+  min-height: 100%;
 
   &.no-scroll {
     overflow: hidden;
   }
+}
+
+// Page-wide grain (clipped around splitters in postprocess.ts). Splitter bands
+// use local ::after grain above the goo filter instead.
+.grain-layer {
+  @include grain-surface;
 }
 
 * {

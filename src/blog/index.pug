@@ -22,24 +22,25 @@ html(lang='en')
     link(rel='stylesheet', href='../main.scss')
     link(rel='stylesheet', href='../blog.scss')
   body.blog-page
-    svg(style='position:absolute;width:0;height:0')
-      filter#noise(color-interpolation-filters='sRGB' x='0%' y='0%' width='100%' height='100%')
-        feTurbulence(type='fractalNoise' baseFrequency='0.7' numOctaves='1' stitchTiles='stitch' result='noiseOut')
-        feColorMatrix(type='saturate' values='0' in='noiseOut' result='grayNoise')
-        feBlend(in='SourceGraphic' in2='contrastedNoise' mode='overlay' result='blended')
-        feComposite(in='blended' in2='SourceGraphic' operator='in')
-    main.blog-shell
-      div(style="padding: 1rem;")
-        a.blog-back-link(href='/') Back to home
-        h1.blog-title(data-text='Blog') Blog
-      ul.blog-post-list
-        li
-          a.blog-post-card(href="/blog/llamacpp-history/")
-            h2.blog-post-card__title A History of llama.cpp
-            p.blog-post-card__meta Apr 13, 2026 - llms, dossier
-            p.blog-post-card__description How Georgi Gerganov's C port of LLaMA became the default inference engine for local AI.
-        li
-          a.blog-post-card(href="/blog/local-llms-history/")
-            h2.blog-post-card__title A History of Local LLMs
-            p.blog-post-card__meta Mar 20, 2026 - llms, dossier
-            p.blog-post-card__description A detailed look at the timeline of local large language models.
+    .blog-canvas
+      main.blog-shell
+        div(style="padding: 1rem;")
+          a.blog-back-link(href='/') Back to home
+          h1.blog-title(data-text='Blog') Blog
+        ul.blog-post-list
+          li
+            a.blog-post-card(href="/blog/on-local-inference/")
+              h2.blog-post-card__title On local inference
+              p.blog-post-card__meta Jun 18, 2026 - llms, local-inference
+              p.blog-post-card__description The unglamorous ongoing labor of keeping a private local inference rig running after the romance of self-hosting has worn thin.
+          li
+            a.blog-post-card(href="/blog/hyperscalers-are-4500-years-old/")
+              h2.blog-post-card__title Hyperscalers are 4500 years old
+              p.blog-post-card__meta May 2, 2026 - infrastructure, history
+              p.blog-post-card__description The Great Pyramid and a hyperscale datacenter are structurally identical bets — concentrated short-term cost justified across a longer horizon.
+          li
+            a.blog-post-card(href="/blog/local-llms-history/")
+              h2.blog-post-card__title A History of Local LLMs
+              p.blog-post-card__meta Mar 20, 2026 - llms, dossier
+              p.blog-post-card__description A detailed look at the timeline of local large language models.
+      .grain-layer(aria-hidden='true')

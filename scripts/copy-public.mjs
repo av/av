@@ -7,6 +7,7 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
 const sourceDir = path.join(projectRoot, 'public');
 const targetDir = path.join(projectRoot, 'dist');
+const vercelConfigPath = path.join(projectRoot, 'vercel.json');
 
 async function main() {
   try {
@@ -24,6 +25,14 @@ async function main() {
     recursive: true,
     force: true,
   });
+
+  try {
+    await fs.copyFile(vercelConfigPath, path.join(targetDir, 'vercel.json'));
+  } catch (error) {
+    if (!error || error.code !== 'ENOENT') {
+      throw error;
+    }
+  }
 }
 
 main().catch((error) => {

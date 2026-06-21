@@ -32,14 +32,16 @@ Last updated: 2026-03-08.
 npm run blog:generate       # generate blog pages + SEO artifacts from content/blog/*.md
 npm run dev                 # blog:generate, then Parcel serve (all entries)
 npm run dev:qr              # Parcel serve for QR page only
-npm run build               # blog:generate → Parcel build → copy public/ into dist/
+npm run build               # blog:generate → Parcel build → copy public/ → verify:grain
+npm run verify:grain        # headless geometry gate (also runs at end of build)
 npm run deploy              # rm dist/, npm run build, vercel --prod
 npm run cache:bust          # rm -rf .parcel-cache
-npx tsc --noEmit            # TypeScript static check (no test runner exists)
+npm test                    # node:test suite for blog decor frontmatter validation
+npx tsc --noEmit            # TypeScript static check
 ```
 
-No ESLint, Prettier, or test framework is configured. `npx tsc --noEmit` is the
-only static check. Future tests: `npx vitest run path/to/file.test.ts -t "name"`.
+No ESLint or Prettier is configured. Static checks: `npm test` (blog decor
+frontmatter in `scripts/blog/decor-config.test.mjs`) and `npx tsc --noEmit`.
 
 ## Repository Map
 
@@ -86,6 +88,28 @@ public/                   Static files copied verbatim into dist/ at build time
    draft: true                 # optional; omit or set false to publish
    ---
    ```
+
+   Optional background decor (`decor`):
+
+   ```yaml
+   # Pictogram gutters (default) — SVG sprites in left/right margins
+   decor:
+     seed: "my-post-slug"      # required; drives deterministic placement
+     theme: default            # optional; pictogram theme from decor-themes.mjs
+     count: 5                  # optional; 1–64 pictograms (default 16)
+     type: pictogram           # optional; default when omitted
+
+   # Generative canvas background — animated field behind content
+   decor:
+     seed: "my-post-slug"      # required; drives deterministic layout
+     canvas: local-inference   # required; renderer kind (currently: local-inference)
+     color: cyan               # optional; Flexoki accent (red|orange|yellow|green|cyan|blue|purple|magenta)
+     type: canvas              # optional when canvas is set; inferred automatically
+   ```
+
+   A shorthand string (`decor: "my-seed"`) is equivalent to pictogram decor with
+   the default theme. If `canvas` is set to a valid kind, `type: canvas` is inferred
+   even when `type` is omitted.
 
 3. Run `npm run blog:generate` (or `npm run dev`, which runs it automatically).
 4. The generator writes `src/blog/<slug>/index.pug`, updates `src/blog/index.pug`,
@@ -201,6 +225,8 @@ used in `src/career/timelineEvents.ts` and `src/skills/skillList.ts`.
 
 - Run the relevant build/dev command for the touched entry point(s).
 - Run `npx tsc --noEmit` after any TypeScript change.
+- Run `npm run verify:grain` after changes to grain clipping or splitter geometry
+  (also runs automatically via `npm run build`).
 - Manually verify affected UI on desktop and mobile widths.
 - After adding/removing blog posts, run `npm run blog:generate` and verify
   `/blog/` index and the post route.

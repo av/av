@@ -5,6 +5,9 @@ import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import { marked } from 'marked';
 
+import { normalizeDecor, validateDecor } from './decor-config.mjs';
+import { buildDecorSprite, decorThemes, resolveDecorTheme } from './decor-themes.mjs';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..', '..');
@@ -57,6 +60,8 @@ async function main() {
       fieldErrors.push(`${relativeFilePath}: "draft" must be a boolean when provided.`);
     }
 
+    fieldErrors.push(...validateDecor(frontmatter, relativeFilePath));
+
     if (fieldErrors.length > 0) {
       validationErrors.push(...fieldErrors);
       continue;
@@ -72,6 +77,7 @@ async function main() {
       dateIso: parsedDate.value.toISOString(),
       isDraft: frontmatter.draft === true,
       html: marked.parse(parsed.content),
+      decor: normalizeDecor(frontmatter.decor),
     });
   }
 
@@ -255,31 +261,173 @@ function renderBlogIndexPug(posts, siteUrl) {
     "    link(rel='stylesheet', href='../main.scss')",
     "    link(rel='stylesheet', href='../blog.scss')",
     '  body.blog-page',
-    "    svg(style='position:absolute;width:0;height:0')",
-    "      filter#noise(color-interpolation-filters='sRGB' x='0%' y='0%' width='100%' height='100%')",
-    "        feTurbulence(type='fractalNoise' baseFrequency='0.7' numOctaves='1' stitchTiles='stitch' result='noiseOut')",
-    "        feColorMatrix(type='saturate' values='0' in='noiseOut' result='grayNoise')",
-    "        feBlend(in='SourceGraphic' in2='contrastedNoise' mode='overlay' result='blended')",
-    "        feComposite(in='blended' in2='SourceGraphic' operator='in')",
-    '    main.blog-shell',
-    '      div(style="padding: 1rem;")',
-    "        a.blog-back-link(href='/') Back to home",
-    "        h1.blog-title(data-text='Blog') Blog",
-    '      ul.blog-post-list',
+    '    .blog-canvas',
+    '      main.blog-shell',
+    '        div(style="padding: 1rem;")',
+    "          a.blog-back-link(href='/') Back to home",
+    "          h1.blog-title(data-text='Blog') Blog",
+    '        ul.blog-post-list',
   ];
 
   for (const post of posts) {
     const postUrl = `/blog/${post.slug}/`;
     lines.push(
-      '        li',
-      `          a.blog-post-card(href=${JSON.stringify(postUrl)})`,
-      `            h2.blog-post-card__title ${escapePugText(post.title)}`,
-      `            p.blog-post-card__meta ${escapePugText(formatDisplayDate(post.date))} - ${escapePugText(post.tags.join(', '))}`,
-      `            p.blog-post-card__description ${escapePugText(post.description)}`,
+      '          li',
+      `            a.blog-post-card(href=${JSON.stringify(postUrl)})`,
+      `              h2.blog-post-card__title ${escapePugText(post.title)}`,
+      `              p.blog-post-card__meta ${escapePugText(formatDisplayDate(post.date))} - ${escapePugText(post.tags.join(', '))}`,
+      `              p.blog-post-card__description ${escapePugText(post.description)}`,
     );
   }
 
+  lines.push("      .grain-layer(aria-hidden='true')");
+
   return `${lines.join('\n')}\n`;
+}
+
+function createSeededRandom(seed) {
+  let h1 = 1779033703;
+  let h2 = 3144134277;
+  let h3 = 1013904242;
+  let h4 = 2773480762;
+
+  for (let i = 0; i < seed.length; i++) {
+    const k = seed.charCodeAt(i);
+    h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
+    h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
+    h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
+    h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
+  }
+
+  h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
+  h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
+  h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
+  h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
+
+  let a = h1 >>> 0;
+  let b = h2 >>> 0;
+  let c = h3 >>> 0;
+  let d = h4 >>> 0;
+
+  return function () {
+    a >>>= 0;
+    b >>>= 0;
+    c >>>= 0;
+    d >>>= 0;
+    const t = (a + b) | 0;
+    a = b ^ (b >>> 9);
+    b = (c + (c << 3)) | 0;
+    c = (c << 21) | (c >>> 11);
+    d = (d + 1) | 0;
+    const nextT = (t + d) | 0;
+    c = (c + nextT) | 0;
+    return (nextT >>> 0) / 4294967296;
+  };
+}
+
+function pickDecorSymbols(symbols, count, rand) {
+  if (count % symbols.length === 0) {
+    const picks = symbols.flatMap((symbol) => Array.from({ length: count / symbols.length }, () => symbol));
+
+    for (let i = picks.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [picks[i], picks[j]] = [picks[j], picks[i]];
+    }
+
+    return picks;
+  }
+
+  return Array.from({ length: count }, () => symbols[Math.floor(rand() * symbols.length)]);
+}
+
+const DECOR_GUTTER_SLOTS = [
+  { side: 'left', left: 7, top: 16 },
+  { side: 'left', left: 8, top: 40 },
+  { side: 'left', left: 6, top: 66 },
+  { side: 'right', left: 92, top: 28 },
+  { side: 'right', left: 90, top: 56 },
+];
+
+function shuffleInPlace(items, rand) {
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+
+  return items;
+}
+
+function renderPictogramMarkup(symbol) {
+  return [
+    "          svg.blog-pictogram(viewBox='0 0 24 24')",
+    `            use(href='#pictogram-${symbol}')`,
+  ];
+}
+
+function renderDecorPug(decor) {
+  const rand = createSeededRandom(decor.seed);
+  const theme = resolveDecorTheme(decor.theme);
+  const slotCount = Math.min(decor.count, theme.symbols.length, DECOR_GUTTER_SLOTS.length);
+  const pickedSymbols = pickDecorSymbols(theme.symbols, slotCount, rand);
+  const slots = shuffleInPlace([...DECOR_GUTTER_SLOTS.slice(0, slotCount)], rand);
+  const lines = ["      .blog-pictograms(aria-hidden='true')"];
+
+  for (let i = 0; i < slotCount; i++) {
+    const symbol = pickedSymbols[i];
+    const slot = slots[i];
+    const left = slot.left + (rand() - 0.5) * 1.5;
+    const top = slot.top + (rand() - 0.5) * 2;
+    const opacity = 0.09 + rand() * 0.03;
+
+    lines.push(
+      `        .blog-pictogram-wrap.blog-pictogram-wrap--${slot.side}(style='--left:${left.toFixed(2)}%;--top:${top.toFixed(2)}%;--pictogram-opacity:${opacity.toFixed(3)}')`,
+      ...renderPictogramMarkup(symbol),
+    );
+  }
+
+  return lines;
+}
+
+function renderDecorSprite(themeName) {
+  return buildDecorSprite(resolveDecorTheme(themeName));
+}
+
+function renderDecorSpriteBlock(themeName) {
+  const indent = (line) => `  ${line}`;
+
+  return [
+    "      svg.blog-defs(aria-hidden='true' focusable='false')",
+    ...renderDecorSprite(themeName).map(indent),
+  ];
+}
+
+function renderCanvasDecorPug(decor) {
+  const attrs = [
+    `        data-decor-seed=${JSON.stringify(decor.seed)}`,
+    `        data-decor-canvas=${JSON.stringify(decor.canvas)}`,
+  ];
+  if (decor.color) {
+    attrs.push(`        data-decor-color=${JSON.stringify(decor.color)}`);
+  }
+  return [
+    "      canvas.blog-decor-canvas(aria-hidden='true'",
+    ...attrs.slice(0, -1),
+    attrs[attrs.length - 1] + ')',
+  ];
+}
+
+function renderDecorContent(decor) {
+  if (decor.type === 'canvas') {
+    return {
+      blocks: renderCanvasDecorPug(decor),
+      script: "    script(src='../decor.ts' type='module')",
+    };
+  }
+
+  return {
+    blocks: [...renderDecorSpriteBlock(decor.theme), ...renderDecorPug(decor)],
+    script: null,
+  };
 }
 
 function renderPostPug(post, siteUrl) {
@@ -307,6 +455,7 @@ function renderPostPug(post, siteUrl) {
   };
 
   const schemaJson = JSON.stringify(schema, null, 2);
+  const decorContent = post.decor ? renderDecorContent(post.decor) : null;
 
   return [
     'doctype html',
@@ -335,17 +484,15 @@ function renderPostPug(post, siteUrl) {
     "    link(rel='stylesheet', href='../../main.scss')",
     "    link(rel='stylesheet', href='../../blog.scss')",
     '  body.blog-page',
-    "    svg(style='position:absolute;width:0;height:0')",
-    "      filter#noise(color-interpolation-filters='sRGB' x='0%' y='0%' width='100%' height='100%')",
-    "        feTurbulence(type='fractalNoise' baseFrequency='0.7' numOctaves='1' stitchTiles='stitch' result='noiseOut')",
-    "        feColorMatrix(type='saturate' values='0' in='noiseOut' result='grayNoise')",
-    "        feBlend(in='SourceGraphic' in2='contrastedNoise' mode='overlay' result='blended')",
-    "        feComposite(in='blended' in2='SourceGraphic' operator='in')",
-    '    main.blog-shell.blog-post',
-    "      a.blog-back-link(href='/blog/') Back to blog",
-    `      h1.blog-title(data-text=${JSON.stringify(post.title)}) ${escapePugText(post.title)}`,
-    `      p.blog-post-card__meta ${escapePugText(formatDisplayDate(post.date))} - ${escapePugText(post.tags.join(', '))}`,
-    `      .blog-content!= ${JSON.stringify(post.html)}`,
+    '    .blog-canvas',
+    ...(decorContent ? decorContent.blocks : []),
+    '      main.blog-shell.blog-post',
+    "        a.blog-back-link(href='/blog/') Back to blog",
+    `        h1.blog-title(data-text=${JSON.stringify(post.title)}) ${escapePugText(post.title)}`,
+    `        p.blog-post-card__meta ${escapePugText(formatDisplayDate(post.date))} - ${escapePugText(post.tags.join(', '))}`,
+    `        .blog-content!= ${JSON.stringify(post.html)}`,
+    "      .grain-layer(aria-hidden='true')",
+    ...(decorContent?.script ? [decorContent.script] : []),
   ].join('\n') + '\n';
 }
 

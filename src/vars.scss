@@ -1,15 +1,15 @@
-// Palette — Aurora Borealis
-$primary: darken(#64ffda, 18%);  // aurora teal
-$secondary: #2a1317;             // arctic midnight navy
+// Palette
+$primary: #3dd4b0;
+$secondary: #281318;
 $secondary-tint: lighten($secondary, 12%);
-$tertiary: #c87fed;              // aurora violet
-$lime: #13ec33;                  // polar green
-$amber: #ffd60a;                 // polar gold
-$red: #ff375f;                   // northern lights red
+$tertiary: #e07a3a;
+$lime: #52e03a;
+$amber: #f0b429;
+$red: #f94158;
 $white: white;
 
 // Pallete tints
-$darken-sm: #f0ece6;             // warm off-white — slight sand undertone
+$darken-sm: #f2ece6;
 
 // Main typography
 $text: $secondary;
@@ -101,9 +101,35 @@ $md-mid: $sm + calc(($md - $sm) / 2);
   }
 }
 
+// Cap band above each splitter goo row (shared with clip + local grain).
+$splitter-cap-height: 5vh;
+
 // Slides the content under
 // the forthplaced splitter.
 @mixin splitter-glide {
   padding-top: 15vh;
   margin-top: -15vh;
 }
+
+// Shared film-grain tile (native 256px asset, displayed at 1.5×).
+$grain-tile-size: 384px;
+
+@mixin grain-tile {
+  background-repeat: repeat;
+  background-size: $grain-tile-size $grain-tile-size;
+  background-image: url('./noise-a.png');
+  image-rendering: pixelated;
+}
+
+// Page-wide grain overlay tile. Normal alpha composite — overlay blend vanishes
+// on white splitter goo output (confirmed via agent-browser layer toggles).
+@mixin grain-surface($z-index: 9999) {
+  position: absolute;
+  inset: 0;
+  z-index: $z-index;
+  pointer-events: none;
+  transform: translateZ(0);
+  @include grain-tile;
+  opacity: 0.06;
+}
+

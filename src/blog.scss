@@ -84,7 +84,14 @@ $font-mono:    'Geist Mono', ui-monospace, 'SFMono-Regular', 'Consolas', monospa
   -moz-osx-font-smoothing: grayscale;
 }
 
+.blog-canvas {
+  position: relative;
+  min-height: 100vh;
+}
+
 .blog-shell {
+  position: relative;
+  z-index: 1;
   width: min(100%, 48rem);
   margin: 0 auto;
   padding: 3rem 1.5rem 4rem;
@@ -259,6 +266,79 @@ $font-mono:    'Geist Mono', ui-monospace, 'SFMono-Regular', 'Consolas', monospa
   .blog-title {
     margin-bottom: 0.4rem;
   }
+
+  .blog-post-card__meta {
+    margin-bottom: 2.5rem;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Generative canvas decor
+// ---------------------------------------------------------------------------
+.blog-decor-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.85;
+
+  @include media(lt-md) {
+    opacity: 0.65;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Background pictograms
+// ---------------------------------------------------------------------------
+.blog-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+// Gutter watermarks — same quiet glow as prose headings, no motion (title owns phosphor).
+.blog-pictograms {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--fx-tx3);
+
+  @include media(lt-md) {
+    opacity: 0.55;
+  }
+}
+
+@include media(lt-md) {
+  .blog-pictogram-wrap--left {
+    left: min(var(--left), 8%) !important;
+  }
+
+  .blog-pictogram-wrap--right {
+    left: max(var(--left), 92%) !important;
+  }
+}
+
+.blog-pictogram-wrap {
+  position: absolute;
+  left: var(--left);
+  top: var(--top);
+  opacity: var(--pictogram-opacity);
+  transform: translate(-50%, -50%);
+}
+
+.blog-pictogram {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+
+  @media (prefers-color-scheme: dark) {
+    filter: drop-shadow(0 0 2px var(--fx-tx3));
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -380,6 +460,38 @@ $font-mono:    'Geist Mono', ui-monospace, 'SFMono-Regular', 'Consolas', monospa
     margin: 2rem 0;
   }
 
+  // --- Tables ---
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.25rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.92rem;
+  }
+
+  th, td {
+    padding: 0.55rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--fx-ui);
+  }
+
+  th {
+    font-family: $font-heading;
+    font-weight: 500;
+    font-size: 0.85rem;
+    color: var(--fx-tx);
+    text-shadow: 0 0 3px var(--fx-tx2), 0 0 8px var(--fx-tx3);
+    border-bottom: 2px solid var(--fx-border);
+  }
+
+  td {
+    color: var(--fx-tx2);
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
   // --- Images ---
   img {
     max-width: 100%;
@@ -435,5 +547,9 @@ $font-mono:    'Geist Mono', ui-monospace, 'SFMono-Regular', 'Consolas', monospa
     h1, h2, h3, h4 {
       text-shadow: none;
     }
+  }
+
+  .blog-pictogram {
+    filter: none;
   }
 }

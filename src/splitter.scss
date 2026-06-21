@@ -1,15 +1,50 @@
 @import "./vars";
 
+.splitter-cap {
+  height: $splitter-cap-height;
+}
+
 .splitter {
   $size: 20rem;
   $circle-size: $size * 0.5;
   $animation-duration: 30s;
 
+  position: relative;
+  width: 100%;
+  margin-top: -$splitter-cap-height;
+  overflow: visible;
   z-index: 1;
-  filter: url(#fancy-goo-lg);
 
-  @include media(sm) {
-    filter: url(#fancy-goo);
+  // Goo filter creates a compositing layer that can obscure the global grain
+  // unless clipped; local ::after grain covers the splitter's own (goo) box,
+  // while the page-wide grain covers everything else. ::after spans exactly the
+  // splitter border box so it aligns 1:1 with the clip hole — the cap band above
+  // stays page-wide grain, which keeps grain visible even where the previous
+  // section (e.g. the opaque z-indexed intro) would occlude this local layer.
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    // Above .splitter__goo filter output within this stacking context.
+    z-index: 2;
+    pointer-events: none;
+    transform: translateZ(0);
+    @include grain-tile;
+    // Phase-synced to .grain-layer in postprocess.ts (--grain-bg-y).
+    background-position: 0 var(--grain-bg-y, 0);
+    opacity: 0.06;
+  }
+
+  &__goo {
+    overflow: hidden;
+    filter: url(#fancy-goo-lg);
+
+    @include media(sm) {
+      filter: url(#fancy-goo);
+    }
   }
 
   .circle-container {

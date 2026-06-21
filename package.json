@@ -1,12 +1,17 @@
 {
   "name": "av.codes",
   "scripts": {
-    "dev": "npm run blog:generate && node scripts/blog/run-parcel.mjs serve",
-    "dev:qr": "parcel src/harbor-qr.pug",
+    "dev": "npm run noise:generate && npm run blog:generate && node scripts/blog/run-parcel.mjs serve",
+    "dev:clean": "node scripts/cache-bust.mjs && npm run dev",
+    "dev:qr": "npm run noise:generate && parcel src/harbor-qr.pug",
     "blog:generate": "node scripts/blog/generate.mjs",
-    "build": "npm run blog:generate && node scripts/blog/run-parcel.mjs build && node scripts/copy-public.mjs",
+    "test": "node --test scripts/blog/decor-config.test.mjs",
+
+    "noise:generate": "node scripts/generate-noise.mjs",
+    "build": "npm run noise:generate && npm run cache:bust && npm run blog:generate && node scripts/blog/run-parcel.mjs build && node scripts/copy-public.mjs && npm run verify:grain",
     "deploy": "./scripts/deploy.sh",
-    "cache:bust": "rm -rf ./.parcel-cache"
+    "cache:bust": "node scripts/cache-bust.mjs",
+    "verify:grain": "node scripts/verify-grain-geometry.mjs"
   },
   "devDependencies": {
     "@parcel/packager-raw-url": "^2.12.0",
@@ -17,6 +22,7 @@
     "@types/chroma-js": "^2.4.4",
     "@types/d3": "^7.4.3",
     "cssnano": "^7.0.2",
+    "lucide-static": "^1.21.0",
     "parcel": "^2.12.0",
     "pug": "^3.0.3",
     "sass": "^1.21.0",
