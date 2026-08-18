@@ -13,11 +13,11 @@ decor:
   color: cyan
 ---
 
-The limit we keep hitting is how many decisions per hour a system can actually make. Every agent run we build stalls at the same kind of step, the one that needs a judgment call, with a human somewhere who has to supply it.
+A single agent run generates roughly 40 decision points an hour. Ten concurrent runs generate 400. Our teams are already past a hundred concurrent runs on a normal workday, which means the system asks for thousands of judgment calls per hour and a person can supply maybe five or six.
 
-One agent with one person watching it is fine. A hundred agents running in parallel need a hundred of those judgment calls at the same time, and that's what our workload looks like now. One person can service a handful of those calls an hour, and a fleet asks for far more than that at once. Waiting on a person for each decision already looks impossible, so we have to scale decision throughput drastically.
+Most of those decisions are small. Which file to read next, whether to retry a failed tool call, when to abandon one approach and try another. They don't require expertise. They require presence, someone paying attention at the moment the question comes up. That's what makes the bottleneck so stubborn: it's not a skill problem, it's a scheduling problem and humans don't schedule down to the second.
 
-The way out is agents controlling other agents. A supervising agent watches its fleet, reads state, kills bad branches, reallocates work, and answers the questions that would otherwise queue in someone's inbox. Humans stay in the picture for direction, budget, and the expensive or irreversible calls, but we come off the critical path of every small choice, because we can't keep up with that many runs.
+The arithmetic only works if agents make those calls for other agents. A supervisor agent reads the state of ten running agents, kills the ones stuck in loops, reassigns work from a failed branch to a fresh one, and answers the "should I retry or bail" questions that would otherwise sit in a queue until a person notices. Humans set the goal, set the budget, and handle the irreversible calls. Everything else runs without waiting for us.
 
 What we have for that job today is roughly an abacus. It works, and you can follow every bead: run logs, retry loops, a dashboard with a few graphs, a person deciding when to intervene. All of it assumes a human reading at human pace, so it caps out at the number of agents one attentive operator can hold in their head.
 
