@@ -102,7 +102,7 @@ public/                   Static files copied verbatim into dist/ at build time
    # Generative canvas background — animated field behind content
    decor:
      seed: "my-post-slug"      # required; drives deterministic layout
-     canvas: local-inference   # required; renderer kind (currently: local-inference)
+     canvas: local-inference   # required; renderer kind (local-inference | asking | boids)
      color: cyan               # optional; Flexoki accent (red|orange|yellow|green|cyan|blue|purple|magenta)
      type: canvas              # optional when canvas is set; inferred automatically
    ```

@@ -1,10 +1,14 @@
 import { decorCanvasKinds } from '../../scripts/blog/decor-canvas-kinds.mjs';
 import { initLocalInferenceCanvas } from './decor/localInferenceCanvas';
+import { initAskingCanvas } from './decor/askingCanvas';
+import { initBoidsCanvas } from './decor/boidsCanvas';
 
 type CanvasRenderer = (canvas: HTMLCanvasElement, seed: string) => void;
 
 const canvasRenderers: Record<string, CanvasRenderer> = {
   'local-inference': initLocalInferenceCanvas,
+  'asking': initAskingCanvas,
+  'boids': initBoidsCanvas,
 };
 
 function initCanvasDecor(canvas: HTMLCanvasElement) {
