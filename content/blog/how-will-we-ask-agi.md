@@ -1,7 +1,7 @@
 ---
 title: "How will we ask AGI?"
 date: "2026-08-12"
-description: "When execution is close to free, the bottleneck moves to knowing what is worth executing. How delegation, taste, and paperwork reshape the way we talk to capable systems."
+description: "As execution becomes cheap, deciding what deserves doing becomes harder. Delegation, judgment, and written authority will shape how we ask capable systems to work."
 slug: "how-will-we-ask-agi"
 tags:
   - llms
@@ -13,30 +13,30 @@ decor:
   color: blue
 ---
 
-Today, when you prompt a model, you write a paragraph of hedging: do this, not that, in this format, and please don't invent the numbers. Once the system genuinely understands the business, you say less. "Close the quarter" is three words, and each one carries dozens of choices you never have to spell out.
+Prompting a model today often means writing a paragraph of precautions: follow these steps, avoid those mistakes, use this format, and keep the numbers real. A system that understands the business needs fewer words. "Close the quarter" takes just three, with dozens of decisions left implicit.
 
-In the extreme version, you give the system two words and a shrug, and it fills in the rest.
+Take that far enough and two words plus a shrug are enough for the system to work out the rest.
 
-That only works when something substantial sits behind the shrug. The system needs enough context to fill in what you left unsaid. When you shorten a request that far, you rely on the listener already knowing what you would have said. They have built that knowledge from the last eighteen months of your decisions, your rejected drafts, the customer you told them never to call on a Friday. You ask cheaply because someone has spent those eighteen months writing the decisions down and keeping them current.
+That shrug depends on a substantial history. The system needs context to recover everything you have omitted. A request this short assumes the listener already knows the fuller version. That knowledge comes from eighteen months of decisions, discarded drafts, and details such as which customer must never get a call on Friday. The request takes little effort because someone spent those eighteen months recording the decisions and keeping the record current.
 
-You see the same shift in how you write requirements. Engineers spent forty years learning to write requirements down. Their builder could not ask questions.
+Requirements will change in much the same way. Engineers spent forty years getting better at specifying what software should do. The machine carrying out those instructions had no way to ask for clarification.
 
-When the builder can ask, and ask fast, you turn the spec into a conversation that runs alongside the work. You get three questions, two you had not thought about, one that shows your plan is wrong. A competent contractor has always worked this way, and a competent contractor sometimes declines.
+When the system can ask questions quickly, the specification becomes an ongoing conversation as the work progresses. It might ask three things: two you had overlooked and a third that exposes a flaw in the plan. A good contractor already works this way, including occasionally turning the job down.
 
-People underestimate how much value comes from hearing no early. These systems can do most of what you ask. They can also see that you asked for the wrong thing. When you evaluate one, test the pushback before anything else. Do you want a coworker who pushes back at nine in the morning, before the work is done and the money is spent? Nearly everyone says yes. Nearly all of them mean it for about a week.
+An early refusal can save more than people expect. These systems can carry out most requests. They can also recognize when the request itself is misguided. The first thing to test when evaluating one is its willingness to challenge you. Would you welcome a coworker who questions your plan at nine in the morning, while there is still time to avoid the work and expense? Almost everyone says they would. For most, that enthusiasm lasts about a week.
 
-When execution costs nothing, you spend most of your time choosing what to build.
+Once execution is effectively free, choosing the work takes up most of your time.
 
-The skill you need for that is taste and judgment - a feel for which of the forty possible projects actually matters to the business. You grow it by making decisions and watching what happens, which takes years. Companies have always been short of it, but they used to be shorter of hands.
+That choice calls for taste and judgment: knowing which of forty possible projects would actually help the business. Developing it takes years of making choices and living with the results. Companies have always needed more of this judgment, though the shortage of people to do the work used to be more pressing.
 
-Every time you delegate, you leave a record of who allowed what, at what cost ceiling, and whether you can undo the action. You send a contract and it stands; you move a meeting and nothing breaks.
+Each delegation leaves a record of the authorized action, the person who approved it, the spending limit, and whether it can be reversed. Sending a contract commits you in a way that rescheduling a meeting usually does not.
 
-Every company that runs these systems well keeps a boring list of irreversible actions, each with a named human beside it. We talked about AI safety for a decade, and that list is what we built.
+A company that operates these systems well keeps an unremarkable list of irreversible actions, with a person responsible for each one. A decade of talking about AI safety has brought us to that list.
 
-You hand software the task. The person who wrote the scope and the person who approved it still carry the responsibility. Now you have the scope in writing.
+Software takes on the work. Responsibility stays with whoever defined its scope and whoever approved it. The scope is now part of the written record.
 
-You will write that file in a house style. We will invent vocabulary for this: budgets, scopes, escalation paths, sign-off gates. You will talk to the system the way you talk to a general counsel: exact about authority and limits, careful about what goes on the record and which calls are yours to make.
+Each organization will develop its own style for that document. We will settle on terms for budgets, scopes, escalation routes, and required approvals. Addressing the system will resemble briefing a general counsel: be precise about its authority, explicit about the limits, and deliberate about what gets recorded and which decisions remain yours.
 
-You learn delegation one way: you hand work to someone, watch them do it differently than you would, and decide whether the difference mattered. Most of us are getting our practice now, on small tasks, with systems that are nowhere near general. The habits we build on small tasks are the ones we will carry to larger ones. The habit nearly everyone is building right now is approving output without reading it.
+Learning to delegate means giving someone work, watching them take a different approach, and judging whether that difference affected the result. Most of us are practicing on small tasks with systems still far from general intelligence. We will bring the habits formed here to more consequential work. At the moment, the habit almost everyone is developing is approval without reading.
 
-These systems keep getting better at what we ask. As they do, we reveal more about ourselves through the asking, because that is what people read. Which projects you funded, which formats you insisted on, which customers you protected - you lay out your actual authority structure and actual priorities in your requests. You also reveal your values by what you refuse to do. When you delegate at this level, you leave your scopes written down.
+These systems become steadily better at carrying out our requests. As they improve, the requests become a more revealing record of the people making them. The projects you fund, the formats you require, and the customers you protect show how authority works and what takes priority in practice. Your refusals say just as much about what you value. Delegation at this scale puts those choices in writing.

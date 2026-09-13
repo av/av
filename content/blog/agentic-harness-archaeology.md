@@ -1,7 +1,7 @@
 ---
 title: "Agentic Harness Archaeology"
 date: "2026-08-04"
-description: "Most of an agentic harness is fossilized workaround — dating the layers of RAG, tool-call parsers, DAG runners, and giant instruction files, and deciding what deserves to survive."
+description: "Agent harnesses preserve workarounds for older models. A look through RAG, tool-call parsers, workflow graphs, and sprawling instructions to decide what still earns its place."
 slug: "agentic-harness-archaeology"
 tags:
   - llms
@@ -13,60 +13,60 @@ decor:
 
 ## Dating the layers
 
-Most of what we call an agentic harness is a fossil. It is the shape a workaround took when an older model could not do something. The workaround hardened into architecture, got a name, and kept being defended long after the model learned the trick on its own.
+Much of an agentic harness preserves the limitations of an earlier model. Its components began as ways to get around something that model could not do. Over time, each workaround became an architectural choice with a name and defenders, even after the model could handle the task itself.
 
-You can date a harness the way you date rock layers. Show me a codebase with a vector store, a ReAct parser, a DAG runner, and a 4,000-line instruction file and I can tell you which quarter it was designed in.
+A harness has layers that reveal its age. A vector store, a ReAct parser, a DAG runner, and 4,000 lines of instructions can place a codebase's design within a particular quarter.
 
-The uncomfortable part is that none of these were mistakes. Each one was the right engineering answer to a real weakness in the model. The mistake is keeping them after the weakness is gone. A workaround that no longer works around anything is just a wall between the model and the task.
+The awkward part is that these choices made sense at the time. Each addressed a limitation the model actually had. Keeping them becomes a mistake once that limitation disappears. Without its original purpose, a workaround simply gets in the model's way.
 
 ## Small context: from RAG to agentic search
 
-When the window was 4k or 8k tokens, you physically could not put all your documents in the prompt. So we built retrieval: split the documents into chunks, embed the chunks, embed the question, take the top few matches, and hope the chunk boundaries did not cut the answer in half. Then reranking, since the top matches were noisy. Hybrid search came next, to catch the exact strings embeddings missed. Then query rewriting, because the user's wording was not the document's wording. A pipeline of patches, each one patching the previous patch.
+With context windows of 4k or 8k tokens, an entire document collection could not fit in the prompt. Retrieval gave us a way around that: divide documents into chunks, embed them and the question, select the closest matches, and hope the answer survived the split. Noisy matches led us to add reranking. Hybrid search followed to recover exact strings that embeddings overlooked. Query rewriting addressed the gap between how users asked questions and how documents phrased the answers. Each addition compensated for a weakness in the preceding step.
 
-Every one of those layers was a guess made on the model's behalf. The retriever decided what was relevant before the one thing capable of judging relevance ever saw the documents.
+At every stage, another component guessed what the model would need. The retriever selected the relevant material before the model had a chance to judge the documents for itself.
 
-Now the model greps. It lists the directory, reads a file, notices a reference, reads that file, and stops when it has enough. That is not a smarter retriever, it is the retriever removed and the decision handed back to the thing that can actually make it. In our own workspace the tool that answers the most questions is ripgrep.
+Now the model can search with grep. It inspects a directory, opens a file, follows a reference to another, and stops once it has what it needs. The model takes over the decision about what to retrieve, replacing a separate selection layer. In our workspace, ripgrep answers more questions than any other tool.
 
-RAG did not die, it narrowed. If you have ten million documents and answers must come back in milliseconds, you still need an index. What died is RAG as the default answer to the question "how does the agent know things."
+RAG still has a place, though its role is more specific. Searching ten million documents in milliseconds still calls for an index. It no longer needs to be the automatic answer to how an agent finds information.
 
 ## Poor tool calling: from custom formats to native calls
 
-We used to write parsers. `Action: search[query]` on its own line. XML tags, which the model closed more reliably than JSON braces. Regex to catch the model writing "Action:" with a lowercase a. Retry prompts that said "you MUST respond only with valid JSON" in capitals, which worked about as well as capitals usually work.
+We once had to build parsers for the model's output. A call might be a line containing `Action: search[query]`. We tried XML because models were better at closing its tags than balancing JSON braces. We added regular expressions for cases where the model wrote "action:" in lowercase. On failure, we retried with prompts demanding "you MUST respond only with valid JSON," with the limited success you would expect from capital letters.
 
-The instruction files from that era are mostly apologies for the format. Half the words exist to prevent a parse error rather than to describe the job.
+Instruction files from that period spend much of their space accommodating the format. As much as half the text is devoted to avoiding parse errors, leaving the actual job in the remaining space.
 
-Tool calling is now trained in. Millions of rewarded examples taught the model to produce a structured call, and your prompt threatening it had nothing to do with that. Parsing is the runtime's problem and mostly a solved one.
+Models now learn tool calling during training. Millions of rewarded examples taught them to emit structured calls; threats in a prompt contributed nothing to that training. The runtime handles parsing, which is now largely a solved problem.
 
-What survives is not the parser but the interface design. Tool names, argument shapes, error messages, and how much a single call gets done still decide whether an agent works. A tool that returns a 4,000-line error dump teaches the model nothing. A tool that returns "file not found, did you mean X" teaches it in one turn. That is API design, and it does not go out of date.
+The lasting work is designing the interface. An agent's effectiveness still depends on tool names, argument structures, useful errors, and how much work one call accomplishes. A 4,000-line error dump gives the model little guidance. "File not found, did you mean X" can tell it how to recover immediately. Those are enduring questions of API design.
 
 ## Poor orchestration: from pipelines to native delegation
 
-When models could not hold a plan for twenty steps, we held the plan for them. Chains. Graphs. State machines with hand-drawn transitions. Frameworks whose core building block was a node, because the model was too unreliable to be trusted with the flow of the work, so the flow moved into Python where we could see it.
+When a model could not follow a plan for twenty steps, we kept track of the plan in code. We built chains of operations. We connected them into graphs. We specified transitions in state machines by hand. Frameworks organized everything around nodes, putting control flow in visible Python code because the model could not reliably manage it.
 
-The honest version of a 2023 agent framework is a workflow engine with an LLM in one of the boxes.
+An accurate description of a 2023 agent framework is a workflow engine with an LLM assigned to one step.
 
-Training then taught the models to plan, break work down, hand pieces off, and pull the results back together. A single prompt now does what a hand-built graph used to do, worse in the graph's best case and far better in every case the graph's author did not think of.
+Later training taught models to plan, divide tasks, delegate pieces, and combine the results. One prompt can now cover the work of a manually assembled graph, falling short where the graph is strongest but handling unforeseen cases far better.
 
-We benchmarked this. An orchestrator pattern, a strong model planning and cheap models executing, scored 37 of 44 tasks at $1.33 each against a single-model baseline of 34 of 44 at $1.58. Rough numbers at best, the test suite was too small and too easy, but the direction was clear: handing work off helps where quality depends on the initial plan and hurts where the work needs one mind holding all the context.
+We tested that tradeoff. Using a strong model to plan and cheaper models to execute solved 37 of 44 tasks at $1.33 per task, compared with 34 of 44 at $1.58 for a single model. The small, easy test suite makes these rough results, but they suggested a useful distinction: delegation helps when the initial plan determines quality and hurts when success requires keeping all the context together.
 
-What is worth keeping is not the graph, it is the boundaries. Safe-to-retry operations, approval gates, budget limits, and audit trails are not patches for model weakness. They are things you want even from a perfect employee.
+The boundaries remain worth keeping as the graphs become less necessary. Operations that can safely be retried, required approvals, spending limits, and audit records serve purposes independent of model capability. Even a perfect employee would need to work within them.
 
 ## Poor instruction following: from instruction files to a little ambiguity
 
-The instruction file grew for the same reason a legal contract grows: every past failure became a clause. A rule the model ignored once got bold. It ignored the bold, so the rule got a section. It got a section, then all caps, then "CRITICAL: NEVER", then a nested subsection contradicting a rule 900 lines above it.
+Instruction files grew like legal contracts, adding a clause for every previous failure. An ignored rule acquired bold formatting. When that failed, it acquired a section of its own. The section gained capitals, then "CRITICAL: NEVER," and eventually a subsection that contradicted a rule 900 lines earlier.
 
-Nobody wrote that file. It piled up.
+The file had no single authorial design. It accumulated one correction at a time.
 
-Spelling everything out has a real cost that only shows up with capable models. Every rule you write is a possibility you remove. Ten if-then branches for one situation stop the model from noticing that the situation is actually the eleventh case. The instruction file becomes a ceiling.
+As models become more capable, the cost of specifying every detail becomes easier to see. Each rule rules out an option. Ten explicit branches can prevent the model from recognizing a situation that fits none of them. The instructions start to limit what the model can achieve.
 
-Steering that works now looks more like a brief to a competent new hire. Here is the goal, here is what good looks like, here are the two constraints that are genuinely non-negotiable, here is who to ask. Leave the middle open. The model fills it with judgment, and judgment is the thing you are paying for.
+Effective guidance increasingly resembles a brief for a capable new colleague. State the goal, describe a good result, name the two firm constraints, and say where to take questions. Allow room to choose the approach. That gives the model space to exercise the judgment you are paying it to provide.
 
-This is the hardest one to give up, because a long instruction file feels like control. It is readable, diffable, reviewable. Leaving things open feels like carelessness right up until you measure it.
+Long instruction files are especially hard to relinquish because they make control tangible. You can read them, compare revisions, and review each change. Allowing discretion can feel careless until you measure the results.
 
 ## What this implies for what you build now
 
-The practical question for anything you add to a harness: which model weakness does this make up for, and what happens to it when that weakness disappears in the next release. If you cannot name the weakness, you are probably building architecture for its own sake. If you can name it, you have just written the rule for when to delete it, which is worth more than the component itself.
+Before adding a component to a harness, identify the model limitation it addresses and what you will do if the next release removes that limitation. If you cannot identify one, the architecture may be serving no useful purpose. If you can, you also have a condition for deleting the component, which may be more valuable than the component itself.
 
-Some things do not make up for any weakness at all, and those are the ones with a future. Permissions. Cost tracking. Visibility into what the agent is doing. Evals. Data plumbing to the systems the model cannot reach. Interfaces that report failure usefully. None of that gets absorbed by a better model, because none of it is about the model being weak.
+The most durable components serve needs that remain as models improve. They control permissions. They account for spending. They make agent activity visible. They evaluate performance. They connect the model to otherwise inaccessible data and systems. They explain failures in ways that help recovery. A stronger model does not replace these functions because their purpose does not depend on its limitations.
 
-The bitter lesson has a boring follow-on for harness engineering. Whatever scaffolding you are proudest of is the scaffolding most likely to be deleted, because the cleverness in it exists to route around something that will not stay broken for long. Build so that deletion is cheap.
+The bitter lesson has a mundane consequence for harness design. Your cleverest scaffolding may be the first to become obsolete, since so much of that cleverness goes into overcoming limitations that training will eventually remove. Make it inexpensive to delete.

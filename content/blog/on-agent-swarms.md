@@ -1,7 +1,7 @@
 ---
 title: "On agent swarms"
 date: "2026-08-17"
-description: "The bottleneck is decisions per hour. Scaling past one human per agent means agents supervising agents, and a control surface built for machine operators."
+description: "Human attention limits how many agents a team can run. Scaling further requires agents that supervise other agents and software they can operate themselves."
 slug: "on-agent-swarms"
 tags:
   - agents
@@ -13,18 +13,18 @@ decor:
   color: cyan
 ---
 
-A single agent run generates roughly 40 decision points an hour. Ten concurrent runs generate 400, and our teams are already past a hundred concurrent runs on a normal workday, which means the system asks for thousands of judgment calls per hour while a person can supply maybe five or six.
+A single agent run needs roughly 40 decisions an hour. Ten simultaneous runs need 400, and our teams already run more than a hundred at once on a typical workday, creating thousands of judgment calls each hour when a person can handle perhaps five or six.
 
-Most of those decisions are small, things like which file to read next, whether to retry a failed tool call, when to abandon one approach and try another. Any person on the team could answer them, but only if they happen to be paying attention at the exact moment the question comes up. The bottleneck is entirely about scheduling, and humans don't schedule down to the second.
+Most of these are small choices: which file to read next, whether a failed tool call deserves another attempt, or when to try a different approach. Anyone on the team could make them, provided they were watching when the question arose. The limiting factor is timing, and people cannot arrange their attention second by second.
 
-So the decision-maker has to be an agent too. A supervisor agent reads the state of ten running agents, kills the ones stuck in loops, reassigns work from a failed branch to a fresh one, and answers the "should I retry or bail" questions that would otherwise sit in a queue until a person notices. Humans still set the goal, set the budget, and handle the irreversible calls, but everything below that threshold runs without waiting for us.
+Those decisions need an agent of their own. A supervisor checks on ten running agents, stops those caught in loops, moves work off failed branches, and decides whether to retry or give up before the question can sit waiting for a human. People still choose the goal, allocate the budget, and authorize irreversible actions; routine work proceeds without waiting for our attention.
 
-What we have for that job today is roughly an abacus. It works, and you can follow every bead, the run logs, retry loops, a dashboard with a few graphs, a person deciding when to intervene. All of it assumes a human reading at human pace, so it caps out at the number of agents one attentive operator can hold in their head.
+Today's tools for this job are about as sophisticated as an abacus. You can trace the activity through run logs, retries, and a few dashboard graphs, with a person watching for the moment to intervene. The whole arrangement depends on how quickly that person can read and how many agents they can keep track of.
 
-The next version of this looks more like a PC, a general control surface where the operator is itself a program, where one supervisor can run other supervisors, and where you add agents without adding people to watch them.
+The next step resembles a PC: a general-purpose system that programs can operate, where supervisors manage other supervisors and adding agents does not require hiring more people to watch them.
 
-Getting there means redoing most of software. The control surface has to be built for machine operators, with permissions, budgets, audit trails, and interrupts as first-class primitives that another agent can call. Underneath that sits infrastructure for running fleets, covering scheduling, isolation, durable state, and observability that agents can read programmatically, and very little of the current stack was designed with any of that in mind.
+Getting there will require rebuilding much of our software. Agents need direct ways to manage permissions, enforce budgets, inspect audit trails, and interrupt work. The infrastructure beneath those controls must schedule and isolate whole fleets, preserve their state, and expose their activity in a form agents can query—requirements much of today's software was never designed to meet.
 
-Compute stays scarce through all of it, because every improvement in decision throughput turns into more agents running longer, and teams keep adding runs until whatever capacity arrives is used up. Build the control layer assuming compute is the constraint, and assume the interesting work is deciding where it goes.
+Compute remains scarce because faster decisions let more agents run for longer, and teams keep expanding their workloads until they consume the available capacity. Design the controls around that limit: the consequential decisions will be about where to spend the compute.
 
-The team that figures this out first will run a thousand agents with five people, and from the outside it will look like a company ten times its size.
+The first team to make this work will have five people running a thousand agents, with the apparent capacity of a company ten times larger.
