@@ -1,0 +1,1310 @@
+{
+  "trigger": "click",
+  "interval": 2200,
+  "aspect": 1.5,
+  "seed": "tooling-history",
+  "steps": [
+    {
+      "title": "VS Code",
+      "caption": "Manual coding. One editor, one repo, no assistance.",
+      "state": {
+        "groups": [
+          {
+            "id": "editor",
+            "label": "Editor",
+            "color": "blue",
+            "x": 50,
+            "y": 40
+          }
+        ],
+        "nodes": [
+          {
+            "id": "ivan",
+            "label": "Ivan",
+            "kind": "human",
+            "color": "yellow",
+            "x": 12,
+            "y": 50
+          },
+          {
+            "id": "vscode",
+            "label": "VS Code",
+            "sublabel": "manual coding",
+            "kind": "tool",
+            "color": "blue",
+            "group": "editor"
+          },
+          {
+            "id": "repo",
+            "label": "code",
+            "kind": "repo",
+            "color": "purple",
+            "group": "editor"
+          }
+        ],
+        "edges": [
+          {
+            "from": "ivan",
+            "to": "vscode",
+            "label": "types"
+          },
+          {
+            "from": "vscode",
+            "to": "repo"
+          }
+        ]
+      }
+    },
+    {
+      "title": "ChatGPT",
+      "caption": "Added ChatGPT for questions from time to time. Copy the answer back by hand.",
+      "ops": [
+        {
+          "op": "add",
+          "group": {
+            "id": "questions",
+            "label": "Questions",
+            "color": "tx2",
+            "x": 50,
+            "y": 78
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "chatgpt",
+            "label": "ChatGPT",
+            "sublabel": "questions",
+            "kind": "chat",
+            "color": "green",
+            "group": "questions"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "chatgpt",
+            "style": "dashed",
+            "label": "asks"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Kagi Assistant",
+      "caption": "Added Kagi Assistant for questions from time to time.",
+      "ops": [
+        {
+          "op": "add",
+          "node": {
+            "id": "kagi",
+            "label": "Kagi Assistant",
+            "sublabel": "questions",
+            "kind": "chat",
+            "color": "green",
+            "group": "questions"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "kagi",
+            "style": "dashed"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Removed ChatGPT",
+      "caption": "Kagi answers the same questions with sources. ChatGPT goes.",
+      "ops": [
+        {
+          "op": "remove",
+          "node": "chatgpt"
+        }
+      ]
+    },
+    {
+      "title": "Copilot",
+      "caption": "Added Copilot to VS Code for completions.",
+      "ops": [
+        {
+          "op": "add",
+          "node": {
+            "id": "copilot",
+            "label": "Copilot",
+            "sublabel": "completions",
+            "kind": "agent",
+            "color": "cyan",
+            "group": "editor"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "copilot",
+            "to": "vscode",
+            "label": "completes"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Ollama",
+      "caption": "Added Ollama for local inference of small models.",
+      "ops": [
+        {
+          "op": "add",
+          "group": {
+            "id": "local",
+            "label": "Local",
+            "color": "orange",
+            "x": 82,
+            "y": 40
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "ollama",
+            "label": "Ollama",
+            "sublabel": "small models",
+            "kind": "model",
+            "color": "orange",
+            "group": "local"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "ollama",
+            "style": "dashed",
+            "label": "local inference"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Aider",
+      "caption": "Tried Aider. It never stuck.",
+      "ops": [
+        {
+          "op": "add",
+          "node": {
+            "id": "aider",
+            "label": "Aider",
+            "sublabel": "terminal",
+            "kind": "agent",
+            "color": "magenta",
+            "state": "pending"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "aider",
+            "to": "repo",
+            "style": "dashed",
+            "state": "pending"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "aider",
+            "to": "ollama",
+            "style": "dashed",
+            "state": "pending"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Roo Code",
+      "caption": "Tried Roo Code, as it was named then. Did not attach either.",
+      "ops": [
+        {
+          "op": "set",
+          "node": "aider",
+          "state": "muted",
+          "sublabel": "dropped"
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "roo",
+            "label": "Roo Code",
+            "sublabel": "extension",
+            "kind": "agent",
+            "color": "magenta",
+            "group": "editor",
+            "state": "pending"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "roo",
+            "to": "repo",
+            "style": "dashed",
+            "state": "pending"
+          }
+        }
+      ]
+    },
+    {
+      "title": "claude.ai",
+      "caption": "Started using claude.ai for copy-pasting prompts. Bigger tasks, still by hand.",
+      "ops": [
+        {
+          "op": "remove",
+          "node": "aider"
+        },
+        {
+          "op": "set",
+          "node": "roo",
+          "state": "muted",
+          "sublabel": "dropped"
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "claude-ai",
+            "label": "claude.ai",
+            "sublabel": "copy-paste prompts",
+            "kind": "chat",
+            "color": "cyan",
+            "group": "questions",
+            "state": "active"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "claude-ai",
+            "label": "prompts"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "claude-ai",
+            "to": "vscode",
+            "style": "dashed",
+            "label": "paste"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Copilot ask chat",
+      "caption": "Copilot added ask chat. Codebase questions move from the browser into the editor.",
+      "ops": [
+        {
+          "op": "remove",
+          "node": "roo"
+        },
+        {
+          "op": "set",
+          "node": "copilot",
+          "sublabel": "ask chat",
+          "size": 1.15
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "copilot",
+            "to": "repo",
+            "label": "reads",
+            "style": "dashed"
+          }
+        },
+        {
+          "op": "set",
+          "node": "claude-ai",
+          "state": "default"
+        }
+      ]
+    },
+    {
+      "title": "Copilot agent mode",
+      "caption": "Copilot added agent mode. Function and module level changes, reviewed in the diff.",
+      "ops": [
+        {
+          "op": "set",
+          "node": "copilot",
+          "sublabel": "agent mode",
+          "size": 1.3,
+          "state": "active"
+        },
+        {
+          "op": "set",
+          "edge": "copilot->repo",
+          "label": "edits",
+          "style": "solid"
+        },
+        {
+          "op": "set",
+          "edge": "copilot->vscode",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "title": "RustDesk",
+      "caption": "RustDesk to control the laptop remotely. The laptop becomes one machine among others.",
+      "ops": [
+        {
+          "op": "add",
+          "group": {
+            "id": "laptop",
+            "label": "Laptop",
+            "color": "tx2"
+          }
+        },
+        {
+          "op": "move",
+          "group": "editor",
+          "parent": "laptop"
+        },
+        {
+          "op": "move",
+          "group": "local",
+          "parent": "laptop"
+        },
+        {
+          "op": "set",
+          "group": "editor",
+          "x": 36,
+          "y": 36
+        },
+        {
+          "op": "set",
+          "group": "local",
+          "x": 62,
+          "y": 36
+        },
+        {
+          "op": "set",
+          "group": "laptop",
+          "x": 48,
+          "y": 38
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "rustdesk",
+            "label": "RustDesk",
+            "sublabel": "remote control",
+            "kind": "service",
+            "color": "tx2",
+            "group": "laptop"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "rustdesk",
+            "label": "from anywhere"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "rustdesk",
+            "to": "vscode",
+            "style": "dashed"
+          }
+        }
+      ]
+    },
+    {
+      "title": "lifeos",
+      "caption": "Developing lifeos as a host for skills, agents and notes. Everything the agents need lives in one repo.",
+      "ops": [
+        {
+          "op": "add",
+          "group": {
+            "id": "lifeos",
+            "label": "lifeos",
+            "color": "yellow",
+            "x": 50,
+            "y": 80
+          }
+        },
+        {
+          "op": "set",
+          "group": "questions",
+          "x": 84,
+          "y": 80
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "lifeos-repo",
+            "label": "lifeos",
+            "kind": "repo",
+            "color": "yellow",
+            "group": "lifeos"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "skills",
+            "label": "skills",
+            "kind": "skill",
+            "color": "yellow",
+            "group": "lifeos"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "agents",
+            "label": "agents",
+            "sublabel": "personas",
+            "kind": "agent",
+            "color": "yellow",
+            "group": "lifeos"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "skills",
+            "to": "copilot",
+            "style": "flow",
+            "color": "yellow",
+            "label": "loads"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "lifeos-repo",
+            "style": "dashed"
+          }
+        }
+      ]
+    },
+    {
+      "title": "RUG",
+      "caption": "A custom multi-layer agent system for Copilot: Repeat Until Good. A loop that keeps re-running until the check passes.",
+      "ops": [
+        {
+          "op": "add",
+          "node": {
+            "id": "rug",
+            "label": "RUG",
+            "sublabel": "Repeat Until Good",
+            "kind": "agent",
+            "color": "red",
+            "group": "editor",
+            "state": "active"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "rug",
+            "to": "copilot",
+            "label": "drives",
+            "color": "red"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "agents",
+            "to": "rug",
+            "style": "flow",
+            "color": "yellow"
+          }
+        },
+        {
+          "op": "set",
+          "node": "copilot",
+          "state": "default"
+        }
+      ]
+    },
+    {
+      "title": "DRUG",
+      "caption": "An extra layer on top of RUG working at milestone level: DRUG.",
+      "ops": [
+        {
+          "op": "add",
+          "node": {
+            "id": "drug",
+            "label": "DRUG",
+            "sublabel": "milestone level",
+            "kind": "agent",
+            "color": "red",
+            "group": "editor",
+            "state": "active",
+            "size": 1.15
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "drug",
+            "to": "rug",
+            "label": "plans",
+            "color": "red"
+          }
+        },
+        {
+          "op": "set",
+          "edge": "agents->rug",
+          "label": ""
+        },
+        {
+          "op": "set",
+          "node": "rug",
+          "state": "default"
+        }
+      ]
+    },
+    {
+      "title": "VS Code limits",
+      "caption": "The VS Code limits become tight. Quotas, context and one window at a time.",
+      "ops": [
+        {
+          "op": "set",
+          "node": "vscode",
+          "state": "error",
+          "sublabel": "limits tight"
+        },
+        {
+          "op": "set",
+          "node": "copilot",
+          "state": "muted"
+        },
+        {
+          "op": "set",
+          "node": "rug",
+          "state": "muted"
+        },
+        {
+          "op": "set",
+          "node": "drug",
+          "state": "muted"
+        },
+        {
+          "op": "set",
+          "edge": "rug->copilot",
+          "state": "muted"
+        },
+        {
+          "op": "set",
+          "edge": "drug->rug",
+          "state": "muted"
+        },
+        {
+          "op": "set",
+          "edge": "copilot->repo",
+          "state": "muted"
+        }
+      ]
+    },
+    {
+      "title": "Claude Code",
+      "caption": "A Claude Code subscription plus the VS Code extension. The agent stops being a feature of the editor.",
+      "ops": [
+        {
+          "op": "remove",
+          "node": "rug"
+        },
+        {
+          "op": "remove",
+          "node": "drug"
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "claude-code",
+            "label": "Claude Code",
+            "sublabel": "sub + extension",
+            "kind": "agent",
+            "color": "cyan",
+            "group": "editor",
+            "state": "active",
+            "size": 1.3
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "claude-code",
+            "to": "repo",
+            "label": "edits"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "claude-code",
+            "label": "tasks"
+          }
+        },
+        {
+          "op": "set",
+          "edge": "skills->copilot",
+          "state": "muted"
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "skills",
+            "to": "claude-code",
+            "style": "flow",
+            "color": "yellow"
+          }
+        },
+        {
+          "op": "set",
+          "node": "vscode",
+          "state": "muted",
+          "sublabel": "editor"
+        },
+        {
+          "op": "set",
+          "edge": "ivan->vscode",
+          "state": "muted",
+          "label": ""
+        },
+        {
+          "op": "set",
+          "edge": "copilot->repo",
+          "state": "muted"
+        }
+      ]
+    },
+    {
+      "title": "control/",
+      "caption": "lifeos grows a control module: a persistent OpenCode daemon over Tailscale on pop-os and fedora, with Backlog.md as the task list.",
+      "ops": [
+        {
+          "op": "remove",
+          "node": "copilot"
+        },
+        {
+          "op": "set",
+          "node": "claude-ai",
+          "state": "muted"
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "backlog",
+            "label": "Backlog.md",
+            "kind": "tool",
+            "color": "yellow",
+            "group": "lifeos"
+          }
+        },
+        {
+          "op": "add",
+          "group": {
+            "id": "pop-os",
+            "label": "pop-os",
+            "color": "green",
+            "x": 85,
+            "y": 18
+          }
+        },
+        {
+          "op": "add",
+          "group": {
+            "id": "fedora",
+            "label": "fedora",
+            "color": "green",
+            "x": 85,
+            "y": 54
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "opencode-pop",
+            "label": "OpenCode",
+            "sublabel": "daemon",
+            "kind": "service",
+            "color": "green",
+            "group": "pop-os"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "opencode-fed",
+            "label": "OpenCode",
+            "sublabel": "daemon",
+            "kind": "service",
+            "color": "green",
+            "group": "fedora"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "claude-code",
+            "to": "opencode-pop",
+            "label": "tailscale",
+            "color": "green"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "claude-code",
+            "to": "opencode-fed",
+            "color": "green"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "skills",
+            "to": "opencode-pop",
+            "style": "flow",
+            "color": "yellow"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "skills",
+            "to": "opencode-fed",
+            "style": "flow",
+            "color": "yellow"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Hermes gateway",
+      "caption": "The OpenCode daemon is retired. Hermes takes the gateway role on fedora; pop-os drops out.",
+      "ops": [
+        {
+          "op": "remove",
+          "node": "opencode-pop"
+        },
+        {
+          "op": "remove",
+          "group": "pop-os"
+        },
+        {
+          "op": "set",
+          "node": "opencode-fed",
+          "state": "error",
+          "sublabel": "retired"
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "hermes",
+            "label": "Hermes",
+            "sublabel": "gateway",
+            "kind": "service",
+            "color": "green",
+            "group": "fedora",
+            "state": "active"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "claude-code",
+            "to": "hermes",
+            "color": "green",
+            "label": "api"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "skills",
+            "to": "hermes",
+            "style": "flow",
+            "color": "yellow"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Kandev",
+      "caption": "Kandev on fedora: tasks on a board, every agent in its own worktree. Claude Code, Codex and Grok run as sessions.",
+      "ops": [
+        {
+          "op": "remove",
+          "node": "opencode-fed"
+        },
+        {
+          "op": "set",
+          "node": "hermes",
+          "state": "muted"
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "kandev-fed",
+            "label": "Kandev",
+            "sublabel": "board",
+            "kind": "service",
+            "color": "green",
+            "group": "fedora",
+            "state": "active",
+            "size": 1.2
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "fed-cc",
+            "label": "claude",
+            "sublabel": "session",
+            "kind": "agent",
+            "color": "cyan",
+            "group": "fedora"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "fed-codex",
+            "label": "codex",
+            "sublabel": "session",
+            "kind": "agent",
+            "color": "cyan",
+            "group": "fedora"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-fed",
+            "to": "fed-cc",
+            "style": "dashed",
+            "color": "green"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-fed",
+            "to": "fed-codex",
+            "style": "dashed",
+            "color": "green"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "kandev-fed",
+            "label": "tasks",
+            "color": "green"
+          }
+        },
+        {
+          "op": "set",
+          "edge": "ivan->claude-code",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "title": "Fleet",
+      "caption": "Four Kandev instances: mac as controller, hetzner, sandbox-av, fedora. RustDesk retires; the laptop is a controller, not a screen.",
+      "ops": [
+        {
+          "op": "remove",
+          "node": "rustdesk"
+        },
+        {
+          "op": "remove",
+          "node": "hermes"
+        },
+        {
+          "op": "set",
+          "group": "laptop",
+          "label": "MacBook · controller",
+          "x": 44,
+          "y": 40
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "kandev-mac",
+            "label": "Kandev",
+            "sublabel": "controller",
+            "kind": "service",
+            "color": "green",
+            "group": "laptop",
+            "state": "active",
+            "size": 1.2
+          }
+        },
+        {
+          "op": "add",
+          "group": {
+            "id": "hetzner",
+            "label": "hetzner",
+            "color": "orange",
+            "x": 85,
+            "y": 13
+          }
+        },
+        {
+          "op": "add",
+          "group": {
+            "id": "av",
+            "label": "sandbox-av",
+            "color": "magenta",
+            "x": 16,
+            "y": 82
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "kandev-hz",
+            "label": "Kandev",
+            "kind": "service",
+            "color": "green",
+            "group": "hetzner"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "kandev-av",
+            "label": "Kandev",
+            "kind": "service",
+            "color": "green",
+            "group": "av"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "hz-cc",
+            "label": "claude",
+            "sublabel": "session",
+            "kind": "agent",
+            "color": "cyan",
+            "group": "hetzner"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "av-droid",
+            "label": "droid",
+            "sublabel": "session",
+            "kind": "agent",
+            "color": "cyan",
+            "group": "av"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-hz",
+            "to": "hz-cc",
+            "style": "dashed",
+            "color": "green"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-av",
+            "to": "av-droid",
+            "style": "dashed",
+            "color": "green"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-mac",
+            "to": "kandev-fed",
+            "label": "tailscale",
+            "color": "green"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-mac",
+            "to": "kandev-hz",
+            "color": "green"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-mac",
+            "to": "kandev-av",
+            "color": "green"
+          }
+        },
+        {
+          "op": "set",
+          "edge": "ivan->kandev-fed",
+          "state": "muted",
+          "label": ""
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "kandev-mac",
+            "label": "tasks",
+            "color": "green"
+          }
+        },
+        {
+          "op": "move",
+          "node": "claude-code",
+          "group": "laptop"
+        },
+        {
+          "op": "set",
+          "node": "claude-code",
+          "size": 1,
+          "state": "default",
+          "sublabel": "session"
+        },
+        {
+          "op": "remove",
+          "edge": "claude-code->repo"
+        },
+        {
+          "op": "remove",
+          "edge": "ivan->claude-code"
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-mac",
+            "to": "claude-code",
+            "style": "dashed",
+            "color": "green"
+          }
+        },
+        {
+          "op": "set",
+          "group": "editor",
+          "x": 30,
+          "y": 26
+        },
+        {
+          "op": "set",
+          "group": "local",
+          "x": 30,
+          "y": 56
+        }
+      ]
+    },
+    {
+      "title": "fleet CLI + skills sync",
+      "caption": "One CLI over the fleet: health, dispatch, and skills sync that mirrors control/skills to every host.",
+      "ops": [
+        {
+          "op": "add",
+          "node": {
+            "id": "fleet",
+            "label": "fleet",
+            "sublabel": "CLI",
+            "kind": "tool",
+            "color": "yellow",
+            "group": "lifeos"
+          }
+        },
+        {
+          "op": "remove",
+          "edge": "skills->claude-code"
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "fleet",
+            "to": "kandev-hz",
+            "style": "dashed",
+            "color": "yellow",
+            "label": "doctor"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "skills",
+            "to": "kandev-mac",
+            "style": "flow",
+            "color": "yellow",
+            "label": "sync"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "skills",
+            "to": "kandev-hz",
+            "style": "flow",
+            "color": "yellow"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "skills",
+            "to": "kandev-av",
+            "style": "flow",
+            "color": "yellow"
+          }
+        },
+        {
+          "op": "set",
+          "node": "backlog",
+          "state": "muted"
+        },
+        {
+          "op": "set",
+          "node": "agents",
+          "state": "muted"
+        }
+      ]
+    },
+    {
+      "title": "Control center",
+      "caption": "A controller task on the mac runs the loop: collect from all instances, classify by evidence, act, escalate only blockers.",
+      "ops": [
+        {
+          "op": "add",
+          "node": {
+            "id": "controller",
+            "label": "controller",
+            "sublabel": "agent session",
+            "kind": "agent",
+            "color": "red",
+            "group": "laptop",
+            "state": "active",
+            "size": 1.15
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "controller",
+            "to": "kandev-hz",
+            "style": "dashed",
+            "color": "red",
+            "label": "collect · act"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "controller",
+            "to": "kandev-av",
+            "style": "dashed",
+            "color": "red"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "controller",
+            "to": "kandev-fed",
+            "style": "dashed",
+            "color": "red"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "fleet",
+            "to": "controller",
+            "style": "flow",
+            "color": "yellow"
+          }
+        },
+        {
+          "op": "remove",
+          "edge": "fleet->kandev-hz"
+        },
+        {
+          "op": "set",
+          "edge": "ivan->kandev-mac",
+          "label": "goals"
+        },
+        {
+          "op": "set",
+          "node": "kandev-mac",
+          "state": "default"
+        }
+      ]
+    },
+    {
+      "title": "Today",
+      "caption": "A person, a controller, three workers and a repo of skills. The editor is still there, mostly as a diff viewer.",
+      "ops": [
+        {
+          "op": "remove",
+          "group": "questions"
+        },
+        {
+          "op": "remove",
+          "node": "kagi"
+        },
+        {
+          "op": "remove",
+          "node": "claude-ai"
+        },
+        {
+          "op": "set",
+          "node": "ivan",
+          "state": "active"
+        },
+        {
+          "op": "set",
+          "node": "vscode",
+          "sublabel": "diff viewer"
+        },
+        {
+          "op": "set",
+          "node": "fed-cc",
+          "state": "active"
+        },
+        {
+          "op": "set",
+          "node": "hz-cc",
+          "state": "active"
+        },
+        {
+          "op": "set",
+          "node": "av-droid",
+          "state": "active"
+        },
+        {
+          "op": "set",
+          "node": "ollama",
+          "state": "muted",
+          "sublabel": "idle"
+        }
+      ]
+    }
+  ]
+}

@@ -43,12 +43,12 @@ $gs-accents: red, orange, yellow, green, cyan, blue, purple, magenta, tx, tx2, t
 }
 
 .graph-story__caption {
-  min-height: 4.6rem;
+  min-height: 5.4rem;
   padding: 0.75rem 1rem 0.5rem;
   font-family: 'Figtree', system-ui, sans-serif;
 
   @include media(sm) {
-    min-height: 5.6rem;
+    min-height: 7.2rem;
   }
 }
 
@@ -223,16 +223,12 @@ $gs-accents: red, orange, yellow, green, cyan, blue, purple, magenta, tx, tx2, t
   fill: var(--gs-accent);
 }
 
-.gs-node {
-  transition: opacity 0.5s ease;
-}
-
 .gs-node__shape {
   fill: color-mix(in srgb, var(--gs-accent) 20%, var(--fx-bg));
   stroke: var(--gs-accent);
   stroke-width: 2;
   stroke-linejoin: round;
-  transition: fill 0.5s ease, stroke 0.5s ease, stroke-width 0.3s ease;
+  transition: fill 0.5s ease, stroke 0.5s ease, stroke-width 0.3s ease, opacity 0.4s ease;
   transform-box: fill-box;
   transform-origin: center;
 }
@@ -262,7 +258,8 @@ $gs-accents: red, orange, yellow, green, cyan, blue, purple, magenta, tx, tx2, t
   animation: gs-pulse 1.8s ease-in-out infinite;
 }
 
-.gs-node.is-state-muted {
+.gs-node.is-state-muted .gs-node__shape,
+.gs-node.is-state-muted text {
   opacity: 0.35;
 }
 
@@ -280,16 +277,12 @@ $gs-accents: red, orange, yellow, green, cyan, blue, purple, magenta, tx, tx2, t
   fill: color-mix(in srgb, var(--fx-red) 25%, var(--fx-bg));
 }
 
-.gs-edge {
-  transition: opacity 0.5s ease;
-}
-
 .gs-edge__line {
   fill: none;
   stroke: var(--gs-accent);
   stroke-width: 1.8;
   stroke-linecap: round;
-  transition: stroke 0.5s ease;
+  transition: stroke 0.5s ease, opacity 0.4s ease;
 }
 
 .gs-edge.is-style-dashed .gs-edge__line {
@@ -301,7 +294,8 @@ $gs-accents: red, orange, yellow, green, cyan, blue, purple, magenta, tx, tx2, t
   animation: gs-flow 1s linear infinite;
 }
 
-.gs-edge.is-state-muted {
+.gs-edge.is-state-muted .gs-edge__line,
+.gs-edge.is-state-muted text {
   opacity: 0.3;
 }
 
@@ -336,8 +330,6 @@ $gs-accents: red, orange, yellow, green, cyan, blue, purple, magenta, tx, tx2, t
     animation: none;
   }
 
-  .gs-node,
-  .gs-edge,
   .gs-node__shape,
   .gs-edge__line,
   .gs-group rect {

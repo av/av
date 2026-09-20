@@ -47,6 +47,12 @@ Placeholder. Skills are a git repo synced to every machine on a schedule, so a s
 
 Placeholder. A supervisor session per machine watches the others, retries stuck ones and reports upward, so the human reads summaries rather than logs.
 
-The same story again, driven by scrolling instead of clicking:
+## How the tooling got here
+
+The longer version, one tool at a time, from a plain editor to a fleet. This one is the engine's stress test: nodes are added, dropped and re-labelled, groups get nested and dissolved, and identity has to survive every step.
+
+<div class="graph-story" data-graph="tooling-history" data-trigger="click"></div>
+
+The same fleet story again, driven by scrolling instead of clicking:
 
 <div class="graph-story" data-graph="agentic-setup" data-trigger="scroll"></div>

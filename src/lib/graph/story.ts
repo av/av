@@ -12,6 +12,18 @@ export const edgeId = (edge: EdgeSpec): string => edge.id ?? `${edge.from}->${ed
 
 const emptyState = (): GraphState => ({ nodes: [], edges: [], groups: [] });
 
+/** Assigns patch fields onto target; `null` clears the field. */
+function applyPatch<T extends object>(target: T, patch: { [K in keyof T]?: T[K] | null }): void {
+  for (const key of Object.keys(patch) as (keyof T)[]) {
+    const value = patch[key];
+    if (value === null) {
+      delete target[key];
+    } else if (value !== undefined) {
+      target[key] = value;
+    }
+  }
+}
+
 const cloneState = (state: GraphState): GraphState => ({
   nodes: state.nodes.map((node) => ({ ...node })),
   edges: state.edges.map((edge) => ({ ...edge })),
@@ -76,15 +88,15 @@ function applyOp(state: GraphState, op: GraphOp, stepIndex: number): void {
     case 'set': {
       if ('node' in op) {
         const { op: _op, node: id, ...patch } = op;
-        if (patch.group !== undefined) findGroup(patch.group);
-        Object.assign(findNode(id), patch);
+        if (patch.group !== undefined && patch.group !== null) findGroup(patch.group);
+        applyPatch(findNode(id), patch);
       } else if ('edge' in op) {
         const { op: _op, edge: id, ...patch } = op;
-        Object.assign(findEdge(id), patch);
+        applyPatch(findEdge(id), patch);
       } else {
         const { op: _op, group: id, ...patch } = op;
-        if (patch.parent !== undefined) findGroup(patch.parent);
-        Object.assign(findGroup(id), patch);
+        if (patch.parent !== undefined && patch.parent !== null) findGroup(patch.parent);
+        applyPatch(findGroup(id), patch);
       }
       return;
     }

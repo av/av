@@ -76,9 +76,12 @@ export interface GraphState {
   groups: GroupSpec[];
 }
 
-export type NodePatch = Partial<Omit<NodeSpec, 'id'>>;
-export type EdgePatch = Partial<Omit<EdgeSpec, 'id' | 'from' | 'to'>>;
-export type GroupPatch = Partial<Omit<GroupSpec, 'id'>>;
+/** Patch values may be `null` to clear a previously set field. */
+type Clearable<T> = { [K in keyof T]?: T[K] | null };
+
+export type NodePatch = Clearable<Omit<NodeSpec, 'id'>>;
+export type EdgePatch = Clearable<Omit<EdgeSpec, 'id' | 'from' | 'to'>>;
+export type GroupPatch = Clearable<Omit<GroupSpec, 'id'>>;
 
 export type GraphOp =
   | { op: 'add'; node: NodeSpec }

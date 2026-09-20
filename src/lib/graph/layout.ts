@@ -8,6 +8,10 @@ export const BASE_RADIUS = 24;
 
 const CLUSTER_PULL = 0.16;
 const ROOT_PULL = 0.03;
+/** Pull of an unchanged node toward where it was in the previous step. */
+const INERTIA = 0.35;
+const TICKS = 320;
+const NESTED_SPREAD = 190;
 const CHARGE = -240;
 const LINK_DISTANCE = 70;
 const COLLIDE_PADDING = 22;
@@ -21,11 +25,13 @@ export interface LayoutNode extends d3.SimulationNodeDatum {
   spec: NodeSpec;
   x: number;
   y: number;
-  /** Position currently painted on screen; tweens converge on `x`/`y`. */
-  px: number;
-  py: number;
   /** False until the node has been given a starting position. */
   placed: boolean;
+  /** True when the node changed group in this step (it may travel far). */
+  moved: boolean;
+  /** Where the node was before this step; unchanged nodes are held near it. */
+  homeX: number;
+  homeY: number;
   r: number;
   shape: NodeShape;
   color: Accent;
@@ -67,7 +73,10 @@ export interface Layout {
 
 const KIND_SHAPES: Record<string, NodeShape> = {
   machine: 'rect',
+  tool: 'rect',
   service: 'pill',
+  chat: 'pill',
+  model: 'pill',
   agent: 'circle',
   human: 'circle',
   skill: 'diamond',
@@ -127,11 +136,47 @@ export default class GraphLayout {
     });
 
     this.assignAnchors(groups, nodes);
+    this.carryGroups(groups, nodes);
     this.simulate(nodes, edges, groups);
     this.measureGroups(groups, nodes);
 
     this.first = false;
-    return { width: this.width, height: this.height, nodes, edges, groups };
+    return this.snapshot(nodes, edges, groups);
+  }
+
+  /**
+   * The simulation keeps mutating its node objects across steps, so each step
+   * hands out an immutable copy. Replaying or jumping between steps therefore
+   * always renders exactly the geometry that was computed for that step.
+   */
+  private snapshot(nodes: LayoutNode[], edges: LayoutEdge[], groups: LayoutGroup[]): Layout {
+    const copies = new Map<string, LayoutNode>();
+    const nodeCopies = nodes.map((node) => {
+      const copy: LayoutNode = {
+        id: node.id,
+        spec: node.spec,
+        x: node.x,
+        y: node.y,
+        r: node.r,
+        shape: node.shape,
+        color: node.color,
+        path: [...node.path],
+        placed: true,
+        moved: false,
+        homeX: node.homeX,
+        homeY: node.homeY,
+      };
+      copies.set(node.id, copy);
+      return copy;
+    });
+    const edgeCopies = edges.map((edge) => ({
+      ...edge,
+      source: copies.get(edge.source.id) ?? edge.source,
+      target: copies.get(edge.target.id) ?? edge.target,
+    }));
+    const groupCopies = groups.map((group) => ({ ...group, box: { ...group.box }, anchor: { ...group.anchor } }));
+
+    return { width: this.width, height: this.height, nodes: nodeCopies, edges: edgeCopies, groups: groupCopies };
   }
 
   private buildGroups(specs: GroupSpec[]): LayoutGroup[] {
@@ -180,7 +225,12 @@ export default class GraphLayout {
         existing.r = r;
         existing.shape = spec.shape ?? shapeForKind(spec.kind);
         existing.color = spec.color ?? 'tx2';
+        // Only a change of the innermost group counts as a move; a re-parented
+        // group carries its members along as one body instead.
+        existing.moved = existing.path[existing.path.length - 1] !== path[path.length - 1];
         existing.path = path;
+        existing.homeX = existing.x;
+        existing.homeY = existing.y;
         return existing;
       }
 
@@ -189,13 +239,14 @@ export default class GraphLayout {
         spec,
         x: 0,
         y: 0,
-        px: 0,
-        py: 0,
         r,
         shape: spec.shape ?? shapeForKind(spec.kind),
         color: spec.color ?? 'tx2',
         path,
         placed: false,
+        moved: false,
+        homeX: 0,
+        homeY: 0,
       };
       this.nodes.set(spec.id, node);
       return node;
@@ -204,44 +255,101 @@ export default class GraphLayout {
 
   private assignAnchors(groups: LayoutGroup[], nodes: LayoutNode[]): void {
     const { width, height } = this;
-    const topLevel = groups.filter((g) => g.spec.parent === undefined);
-    const hasLooseNodes = nodes.some((n) => n.path.length === 0 && n.spec.x === undefined);
-    const slots = topLevel.length + (hasLooseNodes ? 1 : 0);
-    const columns = slots <= 3 ? slots : Math.ceil(slots / 2);
-    const rows = Math.ceil(slots / columns) || 1;
+    const deltas = new Map<string, { x: number; y: number }>();
+    const taken: { x: number; y: number }[] = nodes
+      .filter((n) => n.spec.x !== undefined && n.spec.y !== undefined)
+      .map((n) => this.explicitAnchor(n.spec) ?? { x: 0, y: 0 });
 
-    const slotAt = (index: number) => ({
-      x: (width * (index % columns + 1)) / (columns + 1),
-      y: (height * (Math.floor(index / columns) + 1)) / (rows + 1),
-    });
+    // Groups are sorted by depth, so parents are resolved before children.
+    for (const group of groups) {
+      const previous = this.previousAnchors.get(group.id);
+      const parent = group.spec.parent !== undefined ? groups.find((g) => g.id === group.spec.parent) : undefined;
+      const parentDelta = parent ? deltas.get(parent.id) : undefined;
+      const explicit = this.explicitAnchor(group.spec);
 
-    // Loose nodes take the last slot so groups fill from the left.
-    topLevel.forEach((group, index) => {
-      group.anchor = this.explicitAnchor(group.spec) ?? slotAt(index);
-    });
-    this.looseAnchor = hasLooseNodes ? slotAt(slots - 1) : { x: width / 2, y: height / 2 };
+      if (explicit) {
+        group.anchor = explicit;
+      } else if (previous) {
+        // Existing groups stay where they were, following a moving parent.
+        group.anchor = parentDelta ? { x: previous.x + parentDelta.x, y: previous.y + parentDelta.y } : previous;
+      } else if (parent) {
+        group.anchor = this.nestedSlot(group, parent, groups);
+      } else {
+        group.anchor = this.freeSlot(taken);
+      }
 
-    // Nested groups fan out horizontally under their parent's anchor. A parent
-    // with direct members of its own reserves the last slot for them.
+      if (previous) deltas.set(group.id, { x: group.anchor.x - previous.x, y: group.anchor.y - previous.y });
+      taken.push(group.anchor);
+    }
+
+    this.groupDeltas = deltas;
+    this.looseAnchor = { x: width / 2, y: height / 2 };
+
+    // A parent with direct members of its own keeps them beside its children.
     this.directAnchors.clear();
     for (const parent of groups) {
       const children = groups.filter((g) => g.spec.parent === parent.id);
-      if (children.length === 0) continue;
       const hasDirect = nodes.some((n) => n.path[n.path.length - 1] === parent.id);
-      const slots = children.length + (hasDirect ? 1 : 0);
-      const spread = 170;
-      const slotX = (index: number) => parent.anchor.x + (index - (slots - 1) / 2) * spread;
-
-      children.forEach((child, index) => {
-        child.anchor = this.explicitAnchor(child.spec) ?? { x: slotX(index), y: parent.anchor.y + 10 };
-      });
-      if (hasDirect) this.directAnchors.set(parent.id, { x: slotX(slots - 1), y: parent.anchor.y });
+      if (children.length === 0 || !hasDirect) continue;
+      const maxX = Math.max(...children.map((c) => c.anchor.x));
+      this.directAnchors.set(parent.id, { x: Math.min(maxX + NESTED_SPREAD, this.width - 140), y: parent.anchor.y });
     }
+  }
+
+  /** Anchor for a new nested group: to the right of its existing siblings, else on the parent. */
+  private nestedSlot(group: LayoutGroup, parent: LayoutGroup, groups: LayoutGroup[]): { x: number; y: number } {
+    const siblings = groups.filter((g) => g.spec.parent === parent.id && g !== group && g.anchor !== undefined);
+    const placed = siblings.filter((g) => this.previousAnchors.has(g.id) || this.explicitAnchor(g.spec));
+    if (placed.length === 0) return { x: parent.anchor.x, y: parent.anchor.y };
+    const maxX = Math.max(...placed.map((g) => g.anchor.x));
+    return { x: maxX + NESTED_SPREAD, y: parent.anchor.y };
+  }
+
+  /** Anchor for a new top-level group: the candidate point farthest from everything already placed. */
+  private freeSlot(taken: { x: number; y: number }[]): { x: number; y: number } {
+    const { width, height } = this;
+    const columns = [0.22, 0.5, 0.78];
+    const rows = [0.27, 0.5, 0.73];
+    let best = { x: width / 2, y: height / 2 };
+    let bestScore = -Infinity;
+    for (const row of rows) {
+      for (const column of columns) {
+        const candidate = { x: column * width, y: row * height };
+        const score = taken.length === 0 ? -Math.hypot(candidate.x - width / 2, candidate.y - height / 2) : Math.min(...taken.map((t) => Math.hypot(t.x - candidate.x, t.y - candidate.y)));
+        if (score > bestScore + 0.5) {
+          bestScore = score;
+          best = candidate;
+        }
+      }
+    }
+    return best;
   }
 
   private looseAnchor = { x: STAGE_WIDTH / 2, y: STAGE_WIDTH / 2 };
   /** Anchors for nodes that sit directly in a group that also has child groups. */
   private readonly directAnchors = new Map<string, { x: number; y: number }>();
+  private readonly previousAnchors = new Map<string, { x: number; y: number }>();
+  private groupDeltas = new Map<string, { x: number; y: number }>();
+
+  /**
+   * When a group's anchor moves between steps, carry its members along so the
+   * group travels as one body instead of re-flowing node by node.
+   */
+  private carryGroups(groups: LayoutGroup[], nodes: LayoutNode[]): void {
+    for (const node of nodes) {
+      if (!node.placed || node.moved) continue;
+      const innermost = node.path[node.path.length - 1];
+      const delta = innermost !== undefined ? this.groupDeltas.get(innermost) : undefined;
+      if (!delta || Math.abs(delta.x) + Math.abs(delta.y) < 0.5) continue;
+      node.x += delta.x;
+      node.y += delta.y;
+      node.homeX = node.x;
+      node.homeY = node.y;
+    }
+
+    this.previousAnchors.clear();
+    for (const group of groups) this.previousAnchors.set(group.id, { x: group.anchor.x, y: group.anchor.y });
+  }
 
   private explicitAnchor(spec: { x?: number; y?: number }): { x: number; y: number } | null {
     if (spec.x === undefined || spec.y === undefined) return null;
@@ -273,14 +381,23 @@ export default class GraphLayout {
         const anchor = pinned ?? this.seedPosition(node, edges, groups);
         node.x = anchor.x;
         node.y = anchor.y;
-        node.px = anchor.x;
-        node.py = anchor.y;
+        node.homeX = anchor.x;
+        node.homeY = anchor.y;
         node.placed = true;
+      } else if (node.moved && !pinned) {
+        // Re-seed inside the new group so the node settles there instead of
+        // being dragged across other clusters by weak forces.
+        const anchor = this.anchorFor(node, groups);
+        node.x = anchor.x + (hashUnit(node.id) - 0.5) * 50;
+        node.y = anchor.y + (hashUnit(`${node.id}:y`) - 0.5) * 50;
+        node.homeX = node.x;
+        node.homeY = node.y;
       }
     }
 
     const sameCluster = (a: LayoutNode, b: LayoutNode) => a.path[0] !== undefined && a.path[0] === b.path[0];
     const pullStrength = (node: LayoutNode) => (node.path.length > 0 ? CLUSTER_PULL : ROOT_PULL);
+    const inertia = (node: LayoutNode) => (this.first || node.moved ? 0 : INERTIA);
 
     const simulation = d3
       .forceSimulation<LayoutNode>(nodes)
@@ -297,6 +414,7 @@ export default class GraphLayout {
       .force('collide', d3.forceCollide<LayoutNode>().radius((n) => n.r + COLLIDE_PADDING).iterations(2))
       .force('x', d3.forceX<LayoutNode>((n) => this.anchorFor(n, groups).x).strength(pullStrength))
       .force('y', d3.forceY<LayoutNode>((n) => this.anchorFor(n, groups).y).strength(pullStrength))
+      .force('inertia', rigidInertia(nodes, inertia))
       .force('separate', groupSeparation(nodes, groupList))
       .force('bounds', (alpha) => {
         for (const node of nodes) {
@@ -308,8 +426,8 @@ export default class GraphLayout {
       })
       .stop();
 
-    simulation.alpha(this.first ? 1 : 0.7).alphaMin(0.001);
-    simulation.tick(this.first ? 300 : 220);
+    simulation.alpha(this.first ? 1 : 0.6).alphaMin(0.001);
+    simulation.tick(TICKS);
 
     for (const node of nodes) {
       const pinned = this.explicitAnchor(node.spec);
@@ -431,7 +549,7 @@ function groupSeparation(nodes: LayoutNode[], groups: LayoutGroup[]): d3.Force<L
       const centreB = { x: (bb.x0 + bb.x1) / 2, y: (bb.y0 + bb.y1) / 2 };
       const horizontal = overlapX < overlapY;
       const sign = horizontal ? Math.sign(centreB.x - centreA.x) || 1 : Math.sign(centreB.y - centreA.y) || 1;
-      const shove = (horizontal ? overlapX : overlapY) * 0.5 * alpha;
+      const shove = (horizontal ? overlapX : overlapY) * 0.9 * alpha;
 
       for (const n of a) {
         if (horizontal) n.vx = (n.vx ?? 0) - shove * sign;
@@ -440,6 +558,40 @@ function groupSeparation(nodes: LayoutNode[], groups: LayoutGroup[]): d3.Force<L
       for (const n of b) {
         if (horizontal) n.vx = (n.vx ?? 0) + shove * sign;
         else n.vy = (n.vy ?? 0) + shove * sign;
+      }
+    }
+  };
+}
+
+/**
+ * Holds unchanged nodes in their previous arrangement relative to their
+ * cluster, while letting the cluster as a whole translate. Groups therefore
+ * keep their internal shape when they are pushed around by other forces.
+ */
+function rigidInertia(nodes: LayoutNode[], strength: (node: LayoutNode) => number): d3.Force<LayoutNode, undefined> {
+  const clusters = new Map<string, LayoutNode[]>();
+  for (const node of nodes) {
+    if (strength(node) === 0) continue;
+    const key = node.path[node.path.length - 1] ?? '';
+    const list = clusters.get(key) ?? [];
+    list.push(node);
+    clusters.set(key, list);
+  }
+
+  return (alpha) => {
+    for (const members of clusters.values()) {
+      let shiftX = 0;
+      let shiftY = 0;
+      for (const n of members) {
+        shiftX += n.x - n.homeX;
+        shiftY += n.y - n.homeY;
+      }
+      shiftX /= members.length;
+      shiftY /= members.length;
+      for (const n of members) {
+        const k = strength(n) * alpha;
+        n.vx = (n.vx ?? 0) + (n.homeX + shiftX - n.x) * k;
+        n.vy = (n.vy ?? 0) + (n.homeY + shiftY - n.y) * k;
       }
     }
   };

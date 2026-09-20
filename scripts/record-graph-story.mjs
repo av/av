@@ -2,7 +2,7 @@
 /**
  * Records a graph story from the built site playing through all its steps.
  *
- * Usage: node scripts/record-graph-story.mjs [/blog/agentic-setup/index.html] [docs/graph-story-demo]
+ * Usage: node scripts/record-graph-story.mjs [/blog/agentic-setup/index.html] [docs/graph-story-demo] [story index on page]
  *
  * Requires `npm run build` first (dist/ and the Playwright install that
  * verify:grain bootstraps into scripts/.verify-deps). Needs ffmpeg on PATH.
@@ -21,6 +21,7 @@ const DIST = join(ROOT, 'dist');
 const DEPS = join(SCRIPT_DIR, '.verify-deps');
 
 const PAGE = process.argv[2] ?? '/blog/agentic-setup/index.html';
+const STORY_INDEX = Number(process.argv[4] ?? 0);
 const OUT = join(ROOT, process.argv[3] ?? 'docs/graph-story-demo');
 const VIEWPORT = { width: 960, height: 800 };
 const STEP_HOLD_MS = 2400;
@@ -91,7 +92,7 @@ async function main() {
 
   await page.goto(`http://127.0.0.1:${port}${PAGE}`, { waitUntil: 'networkidle' });
   await page.waitForSelector('.graph-story.is-ready');
-  const story = page.locator('.graph-story.is-ready').first();
+  const story = page.locator('.graph-story.is-ready').nth(STORY_INDEX);
   const figure = story.locator('.graph-story__figure');
 
   // Pin the figure just below the top edge so the crop is stable.

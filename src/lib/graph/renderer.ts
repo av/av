@@ -25,9 +25,11 @@ interface Timing {
 
 function timingFor(duration: number): Timing {
   return {
-    exit: { delay: 0, duration: duration * 0.4 },
-    move: { delay: duration * 0.2, duration: duration * 0.8 },
-    enter: { delay: duration * 0.6, duration: duration * 0.5 },
+    // Strictly sequential phases: things leave, the rest rearranges, new things
+    // appear into the finished layout.
+    exit: { delay: 0, duration: duration * 0.35 },
+    move: { delay: duration * 0.3, duration: duration * 0.7 },
+    enter: { delay: duration * 0.95, duration: duration * 0.45 },
   };
 }
 
@@ -44,6 +46,8 @@ export default class GraphRenderer {
   private readonly edgeLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
   private readonly nodeLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
   private edgeIndex = new Map<string, LayoutEdge>();
+  /** Position currently painted for each node; tweens converge on the layout target. */
+  private readonly painted = new Map<string, { x: number; y: number }>();
 
   constructor(svg: SVGSVGElement, width: number, height: number) {
     this.uid = `gs${instanceCounter++}`;
@@ -82,7 +86,7 @@ export default class GraphRenderer {
 
   private renderGroups(groups: LayoutGroup[], timing: Timing): void {
     const sel = this.groupLayer
-      .selectAll<SVGGElement, LayoutGroup>('g.gs-group')
+      .selectAll<SVGGElement, LayoutGroup>('g.gs-group:not(.is-exiting)')
       .data(groups, (g) => g.id);
 
     const enter = sel
@@ -104,6 +108,7 @@ export default class GraphRenderer {
 
     sel
       .exit<LayoutGroup>()
+      .classed('is-exiting', true)
       .transition(FADE)
       .delay(timing.exit.delay)
       .duration(timing.exit.duration)
@@ -129,7 +134,7 @@ export default class GraphRenderer {
 
   private renderNodes(nodes: LayoutNode[], timing: Timing): void {
     const sel = this.nodeLayer
-      .selectAll<SVGGElement, LayoutNode>('g.gs-node')
+      .selectAll<SVGGElement, LayoutNode>('g.gs-node:not(.is-exiting)')
       .data(nodes, (n) => n.id);
 
     const enter = sel
@@ -152,6 +157,7 @@ export default class GraphRenderer {
 
     const exiting = sel
       .exit<LayoutNode>()
+      .classed('is-exiting', true)
       .transition(FADE)
       .delay(timing.exit.delay)
       .duration(timing.exit.duration)
@@ -167,14 +173,19 @@ export default class GraphRenderer {
     merged.select<SVGTextElement>('text.gs-node__sublabel').call(swapText, (n: LayoutNode) => n.spec.sublabel ?? '', timing);
     merged.select<SVGTextElement>('text.gs-node__label').call(swapText, (n: LayoutNode) => n.spec.label ?? n.id, timing);
 
+    for (const n of nodes) {
+      if (!this.painted.has(n.id)) this.painted.set(n.id, { x: n.x, y: n.y });
+    }
+
     const moving = sel.transition(MOVE).delay(timing.move.delay).duration(timing.move.duration).ease(d3.easeCubicInOut);
     moving.attrTween('transform', (n) => {
-      const ix = d3.interpolateNumber(n.px, n.x);
-      const iy = d3.interpolateNumber(n.py, n.y);
+      const p = this.paintedOf(n);
+      const ix = d3.interpolateNumber(p.x, n.x);
+      const iy = d3.interpolateNumber(p.y, n.y);
       return (t) => {
-        n.px = ix(t);
-        n.py = iy(t);
-        return `translate(${n.px},${n.py})`;
+        p.x = ix(t);
+        p.y = iy(t);
+        return `translate(${p.x},${p.y})`;
       };
     });
     moving.select('path').attr('d', (n) => shapePath(n.shape, n.r));
@@ -182,16 +193,22 @@ export default class GraphRenderer {
     moving.select('text.gs-node__sublabel').attr('y', (n) => n.r + SUBLABEL_OFFSET);
 
     if (timing.move.duration === 0) {
-      for (const n of nodes) {
-        n.px = n.x;
-        n.py = n.y;
-      }
+      for (const n of nodes) this.painted.set(n.id, { x: n.x, y: n.y });
     }
+  }
+
+  private paintedOf(n: LayoutNode): { x: number; y: number } {
+    let p = this.painted.get(n.id);
+    if (!p) {
+      p = { x: n.x, y: n.y };
+      this.painted.set(n.id, p);
+    }
+    return p;
   }
 
   private renderEdges(edges: LayoutEdge[], timing: Timing): void {
     const sel = this.edgeLayer
-      .selectAll<SVGGElement, LayoutEdge>('g.gs-edge')
+      .selectAll<SVGGElement, LayoutEdge>('g.gs-edge:not(.is-exiting)')
       .data(edges, (e) => e.id);
 
     const enter = sel.enter().append('g').attr('class', 'gs-edge').style('opacity', 0);
@@ -201,6 +218,7 @@ export default class GraphRenderer {
 
     sel
       .exit<LayoutEdge>()
+      .classed('is-exiting', true)
       .transition(FADE)
       .delay(timing.exit.delay)
       .duration(timing.exit.duration)
@@ -232,9 +250,11 @@ export default class GraphRenderer {
   }
 
   private edgeGeometry(e: LayoutEdge): { x0: number; y0: number; x1: number; y1: number; cx: number; cy: number } {
-    const { source: s, target: t } = e;
-    const dx = t.px - s.px;
-    const dy = t.py - s.py;
+    const { source, target } = e;
+    const s = { ...this.paintedOf(source), shape: source.shape, r: source.r };
+    const t = { ...this.paintedOf(target), shape: target.shape, r: target.r };
+    const dx = t.x - s.x;
+    const dy = t.y - s.y;
     const theta = Math.atan2(dy, dx);
     const length = Math.hypot(dx, dy) || 1;
     const ux = dx / length;
@@ -242,10 +262,10 @@ export default class GraphRenderer {
 
     const startTrim = shapeRadius(s.shape, s.r, theta) + 2;
     const endTrim = shapeRadius(t.shape, t.r, theta + Math.PI) + (e.spec.directed === false ? 2 : ARROW_GAP);
-    const x0 = s.px + ux * startTrim;
-    const y0 = s.py + uy * startTrim;
-    const x1 = t.px - ux * endTrim;
-    const y1 = t.py - uy * endTrim;
+    const x0 = s.x + ux * startTrim;
+    const y0 = s.y + uy * startTrim;
+    const x1 = t.x - ux * endTrim;
+    const y1 = t.y - uy * endTrim;
 
     // Bend when an edge in the opposite direction exists so both stay visible.
     const reverse = this.edgeIndex.has(`${e.spec.to}->${e.spec.from}`);
@@ -288,12 +308,14 @@ function swapText(
     el.transition(FADE)
       .delay(timing.move.delay)
       .duration(half)
-      .style('opacity', 0)
+      .style('fill-opacity', 0)
+      .style('stroke-opacity', 0)
       .transition()
       .duration(0)
       .text(next)
       .transition()
       .duration(half)
-      .style('opacity', 1);
+      .style('fill-opacity', 1)
+      .style('stroke-opacity', 1);
   });
 }

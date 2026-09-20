@@ -40,6 +40,14 @@ test('ops are applied on top of the previous step', () => {
   assert.deepEqual(validateGraphStory(story), []);
 });
 
+test('null in a set op clears the field', () => {
+  const story = baseStory();
+  story.steps[0].state.groups[0].x = 40;
+  story.steps[0].state.groups[0].y = 40;
+  story.steps[1].ops.push({ op: 'set', group: 'g', x: null, y: null, label: null });
+  assert.deepEqual(validateGraphStory(story), []);
+});
+
 test('dangling references are reported with the step index', () => {
   const story = baseStory();
   story.steps[1].ops.push({ op: 'add', edge: { from: 'a', to: 'nope' } });

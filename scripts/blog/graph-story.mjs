@@ -41,6 +41,14 @@ function parseAttributes(source) {
 
 export const edgeId = (edge) => edge.id ?? `${edge.from}->${edge.to}`;
 
+/** Assigns patch fields onto target; `null` clears the field. */
+function applyPatch(target, patch) {
+  for (const [key, value] of Object.entries(patch)) {
+    if (value === null) delete target[key];
+    else if (value !== undefined) target[key] = value;
+  }
+}
+
 function isAccent(value) {
   return value === undefined || ACCENTS.has(value);
 }
@@ -125,17 +133,17 @@ function applyOp(state, op) {
       if (typeof nodeId === 'string') {
         const target = node(nodeId);
         if (!target) return `unknown node "${nodeId}"`;
-        if (patch.group !== undefined && !group(patch.group)) return `node "${nodeId}" references unknown group "${patch.group}"`;
-        Object.assign(target, patch);
+        if (patch.group != null && !group(patch.group)) return `node "${nodeId}" references unknown group "${patch.group}"`;
+        applyPatch(target, patch);
       } else if (typeof edgeRef === 'string') {
         const target = edge(edgeRef);
         if (!target) return `unknown edge "${edgeRef}"`;
-        Object.assign(target, patch);
+        applyPatch(target, patch);
       } else if (typeof groupId === 'string') {
         const target = group(groupId);
         if (!target) return `unknown group "${groupId}"`;
-        if (patch.parent !== undefined && !group(patch.parent)) return `group "${groupId}" references unknown parent "${patch.parent}"`;
-        Object.assign(target, patch);
+        if (patch.parent != null && !group(patch.parent)) return `group "${groupId}" references unknown parent "${patch.parent}"`;
+        applyPatch(target, patch);
       } else {
         return 'set needs a node / edge / group id';
       }
