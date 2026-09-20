@@ -1,0 +1,775 @@
+{
+  "trigger": "click",
+  "interval": 2600,
+  "aspect": 1.6,
+  "seed": "agentic-setup",
+  "steps": [
+    {
+      "title": "One machine, one agent",
+      "caption": "It starts on a laptop. A single coding agent in a terminal, pointed at one repository.",
+      "state": {
+        "groups": [
+          {
+            "id": "mac",
+            "label": "MacBook",
+            "color": "tx2",
+            "x": 50,
+            "y": 50
+          }
+        ],
+        "nodes": [
+          {
+            "id": "ivan",
+            "label": "Ivan",
+            "kind": "human",
+            "color": "yellow",
+            "x": 14,
+            "y": 50
+          },
+          {
+            "id": "agent-1",
+            "label": "claude",
+            "sublabel": "terminal",
+            "kind": "agent",
+            "color": "cyan",
+            "group": "mac"
+          },
+          {
+            "id": "harbor",
+            "label": "harbor",
+            "kind": "repo",
+            "color": "purple",
+            "group": "mac"
+          }
+        ],
+        "edges": [
+          {
+            "from": "ivan",
+            "to": "agent-1",
+            "label": "prompts"
+          },
+          {
+            "from": "agent-1",
+            "to": "harbor",
+            "label": "edits"
+          }
+        ]
+      }
+    },
+    {
+      "title": "More agents than attention",
+      "caption": "Soon there are four terminals and three repos. Every run needs a decision every couple of minutes, and the laptop is the only place they can happen.",
+      "ops": [
+        {
+          "op": "add",
+          "node": {
+            "id": "agent-2",
+            "label": "codex",
+            "sublabel": "terminal",
+            "kind": "agent",
+            "color": "cyan",
+            "group": "mac"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "agent-3",
+            "label": "claude",
+            "sublabel": "terminal",
+            "kind": "agent",
+            "color": "cyan",
+            "group": "mac"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "agent-4",
+            "label": "droid",
+            "sublabel": "terminal",
+            "kind": "agent",
+            "color": "cyan",
+            "group": "mac"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "av",
+            "label": "av.codes",
+            "kind": "repo",
+            "color": "purple",
+            "group": "mac"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "lifeos",
+            "label": "lifeos",
+            "kind": "repo",
+            "color": "purple",
+            "group": "mac"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "agent-2"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "agent-3"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "agent-4"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "agent-2",
+            "to": "harbor"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "agent-3",
+            "to": "av"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "agent-4",
+            "to": "lifeos"
+          }
+        },
+        {
+          "op": "set",
+          "node": "ivan",
+          "state": "error",
+          "sublabel": "overloaded"
+        },
+        {
+          "op": "set",
+          "edge": "ivan->agent-1",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "title": "Kandev takes the terminals",
+      "caption": "Kandev becomes the surface: tasks in, sessions out, every agent in its own worktree. Ivan talks to one board instead of four shells.",
+      "ops": [
+        {
+          "op": "add",
+          "group": {
+            "id": "kandev-mac",
+            "label": "Kandev",
+            "color": "green",
+            "parent": "mac"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "kandev-1",
+            "label": "kandev",
+            "sublabel": "board",
+            "kind": "service",
+            "color": "green",
+            "size": 1.2,
+            "group": "mac",
+            "state": "active"
+          }
+        },
+        {
+          "op": "move",
+          "node": "agent-1",
+          "group": "kandev-mac"
+        },
+        {
+          "op": "move",
+          "node": "agent-2",
+          "group": "kandev-mac"
+        },
+        {
+          "op": "move",
+          "node": "agent-3",
+          "group": "kandev-mac"
+        },
+        {
+          "op": "move",
+          "node": "agent-4",
+          "group": "kandev-mac"
+        },
+        {
+          "op": "set",
+          "node": "agent-1",
+          "sublabel": "session"
+        },
+        {
+          "op": "set",
+          "node": "agent-2",
+          "sublabel": "session"
+        },
+        {
+          "op": "set",
+          "node": "agent-3",
+          "sublabel": "session"
+        },
+        {
+          "op": "set",
+          "node": "agent-4",
+          "sublabel": "session"
+        },
+        {
+          "op": "remove",
+          "edge": "ivan->agent-1"
+        },
+        {
+          "op": "remove",
+          "edge": "ivan->agent-2"
+        },
+        {
+          "op": "remove",
+          "edge": "ivan->agent-3"
+        },
+        {
+          "op": "remove",
+          "edge": "ivan->agent-4"
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "kandev-1",
+            "label": "tasks",
+            "color": "green"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-1",
+            "to": "agent-1",
+            "color": "green",
+            "style": "dashed"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-1",
+            "to": "agent-2",
+            "color": "green",
+            "style": "dashed"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-1",
+            "to": "agent-3",
+            "color": "green",
+            "style": "dashed"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-1",
+            "to": "agent-4",
+            "color": "green",
+            "style": "dashed"
+          }
+        },
+        {
+          "op": "set",
+          "node": "ivan",
+          "state": "default",
+          "sublabel": ""
+        }
+      ]
+    },
+    {
+      "title": "The laptop becomes a controller",
+      "caption": "The MacBook stops doing the work. A Hetzner box, a Fedora workstation and a throwaway sandbox join over Tailscale, each running its own Kandev.",
+      "ops": [
+        {
+          "op": "set",
+          "group": "mac",
+          "label": "MacBook · controller",
+          "x": 30,
+          "y": 30
+        },
+        {
+          "op": "set",
+          "group": "kandev-mac",
+          "label": "Kandev · control"
+        },
+        {
+          "op": "remove",
+          "node": "agent-3"
+        },
+        {
+          "op": "remove",
+          "node": "agent-4"
+        },
+        {
+          "op": "remove",
+          "node": "av"
+        },
+        {
+          "op": "remove",
+          "node": "lifeos"
+        },
+        {
+          "op": "set",
+          "node": "kandev-1",
+          "sublabel": "control plane"
+        },
+        {
+          "op": "add",
+          "group": {
+            "id": "hetzner",
+            "label": "Hetzner",
+            "color": "orange",
+            "x": 74,
+            "y": 30
+          }
+        },
+        {
+          "op": "add",
+          "group": {
+            "id": "fedora",
+            "label": "Fedora",
+            "color": "blue",
+            "x": 74,
+            "y": 74
+          }
+        },
+        {
+          "op": "add",
+          "group": {
+            "id": "sandbox",
+            "label": "sandbox-av",
+            "color": "magenta",
+            "x": 30,
+            "y": 76
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "kandev-2",
+            "label": "kandev",
+            "kind": "service",
+            "color": "green",
+            "group": "hetzner"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "kandev-3",
+            "label": "kandev",
+            "kind": "service",
+            "color": "green",
+            "group": "fedora"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "kandev-4",
+            "label": "kandev",
+            "kind": "service",
+            "color": "green",
+            "group": "sandbox",
+            "state": "pending"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-1",
+            "to": "kandev-2",
+            "label": "tailscale",
+            "color": "green"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-1",
+            "to": "kandev-3",
+            "color": "green"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-1",
+            "to": "kandev-4",
+            "color": "green",
+            "state": "pending"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Agents move to where the compute is",
+      "caption": "Sessions spawn next to the hardware they need: long builds on Hetzner, GPU work on Fedora, anything risky in the sandbox that gets wiped every night.",
+      "ops": [
+        {
+          "op": "move",
+          "node": "agent-1",
+          "group": "hetzner"
+        },
+        {
+          "op": "move",
+          "node": "agent-2",
+          "group": "hetzner"
+        },
+        {
+          "op": "set",
+          "node": "agent-1",
+          "label": "claude",
+          "sublabel": "build"
+        },
+        {
+          "op": "set",
+          "node": "agent-2",
+          "label": "codex",
+          "sublabel": "review"
+        },
+        {
+          "op": "move",
+          "node": "harbor",
+          "group": "hetzner"
+        },
+        {
+          "op": "remove",
+          "edge": "kandev-1->agent-1"
+        },
+        {
+          "op": "remove",
+          "edge": "kandev-1->agent-2"
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-2",
+            "to": "agent-1",
+            "color": "green",
+            "style": "dashed"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-2",
+            "to": "agent-2",
+            "color": "green",
+            "style": "dashed"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "agent-5",
+            "label": "claude",
+            "sublabel": "gpu",
+            "kind": "agent",
+            "color": "cyan",
+            "group": "fedora"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "llama",
+            "label": "llama.cpp",
+            "kind": "service",
+            "color": "blue",
+            "group": "fedora"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-3",
+            "to": "agent-5",
+            "color": "green",
+            "style": "dashed"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "agent-5",
+            "to": "llama",
+            "label": "models",
+            "color": "blue"
+          }
+        },
+        {
+          "op": "set",
+          "node": "kandev-4",
+          "state": "default"
+        },
+        {
+          "op": "set",
+          "edge": "kandev-1->kandev-4",
+          "state": "default"
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "agent-6",
+            "label": "droid",
+            "sublabel": "untrusted",
+            "kind": "agent",
+            "color": "magenta",
+            "group": "sandbox",
+            "state": "active"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-4",
+            "to": "agent-6",
+            "color": "green",
+            "style": "dashed"
+          }
+        },
+        {
+          "op": "remove",
+          "group": "kandev-mac"
+        }
+      ]
+    },
+    {
+      "title": "Skills sync",
+      "caption": "Skills live in one repo and flow to every machine on a schedule. A skill written on the laptop is available on Hetzner a minute later, in every agent's harness.",
+      "ops": [
+        {
+          "op": "add",
+          "node": {
+            "id": "skills",
+            "label": "skills",
+            "sublabel": "git repo",
+            "kind": "skill",
+            "color": "yellow",
+            "size": 1.15,
+            "group": "mac",
+            "state": "active"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "skills",
+            "to": "kandev-2",
+            "color": "yellow",
+            "style": "flow",
+            "label": "sync"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "skills",
+            "to": "kandev-3",
+            "color": "yellow",
+            "style": "flow"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "skills",
+            "to": "kandev-4",
+            "color": "yellow",
+            "style": "flow"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Agents supervise agents",
+      "caption": "The next step is a supervisor session per machine. It watches the other sessions, retries stuck ones and reports to the controller, so Ivan reads summaries instead of logs.",
+      "ops": [
+        {
+          "op": "add",
+          "node": {
+            "id": "sup-h",
+            "label": "supervisor",
+            "kind": "agent",
+            "color": "red",
+            "group": "hetzner",
+            "state": "pending"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "sup-f",
+            "label": "supervisor",
+            "kind": "agent",
+            "color": "red",
+            "group": "fedora",
+            "state": "pending"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "sup-h",
+            "to": "agent-1",
+            "color": "red",
+            "style": "dashed",
+            "state": "pending"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "sup-h",
+            "to": "agent-2",
+            "color": "red",
+            "style": "dashed",
+            "state": "pending"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "sup-f",
+            "to": "agent-5",
+            "color": "red",
+            "style": "dashed",
+            "state": "pending"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "sup-h",
+            "to": "kandev-1",
+            "label": "reports",
+            "color": "red",
+            "style": "dashed",
+            "state": "pending"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "sup-f",
+            "to": "kandev-1",
+            "color": "red",
+            "style": "dashed",
+            "state": "pending"
+          }
+        },
+        {
+          "op": "set",
+          "node": "skills",
+          "state": "default"
+        },
+        {
+          "op": "set",
+          "node": "agent-6",
+          "state": "default"
+        },
+        {
+          "op": "set",
+          "edge": "ivan->kandev-1",
+          "label": "goals"
+        }
+      ]
+    },
+    {
+      "title": "Today",
+      "caption": "One person, one board, three machines and a sandbox. Everything that used to be a terminal is now a session something else can start, stop and read.",
+      "ops": [
+        {
+          "op": "set",
+          "node": "sup-h",
+          "state": "active"
+        },
+        {
+          "op": "set",
+          "node": "sup-f",
+          "state": "active"
+        },
+        {
+          "op": "set",
+          "edge": "sup-h->agent-1",
+          "state": "default"
+        },
+        {
+          "op": "set",
+          "edge": "sup-h->agent-2",
+          "state": "default"
+        },
+        {
+          "op": "set",
+          "edge": "sup-f->agent-5",
+          "state": "default"
+        },
+        {
+          "op": "set",
+          "edge": "sup-h->kandev-1",
+          "state": "default"
+        },
+        {
+          "op": "set",
+          "edge": "sup-f->kandev-1",
+          "state": "default"
+        },
+        {
+          "op": "set",
+          "node": "ivan",
+          "state": "active",
+          "sublabel": "reads summaries"
+        },
+        {
+          "op": "set",
+          "node": "agent-6",
+          "state": "muted",
+          "sublabel": "wiped nightly"
+        },
+        {
+          "op": "set",
+          "node": "kandev-4",
+          "state": "muted"
+        },
+        {
+          "op": "set",
+          "edge": "kandev-1->kandev-4",
+          "state": "muted"
+        },
+        {
+          "op": "set",
+          "edge": "kandev-4->agent-6",
+          "state": "muted"
+        }
+      ]
+    }
+  ]
+}

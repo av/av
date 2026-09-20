@@ -34,14 +34,16 @@ npm run dev                 # blog:generate, then Parcel serve (all entries)
 npm run dev:qr              # Parcel serve for QR page only
 npm run build               # blog:generate → Parcel build → copy public/ → verify:grain
 npm run verify:grain        # headless geometry gate (also runs at end of build)
+npm run record:graph        # record a blog graph story from dist/ → docs/graph-story-demo.{mp4,webm,png}
 npm run deploy              # rm dist/, npm run build, vercel --prod
 npm run cache:bust          # rm -rf .parcel-cache
-npm test                    # node:test suite for blog decor frontmatter validation
+npm test                    # node:test suites: blog decor frontmatter + graph story validation
 npx tsc --noEmit            # TypeScript static check
 ```
 
 No ESLint or Prettier is configured. Static checks: `npm test` (blog decor
-frontmatter in `scripts/blog/decor-config.test.mjs`) and `npx tsc --noEmit`.
+frontmatter in `scripts/blog/decor-config.test.mjs`, graph stories in
+`scripts/blog/graph-story.test.mjs`) and `npx tsc --noEmit`.
 
 ## Repository Map
 
@@ -54,6 +56,9 @@ src/
   skills/                 D3 SVG skills map (SkillsSection.ts, skillList.ts)
   lib/                    Reusable primitives: Scene, PageSection, SmoothTransform,
                           InterpolatedValue, CanvasCursor, PointerTracker, SelectablePills
+  lib/graph/              Animated graph story engine (types, story reducer, d3-force
+                          layout with groups, SVG renderer, GraphStory controller)
+  graph-story.scss        Styles for graph stories (imported by blog.scss)
   modals/                 Modal content Pug templates (*.pug)
   mixins/                 Shared Pug mixins: splitter, modal, fixed, floater, shape, intro-section
   types/                  Ambient TS declarations (modules.d.ts)
@@ -61,11 +66,14 @@ src/
   *.scss                  Section-level styles + shared vars/mixins
 content/
   blog/                   Markdown source posts (author-facing); *.md files go here
+  blog/graphs/            Graph story data (<name>.json) embedded by posts
 scripts/
   blog/
     generate.mjs          Reads content/blog/*.md → writes src/blog/ pages + SEO artifacts
+    graph-story.mjs       Finds graph-story markers, validates + inlines content/blog/graphs/*.json
     run-parcel.mjs        Reads manifest → spawns Parcel with explicit entrypoint list
   copy-public.mjs         Copies public/ into dist/ (recursive, dotfile-safe)
+  record-graph-story.mjs  Plays a graph story in headless Chromium and records webm/mp4/poster
   deploy.sh               rm dist/, npm run build, cd dist, vercel --prod
 public/                   Static files copied verbatim into dist/ at build time
 ```
@@ -120,6 +128,21 @@ public/                   Static files copied verbatim into dist/ at build time
 6. Posts are sorted newest-first by date, then alphabetically by slug.
 7. `SITE_URL` env var (default `https://av.codes`) sets base URL in canonical tags,
    sitemap, and RSS feed.
+
+### Animated graph stories
+
+Posts can embed an animated, step-by-step graph diagram (see
+`docs/adr/0001-animated-graph-story-engine.md`):
+
+1. Put the story in `content/blog/graphs/<name>.json` — a `GraphStorySpec`
+   (`src/lib/graph/types.ts`): `steps[]`, each with `title`, `caption`, and either
+   a full `state` (`nodes`, `edges`, `groups`) or `ops` applied to the previous
+   step (`add` / `remove` / `set` / `move`). Objects keep identity by `id`.
+2. Reference it from the markdown with a raw HTML marker:
+   `<div class="graph-story" data-graph="<name>" data-trigger="click|scroll|timeline"></div>`
+3. `npm run blog:generate` validates the story (dangling ids fail the build),
+   inlines the JSON plus a no-JS fallback list, and adds `src/blog/graph.ts`
+   to the page. Engine code lives in `src/lib/graph/`; keep it story-agnostic.
 
 ## TypeScript Configuration
 

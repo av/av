@@ -7,12 +7,14 @@ import { marked } from 'marked';
 
 import { normalizeDecor, validateDecor } from './decor-config.mjs';
 import { buildDecorSprite, decorThemes, resolveDecorTheme } from './decor-themes.mjs';
+import { injectGraphStories } from './graph-story.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..', '..');
 
 const contentDir = path.join(projectRoot, 'content', 'blog');
+const graphsDir = path.join(contentDir, 'graphs');
 const blogDir = path.join(projectRoot, 'src', 'blog');
 const publicDir = path.join(projectRoot, 'public');
 const manifestPath = path.join(blogDir, '.generated-manifest.json');
@@ -62,6 +64,9 @@ async function main() {
 
     fieldErrors.push(...validateDecor(frontmatter, relativeFilePath));
 
+    const graphStories = await injectGraphStories(marked.parse(parsed.content), { graphsDir, relativeFilePath });
+    fieldErrors.push(...graphStories.errors);
+
     if (fieldErrors.length > 0) {
       validationErrors.push(...fieldErrors);
       continue;
@@ -76,7 +81,8 @@ async function main() {
       date: parsedDate.value,
       dateIso: parsedDate.value.toISOString(),
       isDraft: frontmatter.draft === true,
-      html: marked.parse(parsed.content),
+      html: graphStories.html,
+      hasGraphStory: graphStories.hasGraphStory,
       decor: normalizeDecor(frontmatter.decor),
     });
   }
@@ -493,6 +499,7 @@ function renderPostPug(post, siteUrl) {
     `        .blog-content!= ${JSON.stringify(post.html)}`,
     "      .grain-layer(aria-hidden='true')",
     ...(decorContent?.script ? [decorContent.script] : []),
+    ...(post.hasGraphStory ? ["    script(src='../graph.ts' type='module')"] : []),
   ].join('\n') + '\n';
 }
 

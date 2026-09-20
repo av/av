@@ -5,13 +5,14 @@
     "dev:clean": "node scripts/cache-bust.mjs && npm run dev",
     "dev:qr": "npm run noise:generate && parcel src/harbor-qr.pug",
     "blog:generate": "node scripts/blog/generate.mjs",
-    "test": "node --test scripts/blog/decor-config.test.mjs",
+    "test": "node --test scripts/blog/decor-config.test.mjs scripts/blog/graph-story.test.mjs",
 
     "noise:generate": "node scripts/generate-noise.mjs",
     "build": "npm run noise:generate && npm run cache:bust && npm run blog:generate && node scripts/blog/run-parcel.mjs build && node scripts/copy-public.mjs && npm run verify:grain",
     "deploy": "./scripts/deploy.sh",
     "cache:bust": "node scripts/cache-bust.mjs",
-    "verify:grain": "node scripts/verify-grain-geometry.mjs"
+    "verify:grain": "node scripts/verify-grain-geometry.mjs",
+    "record:graph": "node scripts/record-graph-story.mjs"
   },
   "devDependencies": {
     "@parcel/packager-raw-url": "^2.12.0",

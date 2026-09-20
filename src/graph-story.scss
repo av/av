@@ -1,0 +1,346 @@
+// ---------------------------------------------------------------------------
+// Animated graph story (src/lib/graph) — styles for blog embeds.
+// Colours come from the Flexoki custom properties declared in blog.scss.
+// ---------------------------------------------------------------------------
+@import "./vars.scss";
+
+$gs-accents: red, orange, yellow, green, cyan, blue, purple, magenta, tx, tx2, tx3;
+
+.graph-story {
+  --gs-accent: var(--fx-tx2);
+  margin: 1.5rem 0;
+  outline: 0;
+
+  &:focus-visible .graph-story__figure {
+    border-color: var(--fx-tx3);
+  }
+}
+
+.graph-story__figure {
+  margin: 0;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.5rem;
+  background: var(--fx-bg2);
+  overflow: hidden;
+
+  @include media(sm) {
+    border-radius: 0;
+    margin-left: -1rem;
+    margin-right: -1rem;
+  }
+}
+
+.graph-story__stage {
+  position: relative;
+  padding: 0.5rem 0.5rem 0;
+}
+
+.graph-story__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: 'Figtree', system-ui, sans-serif;
+}
+
+.graph-story__caption {
+  min-height: 4.6rem;
+  padding: 0.75rem 1rem 0.5rem;
+  font-family: 'Figtree', system-ui, sans-serif;
+
+  @include media(sm) {
+    min-height: 5.6rem;
+  }
+}
+
+.graph-story__title {
+  font-family: 'Geist Pixel', ui-monospace, monospace;
+  font-size: 0.95rem;
+  color: var(--fx-tx);
+  margin-bottom: 0.2rem;
+}
+
+.graph-story__text {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--fx-tx2);
+
+  code {
+    font-size: 0.85em;
+  }
+}
+
+.graph-story__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.75rem 0.7rem;
+}
+
+.graph-story__button {
+  display: inline-grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 1px solid var(--fx-border);
+  border-radius: 999px;
+  background: var(--fx-bg);
+  color: var(--fx-tx);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover,
+  &:focus,
+  &:active {
+    background: var(--fx-bg);
+    outline: 0;
+  }
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    border-color: var(--fx-tx2);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+}
+
+.graph-story__button--play {
+  margin-left: auto;
+
+  &::before {
+    content: '';
+    display: block;
+    width: 0;
+    height: 0;
+    margin-left: 2px;
+    border-style: solid;
+    border-width: 5px 0 5px 8px;
+    border-color: transparent transparent transparent currentColor;
+  }
+
+  &.is-playing::before {
+    width: 8px;
+    height: 10px;
+    margin-left: 0;
+    border-width: 0 3px;
+    border-color: currentColor;
+  }
+}
+
+.graph-story__dots {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.graph-story__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--fx-border);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+
+  &:hover,
+  &:focus,
+  &:active {
+    background: var(--fx-tx2);
+  }
+
+  &.is-active,
+  &.is-active:hover {
+    background: var(--fx-tx);
+    transform: scale(1.3);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--fx-tx2);
+    outline-offset: 2px;
+  }
+}
+
+.graph-story__counter {
+  font-family: 'Geist Pixel', ui-monospace, monospace;
+  font-size: 0.7rem;
+  color: var(--fx-tx3);
+}
+
+// Pre-hydration fallback: a plain list of the steps.
+.graph-story__fallback {
+  padding-left: 1.4rem;
+  font-size: 0.9rem;
+  color: var(--fx-tx2);
+}
+
+// Scroll-driven stories reserve vertical travel and pin the figure.
+.graph-story.is-trigger-scroll {
+  min-height: calc(var(--gs-steps, 1) * var(--gs-step-height, 65vh));
+
+  .graph-story__figure {
+    position: sticky;
+    top: 1.5rem;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// SVG parts
+// ---------------------------------------------------------------------------
+@each $accent in $gs-accents {
+  .graph-story .is-color-#{$accent} {
+    --gs-accent: var(--fx-#{$accent});
+  }
+}
+
+.gs-arrow path {
+  fill: var(--gs-accent);
+}
+
+.gs-group {
+  rect {
+    fill: color-mix(in srgb, var(--gs-accent) 7%, transparent);
+    stroke: color-mix(in srgb, var(--gs-accent) 55%, transparent);
+    stroke-width: 1.5;
+    stroke-dasharray: 6 5;
+    transition: fill 0.5s ease, stroke 0.5s ease;
+  }
+
+  &.is-depth-1 rect,
+  &.is-depth-2 rect {
+    stroke-dasharray: 3 4;
+  }
+}
+
+.gs-group__label {
+  font-family: 'Geist Pixel', ui-monospace, monospace;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  fill: var(--gs-accent);
+}
+
+.gs-node {
+  transition: opacity 0.5s ease;
+}
+
+.gs-node__shape {
+  fill: color-mix(in srgb, var(--gs-accent) 20%, var(--fx-bg));
+  stroke: var(--gs-accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  transition: fill 0.5s ease, stroke 0.5s ease, stroke-width 0.3s ease;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.gs-node__label,
+.gs-node__sublabel {
+  text-anchor: middle;
+  fill: var(--fx-tx);
+  font-size: 18px;
+  font-weight: 500;
+  paint-order: stroke;
+  stroke: var(--fx-bg2);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.gs-node__sublabel {
+  font-size: 13px;
+  font-weight: 400;
+  fill: var(--fx-tx2);
+}
+
+.gs-node.is-state-active .gs-node__shape {
+  stroke-width: 3;
+  filter: drop-shadow(0 0 6px var(--gs-accent));
+  animation: gs-pulse 1.8s ease-in-out infinite;
+}
+
+.gs-node.is-state-muted {
+  opacity: 0.35;
+}
+
+.gs-node.is-state-pending .gs-node__shape {
+  fill: transparent;
+  stroke-dasharray: 5 4;
+}
+
+.gs-node.is-state-pending .gs-node__label {
+  fill: var(--fx-tx2);
+}
+
+.gs-node.is-state-error .gs-node__shape {
+  stroke: var(--fx-red);
+  fill: color-mix(in srgb, var(--fx-red) 25%, var(--fx-bg));
+}
+
+.gs-edge {
+  transition: opacity 0.5s ease;
+}
+
+.gs-edge__line {
+  fill: none;
+  stroke: var(--gs-accent);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  transition: stroke 0.5s ease;
+}
+
+.gs-edge.is-style-dashed .gs-edge__line {
+  stroke-dasharray: 7 5;
+}
+
+.gs-edge.is-style-flow .gs-edge__line {
+  stroke-dasharray: 4 7;
+  animation: gs-flow 1s linear infinite;
+}
+
+.gs-edge.is-state-muted {
+  opacity: 0.3;
+}
+
+.gs-edge.is-state-pending .gs-edge__line {
+  stroke-dasharray: 2 5;
+}
+
+.gs-edge__label {
+  text-anchor: middle;
+  dominant-baseline: middle;
+  font-size: 13px;
+  fill: var(--fx-tx2);
+  paint-order: stroke;
+  stroke: var(--fx-bg2);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+@keyframes gs-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+@keyframes gs-flow {
+  to { stroke-dashoffset: -11; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gs-node.is-state-active .gs-node__shape,
+  .gs-edge.is-style-flow .gs-edge__line {
+    animation: none;
+  }
+
+  .gs-node,
+  .gs-edge,
+  .gs-node__shape,
+  .gs-edge__line,
+  .gs-group rect {
+    transition: none;
+  }
+}
