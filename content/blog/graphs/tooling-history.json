@@ -6,23 +6,29 @@
   "steps": [
     {
       "title": "Manual coding",
-      "caption": "2022. One editor, one repository, and a browser tab for the docs. Nothing in the loop but me.",
+      "caption": "2022. One computer, one editor, one repository, and a browser tab for the docs. Nothing in the loop but me.",
       "body": "Every line typed by hand. The rhythm was read the docs, write the code, run it, read the error, search for it. The browser was already part of the workflow, just not a collaborator.",
       "state": {
         "groups": [
           {
-            "id": "editor",
-            "label": "Editor",
-            "color": "blue",
+            "id": "laptop",
+            "label": "Computer",
+            "color": "tx2",
             "x": 46,
             "y": 30
           },
           {
+            "id": "editor",
+            "label": "Editor",
+            "color": "blue",
+            "parent": "laptop"
+          },
+          {
             "id": "questions",
-            "label": "Questions",
+            "label": "Web",
             "color": "tx2",
             "x": 46,
-            "y": 76
+            "y": 78
           }
         ],
         "nodes": [
@@ -137,10 +143,67 @@
       ]
     },
     {
+      "title": "Phind and Perplexity",
+      "caption": "Search engines that answer: Phind for code, Perplexity for everything else. Free tiers only, for a while.",
+      "body": "They were better at citing than ChatGPT and worse at conversation. Good enough to try, not good enough to pay for.",
+      "ops": [
+        {
+          "op": "add",
+          "node": {
+            "id": "phind",
+            "label": "Phind",
+            "sublabel": "code search",
+            "kind": "chat",
+            "color": "green",
+            "group": "questions",
+            "state": "pending"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "perplexity",
+            "label": "Perplexity",
+            "sublabel": "answers · sources",
+            "kind": "chat",
+            "color": "green",
+            "group": "questions",
+            "state": "pending"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "phind",
+            "style": "dashed",
+            "state": "pending"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "perplexity",
+            "style": "dashed",
+            "state": "pending"
+          }
+        }
+      ]
+    },
+    {
       "title": "Kagi Assistant",
-      "caption": "Kagi Assistant takes over the question traffic. Answers come with sources, and it lives where search already was.",
+      "caption": "Kagi Assistant takes over the question traffic. Answers come with sources, and it lives where search already was. Phind and Perplexity go.",
       "body": "Search and answer merged into one place. The browser stopped being a separate step; asking and searching became the same motion.",
       "ops": [
+        {
+          "op": "remove",
+          "node": "phind"
+        },
+        {
+          "op": "remove",
+          "node": "perplexity"
+        },
         {
           "op": "add",
           "node": {
@@ -231,8 +294,7 @@
             "id": "local",
             "label": "Local",
             "color": "orange",
-            "x": 80,
-            "y": 30
+            "parent": "laptop"
           }
         },
         {
@@ -527,24 +589,11 @@
       "body": "The moment the machine was reachable remotely, the question changed from which tool to which machine. Long runs could keep going while I was away from the desk.",
       "ops": [
         {
-          "op": "add",
-          "group": {
-            "id": "laptop",
-            "label": "Laptop",
-            "color": "tx2",
-            "x": 46,
-            "y": 32
-          }
-        },
-        {
-          "op": "move",
-          "group": "editor",
-          "parent": "laptop"
-        },
-        {
-          "op": "move",
-          "group": "local",
-          "parent": "laptop"
+          "op": "set",
+          "group": "laptop",
+          "label": "Laptop",
+          "x": 46,
+          "y": 32
         },
         {
           "op": "set",
@@ -599,7 +648,7 @@
             "label": "lifeos",
             "color": "yellow",
             "x": 48,
-            "y": 84
+            "y": 87
           }
         },
         {
@@ -1159,7 +1208,7 @@
             "color": "cyan",
             "parent": "laptop",
             "x": 32,
-            "y": 54
+            "y": 50
           }
         },
         {

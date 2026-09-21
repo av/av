@@ -94,7 +94,7 @@ export default class GraphRenderer {
       .append('g')
       .attr('class', 'gs-group')
       .style('opacity', 0);
-    enter.append('rect').attr('rx', 14).attr('ry', 14);
+    enter.append('rect').attr('rx', 2).attr('ry', 2);
     enter.append('text').attr('class', 'gs-group__label');
 
     enter
@@ -117,7 +117,7 @@ export default class GraphRenderer {
 
     const merged: GroupSel = enter.merge(sel).sort((a, b) => a.depth - b.depth);
     merged.attr('class', (g) => `gs-group is-color-${g.color} is-depth-${g.depth}`);
-    merged.select<SVGTextElement>('text').text((g) => g.spec.label ?? '');
+    merged.select<SVGTextElement>('text').text((g) => (g.spec.label ? `[ ${g.spec.label} ]` : ''));
 
     const updated = sel.transition(MOVE).delay(timing.move.delay).duration(timing.move.duration).ease(d3.easeCubicInOut);
     updated

@@ -5,6 +5,7 @@
 @import "./vars.scss";
 
 $gs-accents: red, orange, yellow, green, cyan, blue, purple, magenta, tx, tx2, tx3;
+$gs-pixel: 'Geist Pixel', ui-monospace, monospace;
 
 .graph-story {
   --gs-accent: var(--fx-tx2);
@@ -267,7 +268,8 @@ $gs-accents: red, orange, yellow, green, cyan, blue, purple, magenta, tx, tx2, t
     pointer-events: auto;
     padding: 1.25rem 1.5rem;
     border: 1px solid var(--fx-ui);
-    border-radius: 0.5rem;
+    border-left: 2px solid var(--fx-green);
+    border-radius: 0.15rem;
     background: color-mix(in srgb, var(--fx-bg) 90%, transparent);
     backdrop-filter: blur(6px);
     font-family: 'Figtree', system-ui, sans-serif;
@@ -291,10 +293,14 @@ $gs-accents: red, orange, yellow, green, cyan, blue, purple, magenta, tx, tx2, t
   }
 
   .graph-story__kicker {
-    font-family: 'Geist Pixel', ui-monospace, monospace;
+    font-family: $gs-pixel;
     font-size: 0.7rem;
-    color: var(--fx-tx3);
+    color: var(--fx-green);
     margin-bottom: 0.35rem;
+
+    &::before {
+      content: '> step ';
+    }
   }
 
   .graph-story__panel-title {
@@ -341,34 +347,47 @@ $gs-accents: red, orange, yellow, green, cyan, blue, purple, magenta, tx, tx2, t
   fill: var(--gs-accent);
 }
 
+// Light mode: the site drops phosphor glow there too.
+@media not all and (prefers-color-scheme: dark) {
+  .gs-node__shape,
+  .gs-edge__line,
+  .gs-node.is-state-active .gs-node__shape {
+    filter: none;
+  }
+}
+
 .gs-group {
   rect {
-    fill: color-mix(in srgb, var(--gs-accent) 7%, transparent);
-    stroke: color-mix(in srgb, var(--gs-accent) 55%, transparent);
-    stroke-width: 1.5;
-    stroke-dasharray: 6 5;
+    fill: color-mix(in srgb, var(--gs-accent) 6%, transparent);
+    stroke: color-mix(in srgb, var(--gs-accent) 60%, transparent);
+    stroke-width: 1;
+    stroke-dasharray: 2 4;
     transition: fill 0.5s ease, stroke 0.5s ease;
   }
 
   &.is-depth-1 rect,
   &.is-depth-2 rect {
-    stroke-dasharray: 3 4;
+    stroke-dasharray: 1 3;
   }
 }
 
 .gs-group__label {
-  font-family: 'Geist Pixel', ui-monospace, monospace;
-  font-size: 16px;
-  letter-spacing: 0.04em;
+  font-family: $gs-pixel;
+  font-size: 15px;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   fill: var(--gs-accent);
+  paint-order: stroke;
+  stroke: var(--fx-bg2);
+  stroke-width: 4px;
 }
 
 .gs-node__shape {
-  fill: color-mix(in srgb, var(--gs-accent) 20%, var(--fx-bg));
+  fill: color-mix(in srgb, var(--gs-accent) 12%, var(--fx-bg));
   stroke: var(--gs-accent);
-  stroke-width: 2;
-  stroke-linejoin: round;
+  stroke-width: 1.5;
+  stroke-linejoin: miter;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--gs-accent) 70%, transparent));
   transition: fill 0.5s ease, stroke 0.5s ease, stroke-width 0.3s ease, opacity 0.4s ease;
   transform-box: fill-box;
   transform-origin: center;
@@ -378,8 +397,10 @@ $gs-accents: red, orange, yellow, green, cyan, blue, purple, magenta, tx, tx2, t
 .gs-node__sublabel {
   text-anchor: middle;
   fill: var(--fx-tx);
-  font-size: 18px;
+  font-family: $gs-pixel;
+  font-size: 17px;
   font-weight: 500;
+  letter-spacing: 0.02em;
   paint-order: stroke;
   stroke: var(--fx-bg2);
   stroke-width: 4px;
@@ -388,14 +409,16 @@ $gs-accents: red, orange, yellow, green, cyan, blue, purple, magenta, tx, tx2, t
 }
 
 .gs-node__sublabel {
+  font-family: 'Figtree', system-ui, sans-serif;
   font-size: 13px;
   font-weight: 400;
+  letter-spacing: 0;
   fill: var(--fx-tx2);
 }
 
 .gs-node.is-state-active .gs-node__shape {
-  stroke-width: 3;
-  filter: drop-shadow(0 0 6px var(--gs-accent));
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 4px var(--gs-accent)) drop-shadow(0 0 12px color-mix(in srgb, var(--gs-accent) 60%, transparent));
   animation: gs-pulse 1.8s ease-in-out infinite;
 }
 
@@ -421,8 +444,9 @@ $gs-accents: red, orange, yellow, green, cyan, blue, purple, magenta, tx, tx2, t
 .gs-edge__line {
   fill: none;
   stroke: var(--gs-accent);
-  stroke-width: 1.8;
-  stroke-linecap: round;
+  stroke-width: 1.4;
+  stroke-linecap: square;
+  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--gs-accent) 50%, transparent));
   transition: stroke 0.5s ease, opacity 0.4s ease;
 }
 
@@ -447,7 +471,9 @@ $gs-accents: red, orange, yellow, green, cyan, blue, purple, magenta, tx, tx2, t
 .gs-edge__label {
   text-anchor: middle;
   dominant-baseline: middle;
-  font-size: 13px;
+  font-family: $gs-pixel;
+  font-size: 12px;
+  letter-spacing: 0.03em;
   fill: var(--fx-tx2);
   paint-order: stroke;
   stroke: var(--fx-bg2);
