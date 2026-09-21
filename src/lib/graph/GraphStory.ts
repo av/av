@@ -42,6 +42,7 @@ export default class GraphStory {
   private reduceMotion = false;
 
   private figure!: HTMLElement;
+  private panels: HTMLElement[] = [];
   private title!: HTMLElement;
   private caption!: HTMLElement;
   private counter!: HTMLElement;
@@ -91,7 +92,22 @@ export default class GraphStory {
       this.bindAutoplay();
     }
 
+    this.warmLayouts();
     return this;
+  }
+
+  /** Computes the remaining layouts in idle time so jumping ahead never stalls the main thread. */
+  private warmLayouts(): void {
+    const schedule = (fn: () => void): void => {
+      if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(fn);
+      else window.setTimeout(fn, 32);
+    };
+    const step = () => {
+      if (this.layouts.length >= this.steps.length) return;
+      this.layouts.push(this.layout.compute(this.steps[this.layouts.length].state));
+      schedule(step);
+    };
+    schedule(step);
   }
 
   destroy(): void {
@@ -192,6 +208,34 @@ export default class GraphStory {
 
     this.figure.append(stage, figcaption, nav);
     container.append(this.figure);
+
+    if (this.trigger === 'scroll') {
+      // Full-screen scrollytelling: one explanation panel per step scrolls
+      // past the pinned figure and drives the step index.
+      const panels = el('div', 'graph-story__panels');
+      this.panels = this.steps.map((step, i) => {
+        const panel = el('article', 'graph-story__panel');
+        panel.dataset.step = String(i);
+        const card = el('div', 'graph-story__card');
+        const kicker = el('div', 'graph-story__kicker');
+        kicker.textContent = `${i + 1} / ${this.steps.length}`;
+        const heading = el('h3', 'graph-story__panel-title');
+        heading.textContent = step.title;
+        const caption = el('p', 'graph-story__panel-caption');
+        caption.innerHTML = step.caption;
+        card.append(kicker, heading, caption);
+        if (step.body) {
+          const body = el('div', 'graph-story__panel-body');
+          body.innerHTML = step.body;
+          card.append(body);
+        }
+        panel.append(card);
+        panels.append(panel);
+        return panel;
+      });
+      container.append(panels);
+    }
+
     container.tabIndex = 0;
   }
 
@@ -244,18 +288,20 @@ export default class GraphStory {
     update();
   }
 
+  /** The active step is the last panel whose top has crossed the middle of the viewport. */
   private stepFromScroll(): number {
-    const rect = this.container.getBoundingClientRect();
-    const travel = rect.height - this.figure.offsetHeight;
-    if (travel <= 0) return 0;
-    const progress = Math.min(1, Math.max(0, -rect.top / travel));
-    return Math.min(this.steps.length - 1, Math.floor(progress * this.steps.length));
+    const middle = window.innerHeight / 2;
+    let index = 0;
+    for (let i = 0; i < this.panels.length; i++) {
+      if (this.panels[i].getBoundingClientRect().top <= middle) index = i;
+    }
+    return index;
   }
 
   private scrollToStep(index: number): void {
-    const rect = this.container.getBoundingClientRect();
-    const travel = rect.height - this.figure.offsetHeight;
-    const target = window.scrollY + rect.top + (travel * (index + 0.5)) / this.steps.length;
+    const panel = this.panels[index];
+    if (!panel) return;
+    const target = window.scrollY + panel.getBoundingClientRect().top - window.innerHeight * 0.25;
     window.scrollTo({ top: target, behavior: this.reduceMotion ? 'auto' : 'smooth' });
   }
 
@@ -297,6 +343,7 @@ export default class GraphStory {
       dot.classList.toggle('is-active', i === this.index);
       dot.setAttribute('aria-current', i === this.index ? 'step' : 'false');
     });
+    this.panels.forEach((panel, i) => panel.classList.toggle('is-active', i === this.index));
   }
 }
 

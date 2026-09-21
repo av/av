@@ -177,13 +177,154 @@ $gs-accents: red, orange, yellow, green, cyan, blue, purple, magenta, tx, tx2, t
   color: var(--fx-tx2);
 }
 
-// Scroll-driven stories reserve vertical travel and pin the figure.
+// Scroll-driven stories: full-bleed, the figure fills the viewport and stays
+// pinned while one explanation panel per step scrolls past it.
 .graph-story.is-trigger-scroll {
-  min-height: calc(var(--gs-steps, 1) * var(--gs-step-height, 65vh));
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
 
   .graph-story__figure {
     position: sticky;
-    top: 1.5rem;
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .graph-story__stage {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    padding: 1.5rem 36% 1rem 1.5rem;
+
+    @include media(lt-md) {
+      padding: 3rem 0.5rem 0;
+      flex: 0 0 60vh;
+    }
+  }
+
+  .graph-story__svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .graph-story__caption {
+    display: none;
+  }
+
+  .graph-story__nav {
+    position: absolute;
+    left: 2rem;
+    bottom: 1.25rem;
+    padding: 0;
+
+    @include media(lt-md) {
+      left: auto;
+      right: 1rem;
+      top: 0.75rem;
+      bottom: auto;
+
+      .graph-story__dots {
+        display: none;
+      }
+    }
+  }
+
+  .graph-story__panels {
+    position: relative;
+    z-index: 2;
+    margin-top: -100vh;
+    margin-top: -100dvh;
+    width: 33%;
+    margin-left: auto;
+    padding: 0 2.5vw 0 0;
+    pointer-events: none;
+
+    @include media(lt-md) {
+      width: 100%;
+      padding: 0 1rem;
+    }
+  }
+
+  .graph-story__panel {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+
+    @include media(lt-md) {
+      align-items: flex-end;
+      padding-bottom: 1.5rem;
+    }
+  }
+
+  .graph-story__card {
+    pointer-events: auto;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid var(--fx-ui);
+    border-radius: 0.5rem;
+    background: color-mix(in srgb, var(--fx-bg) 90%, transparent);
+    backdrop-filter: blur(6px);
+    font-family: 'Figtree', system-ui, sans-serif;
+    opacity: 0.45;
+    transition: opacity 0.3s ease, border-color 0.3s ease;
+
+    @include media(lt-md) {
+      position: sticky;
+      bottom: 1rem;
+      width: 100%;
+      padding: 1rem 1.1rem;
+      max-height: 36vh;
+      overflow-y: auto;
+      opacity: 0;
+    }
+  }
+
+  .graph-story__panel.is-active .graph-story__card {
+    opacity: 1;
+    border-color: var(--fx-border);
+  }
+
+  .graph-story__kicker {
+    font-family: 'Geist Pixel', ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--fx-tx3);
+    margin-bottom: 0.35rem;
+  }
+
+  .graph-story__panel-title {
+    font-family: 'Geist Pixel', ui-monospace, monospace;
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--fx-tx);
+    margin: 0 0 0.4rem;
+  }
+
+  .graph-story__panel-caption {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--fx-tx);
+    margin: 0;
+  }
+
+  .graph-story__panel-body {
+    margin-top: 0.6rem;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--fx-tx2);
+
+    p + p {
+      margin-top: 0.5rem;
+    }
+
+    code {
+      font-size: 0.85em;
+    }
   }
 }
 

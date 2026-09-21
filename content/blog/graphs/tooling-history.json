@@ -1,20 +1,28 @@
 {
-  "trigger": "click",
-  "interval": 2200,
-  "aspect": 1.5,
+  "trigger": "scroll",
+  "interval": 2400,
+  "aspect": 1.35,
   "seed": "tooling-history",
   "steps": [
     {
-      "title": "VS Code",
-      "caption": "Manual coding. One editor, one repo, no assistance.",
+      "title": "Manual coding",
+      "caption": "2022. One editor, one repository, and a browser tab for the docs. Nothing in the loop but me.",
+      "body": "Every line typed by hand. The rhythm was read the docs, write the code, run it, read the error, search for it. The browser was already part of the workflow, just not a collaborator.",
       "state": {
         "groups": [
           {
             "id": "editor",
             "label": "Editor",
             "color": "blue",
-            "x": 50,
-            "y": 40
+            "x": 46,
+            "y": 30
+          },
+          {
+            "id": "questions",
+            "label": "Questions",
+            "color": "tx2",
+            "x": 46,
+            "y": 76
           }
         ],
         "nodes": [
@@ -23,7 +31,7 @@
             "label": "Ivan",
             "kind": "human",
             "color": "yellow",
-            "x": 12,
+            "x": 11,
             "y": 50
           },
           {
@@ -40,6 +48,14 @@
             "kind": "repo",
             "color": "purple",
             "group": "editor"
+          },
+          {
+            "id": "browser",
+            "label": "Browser",
+            "sublabel": "docs · Stack Overflow",
+            "kind": "tool",
+            "color": "tx2",
+            "group": "questions"
           }
         ],
         "edges": [
@@ -51,24 +67,21 @@
           {
             "from": "vscode",
             "to": "repo"
+          },
+          {
+            "from": "ivan",
+            "to": "browser",
+            "style": "dashed",
+            "label": "searches"
           }
         ]
       }
     },
     {
-      "title": "ChatGPT",
-      "caption": "Added ChatGPT for questions from time to time. Copy the answer back by hand.",
+      "title": "ChatGPT arrives",
+      "caption": "Late 2022. ChatGPT joins the browser for questions from time to time. Same tab bar, a different kind of answer.",
+      "body": "At first it was a better search box: explain this error, what does this API do, write a regex. The answer still had to be read, judged, and typed over by hand.",
       "ops": [
-        {
-          "op": "add",
-          "group": {
-            "id": "questions",
-            "label": "Questions",
-            "color": "tx2",
-            "x": 50,
-            "y": 78
-          }
-        },
         {
           "op": "add",
           "node": {
@@ -92,15 +105,48 @@
       ]
     },
     {
+      "title": "The clipboard loop",
+      "caption": "Code goes from chat to editor and back. Paste the function in, paste the error out, repeat until it runs.",
+      "body": "This was the first real workflow change: the chat became a second editor without a file system. Every round trip was manual, and context was whatever fit in the paste.",
+      "ops": [
+        {
+          "op": "add",
+          "edge": {
+            "from": "chatgpt",
+            "to": "vscode",
+            "style": "flow",
+            "color": "green",
+            "label": "paste code"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "vscode",
+            "to": "chatgpt",
+            "style": "flow",
+            "color": "green",
+            "label": "paste errors"
+          }
+        },
+        {
+          "op": "set",
+          "node": "vscode",
+          "sublabel": "paste target"
+        }
+      ]
+    },
+    {
       "title": "Kagi Assistant",
-      "caption": "Added Kagi Assistant for questions from time to time.",
+      "caption": "Kagi Assistant takes over the question traffic. Answers come with sources, and it lives where search already was.",
+      "body": "Search and answer merged into one place. The browser stopped being a separate step; asking and searching became the same motion.",
       "ops": [
         {
           "op": "add",
           "node": {
             "id": "kagi",
             "label": "Kagi Assistant",
-            "sublabel": "questions",
+            "sublabel": "questions · sources",
             "kind": "chat",
             "color": "green",
             "group": "questions"
@@ -111,24 +157,38 @@
           "edge": {
             "from": "ivan",
             "to": "kagi",
-            "style": "dashed"
+            "style": "dashed",
+            "label": "asks"
           }
+        },
+        {
+          "op": "set",
+          "node": "browser",
+          "state": "muted",
+          "sublabel": "docs"
         }
       ]
     },
     {
-      "title": "Removed ChatGPT",
-      "caption": "Kagi answers the same questions with sources. ChatGPT goes.",
+      "title": "ChatGPT dropped",
+      "caption": "With Kagi answering the same questions, ChatGPT goes. The clipboard loop goes with it, for now.",
+      "body": "One tool fewer. The copy-paste habit did not disappear, it just waited for a better model to come back to.",
       "ops": [
         {
           "op": "remove",
           "node": "chatgpt"
+        },
+        {
+          "op": "set",
+          "node": "vscode",
+          "sublabel": "manual coding"
         }
       ]
     },
     {
-      "title": "Copilot",
-      "caption": "Added Copilot to VS Code for completions.",
+      "title": "Copilot completions",
+      "caption": "2023. GitHub Copilot in VS Code. Ghost text finishes the line, sometimes the function. The first assistant inside the editor.",
+      "body": "Completions changed the unit of work from a line to a sketch: write the signature and a comment, accept or reject what appears. No prompts, no copy-paste, just typing with a faster echo.",
       "ops": [
         {
           "op": "add",
@@ -146,14 +206,24 @@
           "edge": {
             "from": "copilot",
             "to": "vscode",
-            "label": "completes"
+            "label": "ghost text"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "vscode",
+            "to": "copilot",
+            "style": "dashed",
+            "label": "open files"
           }
         }
       ]
     },
     {
-      "title": "Ollama",
-      "caption": "Added Ollama for local inference of small models.",
+      "title": "Ollama: local models",
+      "caption": "2024. Ollama runs small models on the laptop. Local inference for anything that should not leave the machine, and for curiosity.",
+      "body": "Local models were slower and dumber, but always on and free. They became the playground for prompts, evals and tooling experiments.",
       "ops": [
         {
           "op": "add",
@@ -161,8 +231,8 @@
             "id": "local",
             "label": "Local",
             "color": "orange",
-            "x": 82,
-            "y": 40
+            "x": 80,
+            "y": 30
           }
         },
         {
@@ -188,8 +258,61 @@
       ]
     },
     {
+      "title": "Harbor",
+      "caption": "The local stack grows into Harbor: one command for backends, UIs and services. It becomes a project of its own.",
+      "body": "Managing the local zoo by hand stopped scaling, so the tooling became a product: Harbor spins up the whole stack, pre-configured. Later it collected a few thousand stars.",
+      "ops": [
+        {
+          "op": "add",
+          "node": {
+            "id": "harbor",
+            "label": "Harbor",
+            "sublabel": "local LLM stacks",
+            "kind": "tool",
+            "color": "orange",
+            "group": "local",
+            "state": "active"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "webui",
+            "label": "Open WebUI",
+            "kind": "service",
+            "color": "orange",
+            "group": "local",
+            "size": 0.85
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "harbor",
+            "to": "ollama",
+            "label": "runs",
+            "color": "orange"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "harbor",
+            "to": "webui",
+            "color": "orange"
+          }
+        },
+        {
+          "op": "set",
+          "node": "ollama",
+          "sublabel": "backend"
+        }
+      ]
+    },
+    {
       "title": "Aider",
-      "caption": "Tried Aider. It never stuck.",
+      "caption": "Tried Aider in the terminal, pointed at the repo and at local models. It never stuck.",
+      "body": "The first real coding agent I ran: it edited files directly. But the loop lived outside the editor, and the diffs it produced needed as much review as writing them.",
       "ops": [
         {
           "op": "add",
@@ -217,14 +340,16 @@
             "from": "aider",
             "to": "ollama",
             "style": "dashed",
-            "state": "pending"
+            "state": "pending",
+            "label": "local"
           }
         }
       ]
     },
     {
       "title": "Roo Code",
-      "caption": "Tried Roo Code, as it was named then. Did not attach either.",
+      "caption": "Tried Roo Code, as it was named then, inside VS Code. It did not attach either.",
+      "body": "Same idea, inside the editor: an agent proposing edits with a chat panel. The tooling was ahead of the models that were affordable to run through it.",
       "ops": [
         {
           "op": "set",
@@ -256,8 +381,9 @@
       ]
     },
     {
-      "title": "claude.ai",
-      "caption": "Started using claude.ai for copy-pasting prompts. Bigger tasks, still by hand.",
+      "title": "claude.ai and the clipboard, again",
+      "caption": "2025. claude.ai for bigger tasks by copy-pasting prompts and files. The clipboard loop returns with a stronger model.",
+      "body": "Whole files went in, whole files came out. It worked well enough to be worth the friction, which is exactly the signal that the friction should be automated.",
       "ops": [
         {
           "op": "remove",
@@ -294,15 +420,27 @@
           "edge": {
             "from": "claude-ai",
             "to": "vscode",
-            "style": "dashed",
+            "style": "flow",
+            "color": "cyan",
             "label": "paste"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "vscode",
+            "to": "claude-ai",
+            "style": "flow",
+            "color": "cyan",
+            "label": "files"
           }
         }
       ]
     },
     {
       "title": "Copilot ask chat",
-      "caption": "Copilot added ask chat. Codebase questions move from the browser into the editor.",
+      "caption": "Copilot adds ask chat. Codebase questions move from the browser into the editor, with the open files as context.",
+      "body": "Questions about my own code no longer needed a paste. The browser chats kept the general questions; the editor got the specific ones.",
       "ops": [
         {
           "op": "remove",
@@ -327,12 +465,23 @@
           "op": "set",
           "node": "claude-ai",
           "state": "default"
+        },
+        {
+          "op": "set",
+          "edge": "claude-ai->vscode",
+          "state": "muted"
+        },
+        {
+          "op": "set",
+          "edge": "vscode->claude-ai",
+          "state": "muted"
         }
       ]
     },
     {
       "title": "Copilot agent mode",
-      "caption": "Copilot added agent mode. Function and module level changes, reviewed in the diff.",
+      "caption": "Copilot agent mode: function and module level changes, reviewed in the diff view. The editor is now where the work happens.",
+      "body": "The first time an agent edited across files inside the editor and I reviewed rather than typed. The clipboard loop finally went quiet.",
       "ops": [
         {
           "op": "set",
@@ -351,19 +500,40 @@
           "op": "set",
           "edge": "copilot->vscode",
           "label": ""
+        },
+        {
+          "op": "set",
+          "node": "claude-ai",
+          "state": "muted"
+        },
+        {
+          "op": "remove",
+          "edge": "claude-ai->vscode"
+        },
+        {
+          "op": "remove",
+          "edge": "vscode->claude-ai"
+        },
+        {
+          "op": "set",
+          "node": "browser",
+          "state": "muted"
         }
       ]
     },
     {
       "title": "RustDesk",
-      "caption": "RustDesk to control the laptop remotely. The laptop becomes one machine among others.",
+      "caption": "RustDesk to control the laptop from anywhere. The laptop becomes one machine among others, reached over the network.",
+      "body": "The moment the machine was reachable remotely, the question changed from which tool to which machine. Long runs could keep going while I was away from the desk.",
       "ops": [
         {
           "op": "add",
           "group": {
             "id": "laptop",
             "label": "Laptop",
-            "color": "tx2"
+            "color": "tx2",
+            "x": 46,
+            "y": 32
           }
         },
         {
@@ -379,20 +549,14 @@
         {
           "op": "set",
           "group": "editor",
-          "x": 36,
-          "y": 36
+          "x": 32,
+          "y": 24
         },
         {
           "op": "set",
           "group": "local",
           "x": 62,
-          "y": 36
-        },
-        {
-          "op": "set",
-          "group": "laptop",
-          "x": 48,
-          "y": 38
+          "y": 24
         },
         {
           "op": "add",
@@ -425,7 +589,8 @@
     },
     {
       "title": "lifeos",
-      "caption": "Developing lifeos as a host for skills, agents and notes. Everything the agents need lives in one repo.",
+      "caption": "December 2025. lifeos starts as the host for skills, agent personas, notes and infrastructure. One repo the agents can read.",
+      "body": "Everything an agent needed to know about me and my projects was scattered. lifeos put it in one place: notes, a task list, agent definitions, and later the machines themselves.",
       "ops": [
         {
           "op": "add",
@@ -433,15 +598,15 @@
             "id": "lifeos",
             "label": "lifeos",
             "color": "yellow",
-            "x": 50,
-            "y": 80
+            "x": 48,
+            "y": 84
           }
         },
         {
           "op": "set",
           "group": "questions",
           "x": 84,
-          "y": 80
+          "y": 84
         },
         {
           "op": "add",
@@ -476,6 +641,17 @@
         },
         {
           "op": "add",
+          "node": {
+            "id": "notes",
+            "label": "notes",
+            "kind": "tool",
+            "color": "yellow",
+            "group": "lifeos",
+            "size": 0.85
+          }
+        },
+        {
+          "op": "add",
           "edge": {
             "from": "skills",
             "to": "copilot",
@@ -495,15 +671,16 @@
       ]
     },
     {
-      "title": "RUG",
-      "caption": "A custom multi-layer agent system for Copilot: Repeat Until Good. A loop that keeps re-running until the check passes.",
+      "title": "RUG: Repeat Until Good",
+      "caption": "A custom multi-layer agent system for Copilot. RUG is a pure orchestrator: it never edits, it launches SWE and QA subagents until the check passes.",
+      "body": "The rule was strict: the orchestrator may only delegate and track todos. Fresh subagent contexts did the work, so the manager never got dumber as the session grew.",
       "ops": [
         {
           "op": "add",
           "node": {
             "id": "rug",
             "label": "RUG",
-            "sublabel": "Repeat Until Good",
+            "sublabel": "orchestrator",
             "kind": "agent",
             "color": "red",
             "group": "editor",
@@ -512,10 +689,50 @@
         },
         {
           "op": "add",
+          "node": {
+            "id": "swe",
+            "label": "SWE",
+            "kind": "agent",
+            "color": "red",
+            "group": "editor",
+            "size": 0.75
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "qa",
+            "label": "QA",
+            "kind": "agent",
+            "color": "red",
+            "group": "editor",
+            "size": 0.75
+          }
+        },
+        {
+          "op": "add",
           "edge": {
             "from": "rug",
             "to": "copilot",
             "label": "drives",
+            "color": "red"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "rug",
+            "to": "swe",
+            "style": "dashed",
+            "color": "red"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "rug",
+            "to": "qa",
+            "style": "dashed",
             "color": "red"
           }
         },
@@ -536,8 +753,9 @@
       ]
     },
     {
-      "title": "DRUG",
-      "caption": "An extra layer on top of RUG working at milestone level: DRUG.",
+      "title": "DRUG: Develop, Run, Until Good",
+      "caption": "An extra layer on top of RUG at milestone level. DRUG expands a spec into milestones and launches a RUG per milestone.",
+      "body": "Three levels: DRUG decides what to build and in what order, RUG decomposes a milestone into features, SWE and QA do the work. It was a workflow engine with a model at each node.",
       "ops": [
         {
           "op": "add",
@@ -557,7 +775,7 @@
           "edge": {
             "from": "drug",
             "to": "rug",
-            "label": "plans",
+            "label": "launches",
             "color": "red"
           }
         },
@@ -575,7 +793,8 @@
     },
     {
       "title": "VS Code limits",
-      "caption": "The VS Code limits become tight. Quotas, context and one window at a time.",
+      "caption": "The VS Code limits become tight: quotas, context, one window at a time, and an orchestrator that cannot leave the editor.",
+      "body": "The whole system lived inside one editor process on one machine. When the quota ran out or the window closed, everything stopped.",
       "ops": [
         {
           "op": "set",
@@ -600,6 +819,16 @@
         },
         {
           "op": "set",
+          "node": "swe",
+          "state": "muted"
+        },
+        {
+          "op": "set",
+          "node": "qa",
+          "state": "muted"
+        },
+        {
+          "op": "set",
           "edge": "rug->copilot",
           "state": "muted"
         },
@@ -617,7 +846,8 @@
     },
     {
       "title": "Claude Code",
-      "caption": "A Claude Code subscription plus the VS Code extension. The agent stops being a feature of the editor.",
+      "caption": "Early 2026. A Claude Code subscription plus the VS Code extension. The agent stops being a feature of the editor.",
+      "body": "Claude Code ran in a terminal with the repo as its world. The editor became a diff viewer. RUG and DRUG were retired: the model could plan and delegate on its own.",
       "ops": [
         {
           "op": "remove",
@@ -626,6 +856,14 @@
         {
           "op": "remove",
           "node": "drug"
+        },
+        {
+          "op": "remove",
+          "node": "swe"
+        },
+        {
+          "op": "remove",
+          "node": "qa"
         },
         {
           "op": "add",
@@ -674,7 +912,7 @@
           "op": "set",
           "node": "vscode",
           "state": "muted",
-          "sublabel": "editor"
+          "sublabel": "diff viewer"
         },
         {
           "op": "set",
@@ -690,36 +928,68 @@
       ]
     },
     {
-      "title": "control/",
-      "caption": "lifeos grows a control module: a persistent OpenCode daemon over Tailscale on pop-os and fedora, with Backlog.md as the task list.",
+      "title": "mi and the skills repo",
+      "caption": "March 2026. mi, a minimal self-extending harness, and a skills repo that any harness can load. Skills become the unit of reuse.",
+      "body": "Instead of teaching each tool separately, the know-how moved into skills: discipline, bugbash, integration testing, ideate. mi was the smallest harness that could load them.",
       "ops": [
         {
-          "op": "remove",
-          "node": "copilot"
+          "op": "add",
+          "node": {
+            "id": "mi",
+            "label": "mi",
+            "sublabel": "minimal harness",
+            "kind": "agent",
+            "color": "yellow",
+            "group": "laptop",
+            "size": 0.9
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "skills",
+            "to": "mi",
+            "style": "flow",
+            "color": "yellow"
+          }
         },
         {
           "op": "set",
-          "node": "claude-ai",
-          "state": "muted"
+          "node": "skills",
+          "sublabel": "av/skills",
+          "state": "active"
         },
         {
           "op": "add",
           "node": {
             "id": "backlog",
-            "label": "Backlog.md",
+            "label": "dstask",
+            "sublabel": "task list",
             "kind": "tool",
             "color": "yellow",
-            "group": "lifeos"
+            "group": "lifeos",
+            "size": 0.85
           }
         },
+        {
+          "op": "remove",
+          "node": "copilot"
+        }
+      ]
+    },
+    {
+      "title": "control/: a persistent daemon",
+      "caption": "March 2026. lifeos grows a control module: an OpenCode daemon over Tailscale on pop-os and fedora, with custom agents and a task list it can pick from.",
+      "body": "Agents no longer needed the laptop awake. A systemd service on two Linux boxes ran OpenCode with the LHE, BUILDER, CRITIC and PLANNER personas, dispatching tasks from dstask.",
+      "ops": [
         {
           "op": "add",
           "group": {
             "id": "pop-os",
             "label": "pop-os",
             "color": "green",
-            "x": 85,
-            "y": 18
+            "x": 86,
+            "y": 12
           }
         },
         {
@@ -728,8 +998,8 @@
             "id": "fedora",
             "label": "fedora",
             "color": "green",
-            "x": 85,
-            "y": 54
+            "x": 86,
+            "y": 46
           }
         },
         {
@@ -757,7 +1027,7 @@
         {
           "op": "add",
           "edge": {
-            "from": "claude-code",
+            "from": "ivan",
             "to": "opencode-pop",
             "label": "tailscale",
             "color": "green"
@@ -766,7 +1036,7 @@
         {
           "op": "add",
           "edge": {
-            "from": "claude-code",
+            "from": "ivan",
             "to": "opencode-fed",
             "color": "green"
           }
@@ -774,41 +1044,57 @@
         {
           "op": "add",
           "edge": {
-            "from": "skills",
+            "from": "agents",
             "to": "opencode-pop",
-            "style": "flow",
+            "style": "dashed",
             "color": "yellow"
           }
         },
         {
           "op": "add",
           "edge": {
-            "from": "skills",
+            "from": "agents",
             "to": "opencode-fed",
-            "style": "flow",
+            "style": "dashed",
             "color": "yellow"
           }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "backlog",
+            "to": "opencode-fed",
+            "style": "dashed",
+            "color": "yellow",
+            "label": "dispatch"
+          }
+        },
+        {
+          "op": "set",
+          "node": "claude-ai",
+          "state": "muted"
+        },
+        {
+          "op": "set",
+          "node": "kagi",
+          "state": "muted"
+        },
+        {
+          "op": "set",
+          "node": "notes",
+          "state": "muted"
+        },
+        {
+          "op": "remove",
+          "node": "browser"
         }
       ]
     },
     {
       "title": "Hermes gateway",
-      "caption": "The OpenCode daemon is retired. Hermes takes the gateway role on fedora; pop-os drops out.",
+      "caption": "April 2026. Hermes takes the gateway role: an always-on agent with an OpenAI-compatible API on fedora, reachable from any device.",
+      "body": "Where OpenCode was a worker, Hermes was a front door: Telegram, YouTube uploads, daily activity summaries. The two ran side by side for a while.",
       "ops": [
-        {
-          "op": "remove",
-          "node": "opencode-pop"
-        },
-        {
-          "op": "remove",
-          "group": "pop-os"
-        },
-        {
-          "op": "set",
-          "node": "opencode-fed",
-          "state": "error",
-          "sublabel": "retired"
-        },
         {
           "op": "add",
           "node": {
@@ -824,7 +1110,7 @@
         {
           "op": "add",
           "edge": {
-            "from": "claude-code",
+            "from": "ivan",
             "to": "hermes",
             "color": "green",
             "label": "api"
@@ -838,22 +1124,340 @@
             "style": "flow",
             "color": "yellow"
           }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "relay",
+            "label": "RustDesk relay",
+            "kind": "service",
+            "color": "tx2",
+            "group": "fedora",
+            "size": 0.8
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "rustdesk",
+            "to": "relay",
+            "style": "dashed"
+          }
         }
       ]
     },
     {
-      "title": "Kandev",
-      "caption": "Kandev on fedora: tasks on a board, every agent in its own worktree. Claude Code, Codex and Grok run as sessions.",
+      "title": "More harnesses",
+      "caption": "April to May 2026. Cursor, Droid, Grok CLI in a sandbox container, Codex. Each gets the same skills; none gets to be the only one.",
+      "body": "Different models were good at different things, and subscriptions had quotas. Running several harnesses in parallel turned model choice into a scheduling problem.",
+      "ops": [
+        {
+          "op": "add",
+          "group": {
+            "id": "harnesses",
+            "label": "Harnesses",
+            "color": "cyan",
+            "parent": "laptop",
+            "x": 32,
+            "y": 54
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "cursor",
+            "label": "Cursor",
+            "kind": "agent",
+            "color": "cyan",
+            "group": "harnesses",
+            "size": 0.9
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "droid",
+            "label": "Droid",
+            "kind": "agent",
+            "color": "cyan",
+            "group": "harnesses",
+            "size": 0.9
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "grok",
+            "label": "Grok",
+            "sublabel": "grokc · sandbox",
+            "kind": "agent",
+            "color": "cyan",
+            "group": "harnesses",
+            "size": 0.9
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "codex",
+            "label": "Codex",
+            "kind": "agent",
+            "color": "cyan",
+            "group": "harnesses",
+            "size": 0.9
+          }
+        },
+        {
+          "op": "move",
+          "node": "claude-code",
+          "group": "harnesses"
+        },
+        {
+          "op": "set",
+          "node": "claude-code",
+          "size": 1,
+          "sublabel": ""
+        },
+        {
+          "op": "remove",
+          "edge": "claude-code->repo"
+        },
+        {
+          "op": "remove",
+          "edge": "ivan->claude-code"
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "skills",
+            "to": "cursor",
+            "style": "flow",
+            "color": "yellow"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "skills",
+            "to": "codex",
+            "style": "flow",
+            "color": "yellow"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "codex",
+            "label": "tasks"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "grok",
+            "style": "dashed"
+          }
+        },
+        {
+          "op": "set",
+          "node": "vscode",
+          "state": "muted",
+          "sublabel": "diffs"
+        },
+        {
+          "op": "remove",
+          "node": "claude-ai"
+        },
+        {
+          "op": "remove",
+          "node": "kagi"
+        },
+        {
+          "op": "remove",
+          "group": "questions"
+        }
+      ]
+    },
+    {
+      "title": "Watching the agents",
+      "caption": "May 2026. skilled shows which skills the harnesses actually use; tracequest turns session logs into a live dashboard. Observability before scale.",
+      "body": "With five harnesses running, reading logs stopped working. tracequest indexed thousands of sessions and later mined 1,200 of them for failure patterns.",
+      "ops": [
+        {
+          "op": "add",
+          "node": {
+            "id": "tracequest",
+            "label": "tracequest",
+            "sublabel": "session logs",
+            "kind": "tool",
+            "color": "purple",
+            "group": "lifeos"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "skilled",
+            "label": "skilled",
+            "sublabel": "skill usage",
+            "kind": "tool",
+            "color": "purple",
+            "group": "lifeos",
+            "size": 0.85
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "codex",
+            "to": "tracequest",
+            "style": "dashed",
+            "color": "purple",
+            "label": "logs"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "claude-code",
+            "to": "tracequest",
+            "style": "dashed",
+            "color": "purple"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "grok",
+            "to": "tracequest",
+            "style": "dashed",
+            "color": "purple"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "skills",
+            "to": "skilled",
+            "style": "dashed",
+            "color": "purple"
+          }
+        },
+        {
+          "op": "set",
+          "node": "notes",
+          "state": "default"
+        }
+      ]
+    },
+    {
+      "title": "Long runs in the cloud",
+      "caption": "Summer 2026. Cursor Cloud and the timeboxed-iterating skill: six-hour runs that fan out subagents and write findings back to disk.",
+      "body": "A skill that turns a task and a duration into a loop of subagents, dispatched across Claude Code, Codex, Cursor, Cursor Cloud and Grok. The human sets the clock, not the steps.",
+      "ops": [
+        {
+          "op": "add",
+          "group": {
+            "id": "cloud",
+            "label": "Cloud",
+            "color": "blue",
+            "x": 86,
+            "y": 86
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "cursor-cloud",
+            "label": "Cursor Cloud",
+            "sublabel": "6h runs",
+            "kind": "agent",
+            "color": "blue",
+            "group": "cloud",
+            "state": "active"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "cursor-cloud",
+            "label": "task + duration"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "skills",
+            "to": "cursor-cloud",
+            "style": "flow",
+            "color": "yellow",
+            "label": "timeboxed"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "cursor-cloud",
+            "to": "tracequest",
+            "style": "dashed",
+            "color": "purple"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Daemon retired, board kept",
+      "caption": "August 2026. The OpenCode daemon is retired and pop-os drops out. dstask becomes Backlog.md, the task list the agents share.",
+      "body": "The always-on worker had done its job; harness CLIs run just as well on demand. The task list outlived the daemon that used to pick from it.",
       "ops": [
         {
           "op": "remove",
+          "node": "opencode-pop"
+        },
+        {
+          "op": "remove",
+          "group": "pop-os"
+        },
+        {
+          "op": "remove",
           "node": "opencode-fed"
+        },
+        {
+          "op": "remove",
+          "edge": "ivan->hermes"
+        },
+        {
+          "op": "set",
+          "node": "backlog",
+          "label": "Backlog.md",
+          "state": "active",
+          "size": 1
         },
         {
           "op": "set",
           "node": "hermes",
           "state": "muted"
         },
+        {
+          "op": "set",
+          "node": "cursor-cloud",
+          "state": "default"
+        },
+        {
+          "op": "set",
+          "group": "fedora",
+          "y": 40
+        }
+      ]
+    },
+    {
+      "title": "Kandev",
+      "caption": "September 2026. Kandev on fedora: tasks on a board, each executed by an agent in its own worktree. Claude Code and Codex run as sessions.",
+      "body": "Terminals became sessions something else could start, stop and read. The board replaced the shell as the place where work is visible.",
+      "ops": [
         {
           "op": "add",
           "node": {
@@ -880,29 +1484,9 @@
         },
         {
           "op": "add",
-          "node": {
-            "id": "fed-codex",
-            "label": "codex",
-            "sublabel": "session",
-            "kind": "agent",
-            "color": "cyan",
-            "group": "fedora"
-          }
-        },
-        {
-          "op": "add",
           "edge": {
             "from": "kandev-fed",
             "to": "fed-cc",
-            "style": "dashed",
-            "color": "green"
-          }
-        },
-        {
-          "op": "add",
-          "edge": {
-            "from": "kandev-fed",
-            "to": "fed-codex",
             "style": "dashed",
             "color": "green"
           }
@@ -917,19 +1501,27 @@
           }
         },
         {
+          "op": "move",
+          "node": "codex",
+          "group": "fedora"
+        },
+        {
           "op": "set",
-          "edge": "ivan->claude-code",
-          "label": ""
-        }
-      ]
-    },
-    {
-      "title": "Fleet",
-      "caption": "Four Kandev instances: mac as controller, hetzner, sandbox-av, fedora. RustDesk retires; the laptop is a controller, not a screen.",
-      "ops": [
+          "node": "codex",
+          "sublabel": "session"
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "kandev-fed",
+            "to": "codex",
+            "style": "dashed",
+            "color": "green"
+          }
+        },
         {
           "op": "remove",
-          "node": "rustdesk"
+          "node": "relay"
         },
         {
           "op": "remove",
@@ -937,10 +1529,38 @@
         },
         {
           "op": "set",
+          "node": "backlog",
+          "state": "default"
+        }
+      ]
+    },
+    {
+      "title": "Fleet",
+      "caption": "September 19. Four Kandev instances: mac as controller, hetzner, sandbox-av and fedora over Tailscale. RustDesk retires; the laptop is a controller, not a screen.",
+      "body": "Each instance owns its database, repos and tasks. The controller talks to them natively over MCP; the only missing layer was addressing and a health check.",
+      "ops": [
+        {
+          "op": "remove",
+          "node": "rustdesk"
+        },
+        {
+          "op": "set",
           "group": "laptop",
           "label": "MacBook · controller",
           "x": 44,
-          "y": 40
+          "y": 36
+        },
+        {
+          "op": "set",
+          "group": "editor",
+          "x": 30,
+          "y": 20
+        },
+        {
+          "op": "set",
+          "group": "local",
+          "x": 30,
+          "y": 46
         },
         {
           "op": "add",
@@ -961,8 +1581,8 @@
             "id": "hetzner",
             "label": "hetzner",
             "color": "orange",
-            "x": 85,
-            "y": 13
+            "x": 86,
+            "y": 10
           }
         },
         {
@@ -972,7 +1592,7 @@
             "label": "sandbox-av",
             "color": "magenta",
             "x": 16,
-            "y": 82
+            "y": 86
           }
         },
         {
@@ -996,32 +1616,30 @@
           }
         },
         {
-          "op": "add",
-          "node": {
-            "id": "hz-cc",
-            "label": "claude",
-            "sublabel": "session",
-            "kind": "agent",
-            "color": "cyan",
-            "group": "hetzner"
-          }
+          "op": "move",
+          "node": "grok",
+          "group": "hetzner"
         },
         {
-          "op": "add",
-          "node": {
-            "id": "av-droid",
-            "label": "droid",
-            "sublabel": "session",
-            "kind": "agent",
-            "color": "cyan",
-            "group": "av"
-          }
+          "op": "set",
+          "node": "grok",
+          "sublabel": "session"
+        },
+        {
+          "op": "move",
+          "node": "droid",
+          "group": "av"
+        },
+        {
+          "op": "set",
+          "node": "droid",
+          "sublabel": "session"
         },
         {
           "op": "add",
           "edge": {
             "from": "kandev-hz",
-            "to": "hz-cc",
+            "to": "grok",
             "style": "dashed",
             "color": "green"
           }
@@ -1030,7 +1648,7 @@
           "op": "add",
           "edge": {
             "from": "kandev-av",
-            "to": "av-droid",
+            "to": "droid",
             "style": "dashed",
             "color": "green"
           }
@@ -1083,17 +1701,7 @@
         {
           "op": "set",
           "node": "claude-code",
-          "size": 1,
-          "state": "default",
           "sublabel": "session"
-        },
-        {
-          "op": "remove",
-          "edge": "claude-code->repo"
-        },
-        {
-          "op": "remove",
-          "edge": "ivan->claude-code"
         },
         {
           "op": "add",
@@ -1106,21 +1714,40 @@
         },
         {
           "op": "set",
-          "group": "editor",
-          "x": 30,
-          "y": 26
+          "node": "cursor",
+          "state": "muted"
+        },
+        {
+          "op": "remove",
+          "edge": "skills->cursor"
+        },
+        {
+          "op": "remove",
+          "edge": "skills->codex"
+        },
+        {
+          "op": "remove",
+          "edge": "ivan->codex"
+        },
+        {
+          "op": "remove",
+          "edge": "ivan->grok"
         },
         {
           "op": "set",
-          "group": "local",
-          "x": 30,
-          "y": 56
+          "node": "mi",
+          "state": "muted"
+        },
+        {
+          "op": "remove",
+          "group": "harnesses"
         }
       ]
     },
     {
-      "title": "fleet CLI + skills sync",
-      "caption": "One CLI over the fleet: health, dispatch, and skills sync that mirrors control/skills to every host.",
+      "title": "fleet CLI and skills sync",
+      "caption": "One CLI over the fleet: instances, health, dispatch, and a skills sync that mirrors control/skills to every host. A skill written on the mac is everywhere a minute later.",
+      "body": "The registry is a JSON file; the CLI is stdlib Python with no install step. Restarts refuse busy hosts, and sync prunes what was removed so the hosts never drift.",
       "ops": [
         {
           "op": "add",
@@ -1132,10 +1759,6 @@
             "color": "yellow",
             "group": "lifeos"
           }
-        },
-        {
-          "op": "remove",
-          "edge": "skills->claude-code"
         },
         {
           "op": "add",
@@ -1176,20 +1799,34 @@
           }
         },
         {
-          "op": "set",
-          "node": "backlog",
-          "state": "muted"
+          "op": "add",
+          "edge": {
+            "from": "skills",
+            "to": "kandev-fed",
+            "style": "flow",
+            "color": "yellow"
+          }
+        },
+        {
+          "op": "remove",
+          "edge": "skills->claude-code"
         },
         {
           "op": "set",
           "node": "agents",
+          "state": "muted"
+        },
+        {
+          "op": "set",
+          "node": "skilled",
           "state": "muted"
         }
       ]
     },
     {
       "title": "Control center",
-      "caption": "A controller task on the mac runs the loop: collect from all instances, classify by evidence, act, escalate only blockers.",
+      "caption": "A controller task on the mac runs the loop: collect from all instances, classify by evidence, act, escalate only blockers. I read summaries instead of logs.",
+      "body": "The same fleet-control-center skill that started as an automation on sandbox-av, ported fleet-wide. Human attention is spent on goals and irreversible actions, not on watching.",
       "ops": [
         {
           "op": "add",
@@ -1259,19 +1896,12 @@
     },
     {
       "title": "Today",
-      "caption": "A person, a controller, three workers and a repo of skills. The editor is still there, mostly as a diff viewer.",
+      "caption": "A person, a controller, three workers, a repo of skills and a log viewer. The editor is still there, mostly as a diff viewer. The clipboard loop is a memory.",
+      "body": "What changed over four years is not the model so much as where the loop lives: from my hands, to the editor, to a terminal, to a board, to a fleet.",
       "ops": [
         {
           "op": "remove",
-          "group": "questions"
-        },
-        {
-          "op": "remove",
-          "node": "kagi"
-        },
-        {
-          "op": "remove",
-          "node": "claude-ai"
+          "node": "cursor"
         },
         {
           "op": "set",
@@ -1280,22 +1910,22 @@
         },
         {
           "op": "set",
-          "node": "vscode",
-          "sublabel": "diff viewer"
-        },
-        {
-          "op": "set",
           "node": "fed-cc",
           "state": "active"
         },
         {
           "op": "set",
-          "node": "hz-cc",
+          "node": "grok",
           "state": "active"
         },
         {
           "op": "set",
-          "node": "av-droid",
+          "node": "droid",
+          "state": "active"
+        },
+        {
+          "op": "set",
+          "node": "codex",
           "state": "active"
         },
         {
@@ -1303,6 +1933,16 @@
           "node": "ollama",
           "state": "muted",
           "sublabel": "idle"
+        },
+        {
+          "op": "set",
+          "node": "webui",
+          "state": "muted"
+        },
+        {
+          "op": "set",
+          "node": "harbor",
+          "state": "default"
         }
       ]
     }

@@ -183,6 +183,7 @@ export function resolveStory(spec: GraphStorySpec): ResolvedStep[] {
       index,
       title: step.title ?? '',
       caption: step.caption ?? '',
+      body: step.body ?? '',
       state,
     });
     previous = state;

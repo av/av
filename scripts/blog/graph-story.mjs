@@ -245,6 +245,7 @@ export function validateGraphStory(spec, label = 'graph story') {
     }
     if (step.title !== undefined && typeof step.title !== 'string') errors.push(`${where}: "title" must be a string.`);
     if (step.caption !== undefined && typeof step.caption !== 'string') errors.push(`${where}: "caption" must be a string.`);
+    if (step.body !== undefined && typeof step.body !== 'string') errors.push(`${where}: "body" must be a string.`);
 
     const base = step.state ?? previous;
     if (!base || !Array.isArray(base.nodes) || !Array.isArray(base.edges) || !Array.isArray(base.groups)) {
@@ -299,7 +300,8 @@ export function renderGraphStoryMarkup(spec, { name, trigger }) {
     .map((step) => {
       const title = step.title ? `<strong>${escapeHtml(step.title)}</strong>` : '';
       const caption = step.caption ? ` ${step.caption}` : '';
-      return `<li>${title}${caption}</li>`;
+      const body = step.body ? `<p>${step.body}</p>` : '';
+      return `<li>${title}${caption}${body}</li>`;
     })
     .join('');
 

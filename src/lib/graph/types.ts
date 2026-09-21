@@ -100,6 +100,8 @@ export interface GraphStep {
   title?: string;
   /** Caption text; a small subset of inline HTML is allowed (author content). */
   caption?: string;
+  /** Longer explanation shown in scroll mode panels (inline HTML allowed). */
+  body?: string;
   /** Full state for this step. When omitted, the previous state is reused. */
   state?: GraphState;
   /** Operations applied after `state` (or to the previous step's state). */
@@ -125,5 +127,6 @@ export interface ResolvedStep {
   index: number;
   title: string;
   caption: string;
+  body: string;
   state: GraphState;
 }
