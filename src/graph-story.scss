@@ -482,6 +482,24 @@ $gs-pixel: 'Geist Pixel', ui-monospace, monospace;
   pointer-events: none;
 }
 
+// Context outside the step's focus steps back.
+.gs-node.is-dim .gs-node__shape,
+.gs-node.is-dim text,
+.gs-edge.is-dim .gs-edge__line,
+.gs-edge.is-dim text {
+  opacity: 0.38;
+}
+
+.gs-group.is-dim rect,
+.gs-group.is-dim text {
+  opacity: 0.5;
+}
+
+.gs-node.is-dim .gs-node__shape {
+  filter: none;
+  animation: none;
+}
+
 @keyframes gs-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.06); }

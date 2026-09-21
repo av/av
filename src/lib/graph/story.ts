@@ -6,6 +6,7 @@ import type {
   GroupSpec,
   NodeSpec,
   ResolvedStep,
+  StepFocus,
 } from './types';
 
 export const edgeId = (edge: EdgeSpec): string => edge.id ?? `${edge.from}->${edge.to}`;
@@ -159,6 +160,62 @@ function validateState(state: GraphState, stepIndex: number): void {
   }
 }
 
+/** Collects the ids an op touches (removals excluded: they are gone by the time the step renders). */
+function touchedBy(op: GraphOp, state: GraphState, focus: StepFocus): void {
+  const edgeEnds = (edge: EdgeSpec) => {
+    focus.nodes.add(edge.from);
+    focus.nodes.add(edge.to);
+  };
+  switch (op.op) {
+    case 'add':
+      if ('node' in op) focus.nodes.add(op.node.id);
+      else if ('edge' in op) edgeEnds(op.edge);
+      else focus.groups.add(op.group.id);
+      return;
+    case 'set':
+      if ('node' in op) focus.nodes.add(op.node);
+      else if ('edge' in op) {
+        const edge = state.edges.find((e) => edgeId(e) === op.edge);
+        if (edge) edgeEnds(edge);
+      } else focus.groups.add(op.group);
+      return;
+    case 'move':
+      if ('node' in op) {
+        focus.nodes.add(op.node);
+        if (op.group) focus.groups.add(op.group);
+      } else focus.groups.add(op.group);
+      return;
+    case 'remove':
+      return;
+  }
+}
+
+function resolveFocus(step: { focus?: string[] | 'all'; state?: GraphState; ops?: GraphOp[] }, state: GraphState): StepFocus {
+  const focus: StepFocus = { all: false, nodes: new Set(), groups: new Set() };
+  if (step.focus === 'all' || (step.state && !step.focus)) {
+    // Still record what changed so narrow screens have something to frame.
+    focus.all = true;
+    for (const op of step.ops ?? []) touchedBy(op, state, focus);
+    if (focus.nodes.size === 0 && focus.groups.size === 0) {
+      for (const n of state.nodes) focus.nodes.add(n.id);
+    }
+    return focus;
+  }
+  if (Array.isArray(step.focus)) {
+    const groupIds = new Set(state.groups.map((g) => g.id));
+    for (const id of step.focus) (groupIds.has(id) ? focus.groups : focus.nodes).add(id);
+    return focus;
+  }
+  for (const op of step.ops ?? []) touchedBy(op, state, focus);
+  // Drop ids that no longer exist after this step's ops.
+  const nodeIds = new Set(state.nodes.map((n) => n.id));
+  const groupIds = new Set(state.groups.map((g) => g.id));
+  for (const id of focus.nodes) if (!nodeIds.has(id)) focus.nodes.delete(id);
+  for (const id of focus.groups) if (!groupIds.has(id)) focus.groups.delete(id);
+  if (focus.nodes.size === 0 && focus.groups.size === 0) focus.all = true;
+  return focus;
+}
+
 /**
  * Turns the declarative step list into a list of full states, applying ops on
  * top of the previous step. Throws with a step index on any dangling reference.
@@ -185,6 +242,7 @@ export function resolveStory(spec: GraphStorySpec): ResolvedStep[] {
       caption: step.caption ?? '',
       body: step.body ?? '',
       state,
+      focus: resolveFocus(step, state),
     });
     previous = state;
   });

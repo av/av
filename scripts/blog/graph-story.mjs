@@ -246,6 +246,9 @@ export function validateGraphStory(spec, label = 'graph story') {
     if (step.title !== undefined && typeof step.title !== 'string') errors.push(`${where}: "title" must be a string.`);
     if (step.caption !== undefined && typeof step.caption !== 'string') errors.push(`${where}: "caption" must be a string.`);
     if (step.body !== undefined && typeof step.body !== 'string') errors.push(`${where}: "body" must be a string.`);
+    if (step.focus !== undefined && step.focus !== 'all' && !(Array.isArray(step.focus) && step.focus.every((id) => typeof id === 'string'))) {
+      errors.push(`${where}: "focus" must be "all" or an array of ids.`);
+    }
 
     const base = step.state ?? previous;
     if (!base || !Array.isArray(base.nodes) || !Array.isArray(base.edges) || !Array.isArray(base.groups)) {
@@ -269,6 +272,10 @@ export function validateGraphStory(spec, label = 'graph story') {
     }
 
     validateState(state, errors, where);
+    if (Array.isArray(step.focus)) {
+      const known = new Set([...state.nodes.map((n) => n.id), ...state.groups.map((g) => g.id)]);
+      for (const id of step.focus) if (!known.has(id)) errors.push(`${where}: focus references unknown id "${id}".`);
+    }
     previous = state;
   });
 

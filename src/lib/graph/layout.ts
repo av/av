@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import { edgeId } from './story';
 import type { Accent, EdgeSpec, GraphState, GroupSpec, NodeShape, NodeSpec } from './types';
 
-export const STAGE_WIDTH = 1000;
+export const STAGE_WIDTH = 1300;
 export const BASE_RADIUS = 24;
 
 const CLUSTER_PULL = 0.16;
@@ -11,11 +11,11 @@ const ROOT_PULL = 0.03;
 /** Pull of an unchanged node toward where it was in the previous step. */
 const INERTIA = 0.35;
 const TICKS = 320;
-const NESTED_SPREAD = 190;
-const CHARGE = -240;
-const LINK_DISTANCE = 70;
-const COLLIDE_PADDING = 22;
-const GROUP_PADDING = 18;
+const NESTED_SPREAD = 170;
+const CHARGE = -170;
+const LINK_DISTANCE = 52;
+const COLLIDE_PADDING = 20;
+const GROUP_PADDING = 16;
 const GROUP_LABEL_HEIGHT = 20;
 const NODE_LABEL_HEIGHT = 18;
 const STAGE_MARGIN = 36;
@@ -69,6 +69,28 @@ export interface Layout {
   nodes: LayoutNode[];
   edges: LayoutEdge[];
   groups: LayoutGroup[];
+}
+
+/** Bounding box of a set of nodes and groups (all of them when the sets are empty). */
+export function boundsOf(layout: Layout, nodeIds?: Set<string>, groupIds?: Set<string>): Box | null {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  const all = !nodeIds && !groupIds;
+  for (const n of layout.nodes) {
+    if (!all && !nodeIds?.has(n.id)) continue;
+    x0 = Math.min(x0, n.x - n.r);
+    y0 = Math.min(y0, n.y - n.r);
+    x1 = Math.max(x1, n.x + n.r);
+    y1 = Math.max(y1, n.y + n.r + NODE_LABEL_HEIGHT * 2);
+  }
+  for (const g of layout.groups) {
+    if (!all && !groupIds?.has(g.id)) continue;
+    x0 = Math.min(x0, g.box.x);
+    y0 = Math.min(y0, g.box.y);
+    x1 = Math.max(x1, g.box.x + g.box.width);
+    y1 = Math.max(y1, g.box.y + g.box.height);
+  }
+  if (x0 === Infinity) return null;
+  return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
 }
 
 const KIND_SHAPES: Record<string, NodeShape> = {
@@ -410,7 +432,7 @@ export default class GraphLayout {
           .distance((e) => e.source.r + e.target.r + LINK_DISTANCE)
           .strength((e) => (sameCluster(e.source, e.target) ? 0.5 : 0.04)),
       )
-      .force('charge', d3.forceManyBody<LayoutNode>().strength(CHARGE).distanceMax(280))
+      .force('charge', d3.forceManyBody<LayoutNode>().strength(CHARGE).distanceMax(220))
       .force('collide', d3.forceCollide<LayoutNode>().radius((n) => n.r + COLLIDE_PADDING).iterations(2))
       .force('x', d3.forceX<LayoutNode>((n) => this.anchorFor(n, groups).x).strength(pullStrength))
       .force('y', d3.forceY<LayoutNode>((n) => this.anchorFor(n, groups).y).strength(pullStrength))

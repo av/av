@@ -1,8 +1,8 @@
 import * as d3 from 'd3';
 
 import { shapePath, shapeRadius } from './shapes';
-import type { Layout, LayoutEdge, LayoutGroup, LayoutNode } from './layout';
-import type { Accent } from './types';
+import type { Box, Layout, LayoutEdge, LayoutGroup, LayoutNode } from './layout';
+import type { Accent, StepFocus } from './types';
 
 const ACCENTS: Accent[] = ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'magenta', 'tx', 'tx2', 'tx3'];
 const ARROW_GAP = 5;
@@ -10,6 +10,7 @@ const ARROW_GAP = 5;
 // instead of interrupting each other.
 const FADE = 'gs-fade';
 const MOVE = 'gs-move';
+const CAMERA = 'gs-camera';
 const LABEL_OFFSET = 15;
 const SUBLABEL_OFFSET = 30;
 
@@ -74,14 +75,33 @@ export default class GraphRenderer {
     this.nodeLayer = this.svg.append('g').attr('class', 'gs-nodes');
   }
 
-  render(layout: Layout, duration: number): void {
+  render(layout: Layout, duration: number, focus?: StepFocus): void {
     const timing = timingFor(duration);
     this.edgeIndex = new Map(layout.edges.map((e) => [e.id, e]));
+    this.lit = focus && !focus.all ? litSet(layout, focus) : null;
+    this.svg.classed('is-focused', this.lit !== null);
 
     // Nodes first so their tweens run before edges read `px`/`py` each frame.
     this.renderNodes(layout.nodes, timing);
     this.renderEdges(layout.edges, timing);
     this.renderGroups(layout.groups, timing);
+  }
+
+  /** Ids that stay fully lit; null means nothing is dimmed. */
+  private lit: { nodes: Set<string>; groups: Set<string> } | null = null;
+
+  private dimNode(n: LayoutNode): boolean {
+    return this.lit !== null && !this.lit.nodes.has(n.id);
+  }
+
+  /** Animates the viewBox to frame `box`. */
+  setCamera(box: Box, duration: number): void {
+    const view = `${box.x.toFixed(1)} ${box.y.toFixed(1)} ${box.width.toFixed(1)} ${box.height.toFixed(1)}`;
+    if (duration === 0) {
+      this.svg.interrupt(CAMERA).attr('viewBox', view);
+      return;
+    }
+    this.svg.transition(CAMERA).duration(duration).ease(d3.easeCubicInOut).attr('viewBox', view);
   }
 
   private renderGroups(groups: LayoutGroup[], timing: Timing): void {
@@ -116,7 +136,10 @@ export default class GraphRenderer {
       .remove();
 
     const merged: GroupSel = enter.merge(sel).sort((a, b) => a.depth - b.depth);
-    merged.attr('class', (g) => `gs-group is-color-${g.color} is-depth-${g.depth}`);
+    merged.attr(
+      'class',
+      (g) => `gs-group is-color-${g.color} is-depth-${g.depth}${this.lit && !this.lit.groups.has(g.id) ? ' is-dim' : ''}`,
+    );
     merged.select<SVGTextElement>('text').text((g) => (g.spec.label ? `[ ${g.spec.label} ]` : ''));
 
     const updated = sel.transition(MOVE).delay(timing.move.delay).duration(timing.move.duration).ease(d3.easeCubicInOut);
@@ -168,7 +191,8 @@ export default class GraphRenderer {
     const merged: NodeSel = enter.merge(sel);
     merged.attr(
       'class',
-      (n) => `gs-node is-shape-${n.shape} is-color-${n.color} is-state-${n.spec.state ?? 'default'}${n.spec.kind ? ` is-kind-${n.spec.kind}` : ''}`,
+      (n) =>
+        `gs-node is-shape-${n.shape} is-color-${n.color} is-state-${n.spec.state ?? 'default'}${n.spec.kind ? ` is-kind-${n.spec.kind}` : ''}${this.dimNode(n) ? ' is-dim' : ''}`,
     );
     merged.select<SVGTextElement>('text.gs-node__sublabel').call(swapText, (n: LayoutNode) => n.spec.sublabel ?? '', timing);
     merged.select<SVGTextElement>('text.gs-node__label').call(swapText, (n: LayoutNode) => n.spec.label ?? n.id, timing);
@@ -228,7 +252,8 @@ export default class GraphRenderer {
     const merged: EdgeSel = enter.merge(sel);
     merged.attr(
       'class',
-      (e) => `gs-edge is-color-${e.color} is-style-${e.spec.style ?? 'solid'} is-state-${e.spec.state ?? 'default'}`,
+      (e) =>
+        `gs-edge is-color-${e.color} is-style-${e.spec.style ?? 'solid'} is-state-${e.spec.state ?? 'default'}${this.dimNode(e.source) && this.dimNode(e.target) ? ' is-dim' : ''}`,
     );
     merged
       .select<SVGPathElement>('path')
@@ -318,4 +343,17 @@ function swapText(
       .style('fill-opacity', 1)
       .style('stroke-opacity', 1);
   });
+}
+
+/** Lit set: focused nodes, members of focused groups, and the groups that contain any lit node. */
+function litSet(layout: Layout, focus: StepFocus): { nodes: Set<string>; groups: Set<string> } {
+  const nodes = new Set(focus.nodes);
+  for (const n of layout.nodes) {
+    if (n.path.some((g) => focus.groups.has(g))) nodes.add(n.id);
+  }
+  const groups = new Set(focus.groups);
+  for (const n of layout.nodes) {
+    if (nodes.has(n.id)) for (const g of n.path) groups.add(g);
+  }
+  return { nodes, groups };
 }

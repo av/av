@@ -102,6 +102,12 @@ export interface GraphStep {
   caption?: string;
   /** Longer explanation shown in scroll mode panels (inline HTML allowed). */
   body?: string;
+  /**
+   * What the camera frames and what stays lit. Defaults to the ids touched by
+   * this step's ops (everything for a full `state`). `'all'` shows the whole
+   * graph; an id list frames those nodes/groups.
+   */
+  focus?: string[] | 'all';
   /** Full state for this step. When omitted, the previous state is reused. */
   state?: GraphState;
   /** Operations applied after `state` (or to the previous step's state). */
@@ -129,4 +135,12 @@ export interface ResolvedStep {
   caption: string;
   body: string;
   state: GraphState;
+  /** Ids to frame and keep lit; `all` disables dimming. */
+  focus: StepFocus;
+}
+
+export interface StepFocus {
+  all: boolean;
+  nodes: Set<string>;
+  groups: Set<string>;
 }

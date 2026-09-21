@@ -1,5 +1,5 @@
-import GraphLayout from './layout';
-import type { Layout } from './layout';
+import GraphLayout, { boundsOf } from './layout';
+import type { Box, Layout } from './layout';
 import GraphRenderer from './renderer';
 import { resolveStory } from './story';
 import type { GraphStorySpec, ResolvedStep, StoryTrigger } from './types';
@@ -15,6 +15,9 @@ interface GraphStoryOptions {
 
 const DEFAULT_DURATION = 900;
 const DEFAULT_INTERVAL = 2600;
+const CAMERA_PADDING = 70;
+/** A focused view never zooms in past this share of the layout width. */
+const MIN_VIEW_SHARE = 0.4;
 const SCROLL_STEP_HEIGHT_VH = 65;
 
 /**
@@ -35,8 +38,9 @@ export default class GraphStory {
   private readonly container: HTMLElement;
   private readonly spec: GraphStorySpec;
   private readonly options: GraphStoryOptions;
-  private readonly layout: GraphLayout;
+  private layout!: GraphLayout;
   private readonly layouts: Layout[] = [];
+  private viewAspect = 1.6;
   private renderer: GraphRenderer | null = null;
   private index = -1;
   private reduceMotion = false;
@@ -62,7 +66,6 @@ export default class GraphStory {
     this.options = options;
     this.steps = resolveStory(spec);
     this.trigger = options.trigger ?? spec.trigger ?? 'click';
-    this.layout = new GraphLayout(spec.aspect ?? 1.6, spec.seed ?? 'graph-story');
   }
 
   get current(): number {
@@ -164,9 +167,36 @@ export default class GraphStory {
     }
 
     const duration = immediate || this.reduceMotion ? 0 : (this.options.duration ?? DEFAULT_DURATION) * (jump ? 0.6 : 1);
-    this.renderer?.render(this.layouts[index], duration);
+    const step = this.steps[index];
+    this.renderer?.render(this.layouts[index], duration, step.focus);
+    this.renderer?.setCamera(this.cameraFor(this.layouts[index], step), duration);
     this.updateChrome();
     this.options.onStep?.(index, this.steps[index]);
+  }
+
+  /** Frames the step's focus (or everything), padded and matched to the stage aspect. */
+  private cameraFor(layout: Layout, step: ResolvedStep): Box {
+    const full = boundsOf(layout) ?? { x: 0, y: 0, width: layout.width, height: layout.height };
+    // Portrait stages cannot show the whole graph legibly, so the "all" view
+    // there frames the top-level groups touched most recently instead.
+    const portrait = this.viewAspect < 1;
+    const focused = step.focus.all && !portrait ? null : boundsOf(layout, step.focus.nodes, step.focus.groups);
+    const box = focused ?? full;
+
+    let width = Math.max(box.width + CAMERA_PADDING * 2, layout.width * MIN_VIEW_SHARE);
+    let height = Math.max(box.height + CAMERA_PADDING * 2, width / this.viewAspect);
+    if (width / height < this.viewAspect) width = height * this.viewAspect;
+    else height = width / this.viewAspect;
+
+    // Never frame less than the whole graph would need, so zooming out is monotone-ish.
+    if (focused) {
+      width = Math.min(width, Math.max(full.width + CAMERA_PADDING * 2, (full.height + CAMERA_PADDING * 2) * this.viewAspect));
+      height = width / this.viewAspect;
+    }
+
+    const cx = box.x + box.width / 2;
+    const cy = box.y + box.height / 2;
+    return { x: cx - width / 2, y: cy - height / 2, width, height };
   }
 
   private buildDom(): void {
@@ -182,6 +212,16 @@ export default class GraphStory {
     svg.setAttribute('class', 'graph-story__svg');
     svg.setAttribute('role', 'img');
     stage.append(svg);
+    this.figure.append(stage);
+    container.append(this.figure);
+
+    // Scroll mode fills the viewport, so lay the graph out in the stage's real
+    // aspect (portrait on phones) instead of a fixed landscape canvas.
+    const svgBox = svg.getBoundingClientRect();
+    const measured = svgBox.width > 0 && svgBox.height > 0 ? svgBox.width / svgBox.height : null;
+    const aspect = this.trigger === 'scroll' && measured ? Math.min(2.2, Math.max(0.55, measured)) : (this.spec.aspect ?? 1.6);
+    this.viewAspect = aspect;
+    this.layout = new GraphLayout(aspect, this.spec.seed ?? 'graph-story');
     this.renderer = new GraphRenderer(svg, this.layout.width, this.layout.height);
 
     const figcaption = el('figcaption', 'graph-story__caption');
@@ -206,8 +246,7 @@ export default class GraphStory {
       nav.append(this.playButton);
     }
 
-    this.figure.append(stage, figcaption, nav);
-    container.append(this.figure);
+    this.figure.append(figcaption, nav);
 
     if (this.trigger === 'scroll') {
       // Full-screen scrollytelling: one explanation panel per step scrolls
