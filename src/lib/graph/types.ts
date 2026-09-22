@@ -143,4 +143,6 @@ export interface StepFocus {
   all: boolean;
   nodes: Set<string>;
   groups: Set<string>;
+  /** Edges the step itself touched; only these are lit. */
+  edges: Set<string>;
 }

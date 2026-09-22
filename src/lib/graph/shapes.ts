@@ -11,7 +11,7 @@ export const SUBLABEL_SIZE = 11;
 export const PIXEL_FONT = "'Geist Pixel', 'Geist Mono', ui-monospace, monospace";
 /** Fallback advance width, as a fraction of font size, when nothing can measure text. */
 const CHAR_ADVANCE = 0.68;
-const SIGIL_WIDTH = 15;
+const SIGIL_WIDTH = 20;
 const PAD_X = 11;
 const CARD_HEIGHT = 30;
 const CARD_HEIGHT_TWO_LINE = 44;

@@ -54,8 +54,20 @@ $gs-chrome: 22px;
   height: 100%;
   border: 1px solid var(--fx-border);
   border-radius: 0.15rem;
-  background: color-mix(in srgb, var(--fx-bg) 88%, transparent);
+  background: var(--fx-bg);
   overflow: hidden;
+  // Its own surface, so the page's animated decor never shows through.
+  isolation: isolate;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.045;
+    @include grain-tile;
+  }
 }
 
 .graph-story__chrome {
@@ -70,7 +82,7 @@ $gs-chrome: 22px;
   gap: 0.75rem;
   padding: 0 0.7rem;
   border-bottom: 1px solid var(--fx-ui);
-  background: color-mix(in srgb, var(--fx-bg2) 70%, transparent);
+  background: var(--fx-bg2);
   font-family: $gs-pixel;
   font-size: 11px;
   letter-spacing: 0.06em;
@@ -312,6 +324,7 @@ $gs-chrome: 22px;
 
   .graph-story__svg {
     position: absolute;
+    z-index: 1;
     top: $gs-chrome;
     left: 0;
     width: 100%;
@@ -378,8 +391,7 @@ $gs-chrome: 22px;
     padding: 1.25rem 1.5rem;
     border: 1px solid var(--fx-ui);
     border-radius: 0.15rem;
-    background: color-mix(in srgb, var(--fx-bg) 90%, transparent);
-    backdrop-filter: blur(6px);
+    background: color-mix(in srgb, var(--fx-bg) 94%, transparent);
     font-family: 'Figtree', system-ui, sans-serif;
     opacity: 0.45;
     transition: opacity 0.3s ease, border-color 0.3s ease;
@@ -548,7 +560,6 @@ $gs-chrome: 22px;
 .gs-node__sigil {
   font-size: 15px;
   fill: var(--gs-accent);
-  opacity: 0.85;
 }
 
 .graph-story .is-color-green .gs-node__label {

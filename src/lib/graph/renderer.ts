@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 
-import { cardPath, cardRadius, labelOffsetX, sigilForKind, sigilOffsetX } from './shapes';
+import { cardPath, cardRadius, estimateTextWidth, labelOffsetX, sigilForKind, sigilOffsetX } from './shapes';
+import type { TextMeasurer } from './shapes';
 import type { Box, Layout, LayoutEdge, LayoutGroup, LayoutNode } from './layout';
 import type { Accent, StepFocus } from './types';
 
@@ -11,14 +12,19 @@ const ARROW_GAP = 6;
 const FADE = 'gs-fade';
 const MOVE = 'gs-move';
 const CAMERA = 'gs-camera';
-/** Advance width of the edge-label font, for sizing its plate. */
-const EDGE_LABEL_ADVANCE = 7.4;
+const EDGE_LABEL_SIZE = 11;
+/** Group titles are uppercase and letter-spaced, so the plate needs slack. */
+const GROUP_LABEL_SIZE = 12;
+const GROUP_LABEL_TRACKING = 0.12;
+const GROUP_LABEL_PAD = 9;
 /** Edges longer than this are routed orthogonally instead of drawn as diagonals. */
 const LONG_EDGE = 260;
 /** Corner radius on a routed edge. */
 const ELBOW_RADIUS = 10;
-/** How far a routed edge's channel is nudged off centre, to separate parallel runs. */
-const CHANNEL_SPREAD = 44;
+/** Spacing between two routed edges sharing a channel. */
+const CHANNEL_SPACING = 16;
+/** Routes whose channels land within this distance share a bus. */
+const CHANNEL_BUCKET = 90;
 /**
  * Text centres inside the card, relative to its centre. Two lines are centred
  * as a block: 15px over 11px with a small gap is 29 units tall.
@@ -62,9 +68,13 @@ export default class GraphRenderer {
   private edgeIndex = new Map<string, LayoutEdge>();
   /** Position currently painted for each node; tweens converge on the layout target. */
   private readonly painted = new Map<string, { x: number; y: number }>();
+  /** Lane offset for each routed edge, assigned once per render. */
+  private readonly channels = new Map<string, number>();
+  private readonly measure: TextMeasurer;
 
-  constructor(svg: SVGSVGElement, width: number, height: number) {
+  constructor(svg: SVGSVGElement, width: number, height: number, measure: TextMeasurer = estimateTextWidth) {
     this.uid = `gs${instanceCounter++}`;
+    this.measure = measure;
     this.svg = d3.select(svg).attr('viewBox', `0 0 ${width} ${height}`).attr('preserveAspectRatio', 'xMidYMid meet');
 
     const defs = this.svg.append('defs');
@@ -92,6 +102,7 @@ export default class GraphRenderer {
     const timing = timingFor(duration);
     this.edgeIndex = new Map(layout.edges.map((e) => [e.id, e]));
     this.lit = focus && !focus.all ? litSet(layout, focus) : null;
+    this.assignChannels(layout.edges);
     this.svg.classed('is-focused', this.lit !== null);
 
     // Nodes first so their tweens run before edges read `px`/`py` each frame.
@@ -101,7 +112,7 @@ export default class GraphRenderer {
   }
 
   /** Ids that stay fully lit; null means nothing is dimmed. */
-  private lit: { nodes: Set<string>; groups: Set<string> } | null = null;
+  private lit: { nodes: Set<string>; groups: Set<string>; edges: Set<string> } | null = null;
 
   private dimNode(n: LayoutNode): boolean {
     return this.lit !== null && !this.lit.nodes.has(n.id);
@@ -134,7 +145,7 @@ export default class GraphRenderer {
 
     enter.select('rect.gs-group__panel').call(placePanel);
     enter.select('text.gs-group__label').call(placeGroupLabel);
-    enter.select('rect.gs-group__legend').call(placeLegend);
+    enter.select('rect.gs-group__legend').call(placeLegend, this.measure);
     enter.transition(FADE).delay(timing.enter.delay).duration(timing.enter.duration).style('opacity', 1);
 
     sel
@@ -156,7 +167,7 @@ export default class GraphRenderer {
     const updated = sel.transition(MOVE).delay(timing.move.delay).duration(timing.move.duration).ease(d3.easeCubicInOut);
     updated.select('rect.gs-group__panel').call(placePanel);
     updated.select('text.gs-group__label').call(placeGroupLabel);
-    updated.select('rect.gs-group__legend').call(placeLegend);
+    updated.select('rect.gs-group__legend').call(placeLegend, this.measure);
   }
 
   private renderNodes(nodes: LayoutNode[], timing: Timing): void {
@@ -179,7 +190,7 @@ export default class GraphRenderer {
       .append('text')
       .attr('class', 'gs-node__sigil')
       .attr('x', (n) => sigilOffsetX(n.width))
-      .attr('y', LABEL_BASELINE)
+      .attr('y', (n) => (n.spec.sublabel ? LABEL_BASELINE_TWO_LINE : LABEL_BASELINE))
       .text((n) => sigilForKind(n.spec.kind));
     enter
       .append('text')
@@ -232,7 +243,10 @@ export default class GraphRenderer {
       };
     });
     moving.select('path').attr('d', (n) => cardPath(n.shape, n.width, n.height));
-    moving.select('text.gs-node__sigil').attr('x', (n) => sigilOffsetX(n.width));
+    moving
+      .select('text.gs-node__sigil')
+      .attr('x', (n) => sigilOffsetX(n.width))
+      .attr('y', (n) => (n.spec.sublabel ? LABEL_BASELINE_TWO_LINE : LABEL_BASELINE));
     moving
       .select('text.gs-node__label')
       .attr('x', (n) => labelOffsetX(n.width))
@@ -278,12 +292,13 @@ export default class GraphRenderer {
     merged.attr(
       'class',
       (e) =>
-        `gs-edge is-color-${e.color} is-style-${e.spec.style ?? 'solid'} is-state-${e.spec.state ?? 'default'}${this.dimNode(e.source) && this.dimNode(e.target) ? ' is-dim' : ''}`,
+        `gs-edge is-color-${e.color} is-style-${e.spec.style ?? 'solid'} is-state-${e.spec.state ?? 'default'}${this.lit && !this.lit.edges.has(e.id) ? ' is-dim' : ''}`,
     );
     merged
       .select<SVGPathElement>('path')
       .attr('marker-end', (e) => (e.spec.directed === false ? null : `url(#${this.uid}-arrow-${e.color})`));
     merged.select<SVGTextElement>('text').text((e) => e.spec.label ?? '');
+    const self = this;
     merged.each(function (e) {
       const label = e.spec.label ?? '';
       const plate = d3.select(this).select<SVGRectElement>('rect.gs-edge__plate');
@@ -291,7 +306,7 @@ export default class GraphRenderer {
         plate.attr('width', 0).attr('height', 0);
         return;
       }
-      const width = label.length * EDGE_LABEL_ADVANCE + 8;
+      const width = self.measure(label, EDGE_LABEL_SIZE) + 10;
       plate.attr('x', -width / 2).attr('y', -8).attr('width', width).attr('height', 16);
     });
 
@@ -339,9 +354,49 @@ export default class GraphRenderer {
   }
 
   /**
-   * Long edges are routed as elbows down a shared channel. Drawn as diagonals
-   * they cross the whole diagram at every angle, which is what turns a busy
-   * step into spaghetti; orthogonal runs read as a schematic instead.
+   * Assigns every long edge a lane in a shared bus. Offsetting each route by a
+   * hash spread them randomly, so runs still landed on top of each other; here
+   * routes that would share a channel are bucketed and spaced evenly, which is
+   * what makes a dense step read as a bus rather than a tangle.
+   */
+  private assignChannels(edges: LayoutEdge[]): void {
+    this.channels.clear();
+    const buckets = new Map<string, LayoutEdge[]>();
+
+    for (const edge of edges) {
+      const plan = this.routePlan(edge);
+      if (!plan) continue;
+      const key = `${plan.axis}:${Math.round(plan.centre / CHANNEL_BUCKET)}`;
+      const bucket = buckets.get(key) ?? [];
+      bucket.push(edge);
+      buckets.set(key, bucket);
+    }
+
+    for (const bucket of buckets.values()) {
+      // A stable order keeps lanes from swapping between renders.
+      bucket.sort((a, b) => a.id.localeCompare(b.id));
+      bucket.forEach((edge, index) => {
+        this.channels.set(edge.id, (index - (bucket.length - 1) / 2) * CHANNEL_SPACING);
+      });
+    }
+  }
+
+  /** Which way a long edge runs and where its channel would sit, ignoring lanes. */
+  private routePlan(e: LayoutEdge): { axis: 'h' | 'v'; centre: number } | null {
+    const s = this.paintedOf(e.source);
+    const t = this.paintedOf(e.target);
+    const dx = t.x - s.x;
+    const dy = t.y - s.y;
+    if (Math.hypot(dx, dy) < LONG_EDGE) return null;
+    return Math.abs(dx) >= Math.abs(dy)
+      ? { axis: 'h', centre: (s.x + t.x) / 2 }
+      : { axis: 'v', centre: (s.y + t.y) / 2 };
+  }
+
+  /**
+   * Long edges leave a card face, run down their assigned lane, and enter the
+   * other face. Drawn as diagonals they cross at every angle, which is what
+   * turns a busy step into spaghetti.
    */
   private routedPoints(e: LayoutEdge): Point[] {
     const source = e.source;
@@ -351,16 +406,12 @@ export default class GraphRenderer {
     const dx = t.x - s.x;
     const dy = t.y - s.y;
     const gap = this.endGap(e);
-
-    // Opposite directions between the same pair take opposite offsets so the
-    // two runs never land on top of each other.
-    const reversed = this.edgeIndex.has(`${e.spec.to}->${e.spec.from}`) && e.spec.from > e.spec.to;
-    const offset = (hashUnit(e.id) - 0.5) * CHANNEL_SPREAD * (reversed ? -1 : 1);
+    const lane = this.channels.get(e.id) ?? 0;
 
     if (Math.abs(dx) >= Math.abs(dy)) {
       const sx = s.x + Math.sign(dx) * (s.width / 2 + 2);
       const tx = t.x - Math.sign(dx) * (t.width / 2 + gap);
-      const midX = (sx + tx) / 2 + offset;
+      const midX = (sx + tx) / 2 + lane;
       return [
         { x: sx, y: s.y },
         { x: midX, y: s.y },
@@ -371,7 +422,7 @@ export default class GraphRenderer {
 
     const sy = s.y + Math.sign(dy) * (s.height / 2 + 2);
     const ty = t.y - Math.sign(dy) * (t.height / 2 + gap);
-    const midY = (sy + ty) / 2 + offset;
+    const midY = (sy + ty) / 2 + lane;
     return [
       { x: s.x, y: sy },
       { x: s.x, y: midY },
@@ -381,9 +432,7 @@ export default class GraphRenderer {
   }
 
   private edgePoints(e: LayoutEdge): Point[] {
-    const s = this.paintedOf(e.source);
-    const t = this.paintedOf(e.target);
-    return Math.hypot(t.x - s.x, t.y - s.y) >= LONG_EDGE ? this.routedPoints(e) : this.straightPoints(e);
+    return this.channels.has(e.id) ? this.routedPoints(e) : this.straightPoints(e);
   }
 
   private edgePath(e: LayoutEdge): string {
@@ -440,7 +489,7 @@ function swapText(
 }
 
 /** Lit set: focused nodes, members of focused groups, and the groups that contain any lit node. */
-function litSet(layout: Layout, focus: StepFocus): { nodes: Set<string>; groups: Set<string> } {
+function litSet(layout: Layout, focus: StepFocus): { nodes: Set<string>; groups: Set<string>; edges: Set<string> } {
   const nodes = new Set(focus.nodes);
   for (const n of layout.nodes) {
     if (n.path.some((g) => focus.groups.has(g))) nodes.add(n.id);
@@ -449,11 +498,10 @@ function litSet(layout: Layout, focus: StepFocus): { nodes: Set<string>; groups:
   for (const n of layout.nodes) {
     if (nodes.has(n.id)) for (const g of n.path) groups.add(g);
   }
-  return { nodes, groups };
+  return { nodes, groups, edges: new Set(focus.edges) };
 }
 
 const GROUP_LABEL_X = 12;
-const GROUP_LABEL_ADVANCE = 8.4;
 
 interface GroupPlacement {
   attr(name: string, value: (datum: LayoutGroup) => number | string): GroupPlacement;
@@ -472,26 +520,24 @@ function placeGroupLabel(sel: GroupPlacement): void {
 }
 
 /** Sized to the label so the panel border is interrupted, not overdrawn. */
-function placeLegend(sel: GroupPlacement): void {
+function legendWidth(label: string | undefined, measure: TextMeasurer): number {
+  if (!label) return 0;
+  const text = label.toUpperCase();
+  const tracking = text.length * GROUP_LABEL_SIZE * GROUP_LABEL_TRACKING;
+  return measure(text, GROUP_LABEL_SIZE) + tracking + GROUP_LABEL_PAD * 2;
+}
+
+function placeLegend(sel: GroupPlacement, measure: TextMeasurer): void {
   sel
-    .attr('x', (g) => g.box.x + GROUP_LABEL_X - 4)
-    .attr('y', (g) => g.box.y - 7)
-    .attr('width', (g) => (g.spec.label ? g.spec.label.length * GROUP_LABEL_ADVANCE + 8 : 0))
-    .attr('height', (g) => (g.spec.label ? 14 : 0));
+    .attr('x', (g) => g.box.x + GROUP_LABEL_X - GROUP_LABEL_PAD)
+    .attr('y', (g) => g.box.y - 8)
+    .attr('width', (g) => legendWidth(g.spec.label, measure))
+    .attr('height', (g) => (g.spec.label ? 16 : 0));
 }
 
 interface Point {
   x: number;
   y: number;
-}
-
-function hashUnit(input: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < input.length; i++) {
-    h ^= input.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return (h >>> 0) / 4294967296;
 }
 
 /** Polyline with the corners rounded, clamped so short segments stay clean. */

@@ -165,6 +165,7 @@ function touchedBy(op: GraphOp, state: GraphState, focus: StepFocus): void {
   const edgeEnds = (edge: EdgeSpec) => {
     focus.nodes.add(edge.from);
     focus.nodes.add(edge.to);
+    focus.edges.add(edgeId(edge));
   };
   switch (op.op) {
     case 'add':
@@ -191,7 +192,7 @@ function touchedBy(op: GraphOp, state: GraphState, focus: StepFocus): void {
 }
 
 function resolveFocus(step: { focus?: string[] | 'all'; state?: GraphState; ops?: GraphOp[] }, state: GraphState): StepFocus {
-  const focus: StepFocus = { all: false, nodes: new Set(), groups: new Set() };
+  const focus: StepFocus = { all: false, nodes: new Set(), groups: new Set(), edges: new Set() };
   if (step.focus === 'all' || (step.state && !step.focus)) {
     // Still record what changed so narrow screens have something to frame.
     focus.all = true;
@@ -210,8 +211,10 @@ function resolveFocus(step: { focus?: string[] | 'all'; state?: GraphState; ops?
   // Drop ids that no longer exist after this step's ops.
   const nodeIds = new Set(state.nodes.map((n) => n.id));
   const groupIds = new Set(state.groups.map((g) => g.id));
+  const edgeIds = new Set(state.edges.map((e) => edgeId(e)));
   for (const id of focus.nodes) if (!nodeIds.has(id)) focus.nodes.delete(id);
   for (const id of focus.groups) if (!groupIds.has(id)) focus.groups.delete(id);
+  for (const id of focus.edges) if (!edgeIds.has(id)) focus.edges.delete(id);
   if (focus.nodes.size === 0 && focus.groups.size === 0) focus.all = true;
   return focus;
 }

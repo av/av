@@ -32,6 +32,8 @@ const NARROW_STAGE_PX = 560;
 const PORTRAIT_MIN_SHARE = 0.24;
 const PORTRAIT_MAX_SHARE = 0.38;
 const SCROLL_STEP_HEIGHT_VH = 65;
+/** How many layouts to keep computed ahead of the reader. */
+const WARM_AHEAD = 4;
 
 /**
  * Mounts an animated graph story into a container element.
@@ -64,6 +66,7 @@ export default class GraphStory {
   private chromeTitle!: HTMLElement;
   private chromeCounter!: HTMLElement;
   private panels: HTMLElement[] = [];
+  private panelTops: number[] = [];
   private title!: HTMLElement;
   private caption!: HTMLElement;
   private counter!: HTMLElement;
@@ -78,6 +81,7 @@ export default class GraphStory {
   private timer: number | null = null;
   private playing = false;
   private scrollFrame: number | null = null;
+  private warming = false;
   private readonly cleanups: (() => void)[] = [];
 
   constructor(container: HTMLElement, spec: GraphStorySpec, options: GraphStoryOptions = {}) {
@@ -131,6 +135,7 @@ export default class GraphStory {
       if (frame !== null) return;
       frame = window.requestAnimationFrame(() => {
         frame = null;
+        this.panelTops = [];
         if (!this.svg || this.index < 0) return;
         this.measureStage(this.svg);
         this.renderer?.setCamera(this.cameraFor(this.layouts[this.index], this.steps[this.index]), 0);
@@ -161,14 +166,27 @@ export default class GraphStory {
     return Math.min(2, Math.max(0.95, this.viewAspect));
   }
 
-  /** Computes the remaining layouts in idle time so jumping ahead never stalls the main thread. */
+  /**
+   * Computes a few layouts ahead of the reader in idle time. Warming all of
+   * them at load cost seconds of blocked main thread for steps most readers
+   * never reach; the rest are computed on demand as they approach.
+   */
   private warmLayouts(): void {
+    if (this.warming) return;
+    const target = Math.min(this.steps.length, Math.max(this.index, 0) + WARM_AHEAD);
+    if (this.layouts.length >= target) return;
+
+    this.warming = true;
     const schedule = (fn: () => void): void => {
       if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(fn);
       else window.setTimeout(fn, 32);
     };
     const step = () => {
-      if (this.layouts.length >= this.steps.length) return;
+      const limit = Math.min(this.steps.length, Math.max(this.index, 0) + WARM_AHEAD);
+      if (this.layouts.length >= limit) {
+        this.warming = false;
+        return;
+      }
       this.layouts.push(this.layout.compute(this.steps[this.layouts.length].state));
       schedule(step);
     };
@@ -245,6 +263,7 @@ export default class GraphStory {
     this.renderer?.render(this.layouts[index], duration, step.focus);
     this.renderer?.setCamera(this.cameraFor(this.layouts[index], step), duration);
     this.updateChrome();
+    this.warmLayouts();
     this.options.onStep?.(index, this.steps[index]);
   }
 
@@ -347,8 +366,9 @@ export default class GraphStory {
     // aspect (portrait on phones) instead of a fixed landscape canvas.
     this.svg = svg;
     this.measureStage(svg);
-    this.layout = new GraphLayout(this.layoutAspect(), this.spec.seed ?? 'graph-story', createTextMeasurer());
-    this.renderer = new GraphRenderer(svg, this.layout.width, this.layout.height);
+    const measure = createTextMeasurer();
+    this.layout = new GraphLayout(this.layoutAspect(), this.spec.seed ?? 'graph-story', measure);
+    this.renderer = new GraphRenderer(svg, this.layout.width, this.layout.height, measure);
 
     const figcaption = el('figcaption', 'graph-story__caption');
     this.title = el('div', 'graph-story__title');
@@ -447,28 +467,34 @@ export default class GraphStory {
       if (this.scrollFrame === null) this.scrollFrame = window.requestAnimationFrame(update);
     };
     window.addEventListener('scroll', schedule, { passive: true });
-    window.addEventListener('resize', schedule);
-    this.cleanups.push(() => {
-      window.removeEventListener('scroll', schedule);
-      window.removeEventListener('resize', schedule);
-    });
+    this.cleanups.push(() => window.removeEventListener('scroll', schedule));
     update();
   }
 
-  /** The active step is the last panel whose top has crossed the middle of the viewport. */
+  /**
+   * The active step is the last panel whose top has crossed the middle of the
+   * viewport. Panel tops are cached: measuring all of them on every scroll
+   * frame forces a layout flush per frame, which is the page's worst jank.
+   */
   private stepFromScroll(): number {
-    const middle = window.innerHeight / 2;
+    if (this.panelTops.length !== this.panels.length) this.measurePanels();
+    const middle = window.scrollY + window.innerHeight / 2;
     let index = 0;
-    for (let i = 0; i < this.panels.length; i++) {
-      if (this.panels[i].getBoundingClientRect().top <= middle) index = i;
+    for (let i = 0; i < this.panelTops.length; i++) {
+      if (this.panelTops[i] <= middle) index = i;
     }
     return index;
   }
 
+  private measurePanels(): void {
+    this.panelTops = this.panels.map((panel) => panel.getBoundingClientRect().top + window.scrollY);
+  }
+
   private scrollToStep(index: number): void {
-    const panel = this.panels[index];
-    if (!panel) return;
-    const target = window.scrollY + panel.getBoundingClientRect().top - window.innerHeight * 0.25;
+    if (this.panelTops.length !== this.panels.length) this.measurePanels();
+    const top = this.panelTops[index];
+    if (top === undefined) return;
+    const target = top - window.innerHeight * 0.25;
     window.scrollTo({ top: target, behavior: this.reduceMotion ? 'auto' : 'smooth' });
   }
 

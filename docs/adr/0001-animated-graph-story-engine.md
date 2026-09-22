@@ -65,13 +65,25 @@ Cards are opaque, so an unavoidable overlap occludes cleanly rather than
 turning into a tangle, and context is dimmed by darkening strokes and text
 rather than by lowering opacity, which would let edges show through the cards.
 
+## Overlap is an invariant, not a hope
+
+The collide force only nudges velocities, so a crowded group could still
+settle with two cards on top of each other, and the fix of running more ticks
+cost more than it bought. Positions are separated directly in a short pass
+after the simulation, which makes non-overlap a property of every layout
+rather than something convergence has to achieve. That also let the tick
+counts drop: a step that only changes labels or states skips the simulation
+entirely, which is most steps.
+
 ## Long edges are routed, short ones are not
 
 Drawn as diagonals, the links that cross the whole diagram meet at every angle
 and turn a busy step into spaghetti. Edges longer than a threshold are routed
 orthogonally instead: out of the source's face, along a shared channel, into
-the target's face, with the channel nudged off centre by a hash of the edge id
-so parallel runs separate and a reversed pair never lands on the same line.
+the target's face. Routes that would share a channel are bucketed and their
+lanes spaced evenly, so a dense step reads as a bus. An earlier version offset
+each route by a hash of its id, which spread them randomly and still let runs
+land on top of each other.
 Short edges stay straight, because an elbow between two adjacent cards is
 noise. The result reads as a schematic, which is also the look we want.
 

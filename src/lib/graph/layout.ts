@@ -11,7 +11,10 @@ const CLUSTER_PULL = 0.16;
 const ROOT_PULL = 0.03;
 /** Pull of an unchanged node toward where it was in the previous step. */
 const INERTIA = 0.35;
-const TICKS = 320;
+/** Ticks for the first layout, a step that moves things, and a step that only restyles. */
+const TICKS_FIRST = 220;
+const TICKS_MOVED = 120;
+const TICKS_SETTLED = 40;
 const NESTED_SPREAD = 170;
 const CHARGE = -260;
 const LINK_DISTANCE = 64;
@@ -142,6 +145,7 @@ export default class GraphLayout {
   private readonly nodes = new Map<string, LayoutNode>();
   private readonly random: () => number;
   private readonly measure: TextMeasurer;
+  private previousNodeCount = -1;
   private first = true;
 
   constructor(aspect: number, seed: string, measure: TextMeasurer = estimateTextWidth) {
@@ -384,6 +388,16 @@ export default class GraphLayout {
     for (const group of groups) this.previousAnchors.set(group.id, { x: group.anchor.x, y: group.anchor.y });
   }
 
+  /** True when nothing about this step can change where a node sits. */
+  private isStatic(nodes: LayoutNode[]): boolean {
+    if (this.first || nodes.length !== this.previousNodeCount) return false;
+    if (nodes.some((n) => n.moved)) return false;
+    for (const delta of this.groupDeltas.values()) {
+      if (Math.abs(delta.x) + Math.abs(delta.y) > 0.5) return false;
+    }
+    return true;
+  }
+
   private explicitAnchor(spec: { x?: number; y?: number }): { x: number; y: number } | null {
     if (spec.x === undefined || spec.y === undefined) return null;
     return { x: (spec.x / 100) * this.width, y: (spec.y / 100) * this.height };
@@ -460,8 +474,22 @@ export default class GraphLayout {
       })
       .stop();
 
-    simulation.alpha(this.first ? 1 : 0.6).alphaMin(0.001);
-    simulation.tick(TICKS);
+    // A step that only changes labels or states cannot move anything, and many
+    // steps are exactly that: re-settling them is pure cost.
+    const settled = this.isStatic(nodes);
+    const disturbed = nodes.some((n) => n.moved) || nodes.length !== this.previousNodeCount;
+    this.previousNodeCount = nodes.length;
+
+    if (!settled) {
+      const ticks = this.first ? TICKS_FIRST : disturbed ? TICKS_MOVED : TICKS_SETTLED;
+      simulation.alpha(this.first ? 1 : disturbed ? 0.6 : 0.25).alphaMin(0.001);
+      simulation.tick(ticks);
+    }
+
+    // The collide force only nudges velocities, so a crowded cluster can still
+    // settle overlapped. Separating positions directly makes it an invariant
+    // rather than something the simulation has to converge on.
+    separateOverlaps(nodes, CARD_GAP, width, height);
 
     for (const node of nodes) {
       const pinned = this.explicitAnchor(node.spec);
@@ -571,10 +599,18 @@ function groupSeparation(nodes: LayoutNode[], groups: LayoutGroup[]): d3.Force<L
     return { x0, y0, x1, y1 };
   };
 
+  // One bounds pass per cluster per tick, not one per pair: the same cluster
+  // appears in many pairs and this runs on every tick of every step.
+  const clusters = [...new Set(pairs.flat())];
+  const cache = new Map<LayoutNode[], ReturnType<typeof bounds>>();
+
   return (alpha) => {
+    cache.clear();
+    for (const cluster of clusters) cache.set(cluster, bounds(cluster));
+
     for (const [a, b] of pairs) {
-      const ba = bounds(a);
-      const bb = bounds(b);
+      const ba = cache.get(a)!;
+      const bb = cache.get(b)!;
       const overlapX = Math.min(ba.x1, bb.x1) - Math.max(ba.x0, bb.x0);
       const overlapY = Math.min(ba.y1, bb.y1) - Math.max(ba.y0, bb.y0);
       if (overlapX <= 0 || overlapY <= 0) continue;
@@ -635,8 +671,8 @@ function rigidInertia(nodes: LayoutNode[], strength: (node: LayoutNode) => numbe
  * Keeps cards from overlapping. Circles waste space around wide boxes, so this
  * separates axis-aligned rectangles along whichever axis they overlap least.
  */
-function boxCollide(nodes: LayoutNode[], gap: number): d3.Force<LayoutNode, undefined> {
-  return (alpha) => {
+function boxCollide(nodes: LayoutNode[], gap: number, iterations = 2): d3.Force<LayoutNode, undefined> {
+  const relax = (alpha: number) => {
     for (let i = 0; i < nodes.length; i++) {
       const a = nodes[i];
       for (let j = i + 1; j < nodes.length; j++) {
@@ -661,4 +697,53 @@ function boxCollide(nodes: LayoutNode[], gap: number): d3.Force<LayoutNode, unde
       }
     }
   };
+
+  // Several relaxation passes per tick converge far faster than the same work
+  // spread over more ticks, which keeps cards from ending up overlapped.
+  return (alpha) => {
+    for (let pass = 0; pass < iterations; pass++) relax(alpha);
+  };
+}
+
+/**
+ * Pushes overlapping cards apart by moving them, not by adding velocity.
+ * Runs after the simulation so two cards can never end a step on top of
+ * each other, however crowded their group got.
+ */
+function separateOverlaps(nodes: LayoutNode[], gap: number, width: number, height: number, passes = 14): void {
+  for (let pass = 0; pass < passes; pass++) {
+    let worst = 0;
+
+    for (let i = 0; i < nodes.length; i++) {
+      const a = nodes[i];
+      for (let j = i + 1; j < nodes.length; j++) {
+        const b = nodes[j];
+        const overlapX = (a.width + b.width) / 2 + gap - Math.abs(a.x - b.x);
+        if (overlapX <= 0) continue;
+        const overlapY = (a.height + b.height) / 2 + gap - Math.abs(a.y - b.y);
+        if (overlapY <= 0) continue;
+
+        const horizontal = overlapX / (a.width + b.width) < overlapY / (a.height + b.height);
+        const overlap = horizontal ? overlapX : overlapY;
+        worst = Math.max(worst, overlap);
+        const shift = overlap / 2 + 0.5;
+        const sign = horizontal ? Math.sign(b.x - a.x) || 1 : Math.sign(b.y - a.y) || 1;
+
+        if (horizontal) {
+          a.x -= shift * sign;
+          b.x += shift * sign;
+        } else {
+          a.y -= shift * sign;
+          b.y += shift * sign;
+        }
+      }
+    }
+
+    for (const node of nodes) {
+      node.x = Math.max(node.width / 2 + 4, Math.min(width - node.width / 2 - 4, node.x));
+      node.y = Math.max(node.height / 2 + 4, Math.min(height - node.height / 2 - 4, node.y));
+    }
+
+    if (worst < 0.5) break;
+  }
 }

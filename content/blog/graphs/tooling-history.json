@@ -654,6 +654,155 @@
       ]
     },
     {
+      "title": "Three windows at once",
+      "caption": "Three VS Code windows side by side, each with Copilot agent on a different project. The way to run more work was to open another editor.",
+      "body": "Parallelism meant windows. Each instance had its own agent, its own repo and its own quota, and keeping track of which one needed attention was the job.",
+      "ops": [
+        {
+          "op": "set",
+          "group": "editor",
+          "label": "EDITOR 1"
+        },
+        {
+          "op": "set",
+          "node": "repo",
+          "label": "harbor"
+        },
+        {
+          "op": "add",
+          "group": {
+            "id": "editor-2",
+            "label": "EDITOR 2",
+            "color": "tx3",
+            "parent": "laptop"
+          }
+        },
+        {
+          "op": "add",
+          "group": {
+            "id": "editor-3",
+            "label": "EDITOR 3",
+            "color": "tx3",
+            "parent": "laptop"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "vscode-2",
+            "label": "VS Code",
+            "sublabel": "agent mode",
+            "kind": "tool",
+            "color": "tx",
+            "group": "editor-2"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "copilot-2",
+            "label": "Copilot",
+            "kind": "agent",
+            "color": "green",
+            "group": "editor-2"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "repo-2",
+            "label": "av.codes",
+            "kind": "repo",
+            "color": "tx",
+            "group": "editor-2"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "vscode-3",
+            "label": "VS Code",
+            "sublabel": "agent mode",
+            "kind": "tool",
+            "color": "tx",
+            "group": "editor-3"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "copilot-3",
+            "label": "Copilot",
+            "kind": "agent",
+            "color": "green",
+            "group": "editor-3"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "repo-3",
+            "label": "dashboard",
+            "kind": "repo",
+            "color": "tx",
+            "group": "editor-3"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "copilot-2",
+            "to": "repo-2",
+            "label": "edits",
+            "color": "tx3"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "copilot-2",
+            "to": "vscode-2",
+            "color": "tx3"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "copilot-3",
+            "to": "repo-3",
+            "label": "edits",
+            "color": "tx3"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "copilot-3",
+            "to": "vscode-3",
+            "color": "tx3"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "vscode-2",
+            "style": "dashed",
+            "color": "tx2"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "vscode-3",
+            "style": "dashed",
+            "color": "tx2"
+          }
+        }
+      ]
+    },
+    {
       "title": "lifeos",
       "caption": "December 2025. lifeos starts as the host for skills, agent personas, notes and infrastructure. One repo the agents can read.",
       "body": "Everything an agent needed to know about me and my projects was scattered. lifeos put it in one place: notes, a task list, agent definitions, and later the machines themselves.",
@@ -908,6 +1057,36 @@
           "op": "set",
           "edge": "copilot->repo",
           "state": "muted"
+        },
+        {
+          "op": "set",
+          "node": "vscode-2",
+          "state": "error"
+        },
+        {
+          "op": "set",
+          "node": "vscode-3",
+          "state": "error"
+        },
+        {
+          "op": "set",
+          "node": "copilot-2",
+          "state": "muted"
+        },
+        {
+          "op": "set",
+          "node": "copilot-3",
+          "state": "muted"
+        },
+        {
+          "op": "set",
+          "node": "repo-2",
+          "state": "muted"
+        },
+        {
+          "op": "set",
+          "node": "repo-3",
+          "state": "muted"
         }
       ]
     },
@@ -916,6 +1095,48 @@
       "caption": "Early 2026. A Claude Code subscription plus the VS Code extension. The agent stops being a feature of the editor.",
       "body": "Claude Code ran in a terminal with the repo as its world. The editor became a diff viewer. RUG and DRUG were retired: the model could plan and delegate on its own.",
       "ops": [
+        {
+          "op": "remove",
+          "node": "vscode-2"
+        },
+        {
+          "op": "remove",
+          "node": "copilot-2"
+        },
+        {
+          "op": "remove",
+          "node": "repo-2"
+        },
+        {
+          "op": "remove",
+          "node": "vscode-3"
+        },
+        {
+          "op": "remove",
+          "node": "copilot-3"
+        },
+        {
+          "op": "remove",
+          "node": "repo-3"
+        },
+        {
+          "op": "remove",
+          "group": "editor-2"
+        },
+        {
+          "op": "remove",
+          "group": "editor-3"
+        },
+        {
+          "op": "set",
+          "group": "editor",
+          "label": "EDITOR"
+        },
+        {
+          "op": "set",
+          "node": "repo",
+          "label": "code"
+        },
         {
           "op": "remove",
           "node": "rug"
