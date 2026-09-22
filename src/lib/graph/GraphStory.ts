@@ -19,7 +19,11 @@ const CAMERA_PADDING = 70;
 /** How long a queued scroll-mode jump keeps steering next/prev, in ms. */
 const PENDING_TTL = 1200;
 /** A focused view never zooms in past this share of the layout width. */
-const MIN_VIEW_SHARE = 0.4;
+const MIN_VIEW_SHARE = 0.55;
+/** Share of the centred square the focus fills; the rest is breathing room. */
+const CONTENT_FILL = 0.84;
+/** Stage widths below this are treated as a phone. */
+const NARROW_STAGE_PX = 560;
 /**
  * A phone can only hold two or three cards across at a readable size, so a
  * narrow stage frames the action tightly and lets context fade off-frame.
@@ -49,6 +53,8 @@ export default class GraphStory {
   private layout!: GraphLayout;
   private readonly layouts: Layout[] = [];
   private viewAspect = 1.6;
+  private stageWidthPx = 0;
+  private svg: SVGSVGElement | null = null;
   private renderer: GraphRenderer | null = null;
   private index = -1;
   private reduceMotion = false;
@@ -106,8 +112,50 @@ export default class GraphStory {
       this.bindAutoplay();
     }
 
+    this.bindResize();
     this.warmLayouts();
     return this;
+  }
+
+  /**
+   * The stage box changes with the window, and the camera is fitted to it, so
+   * re-frame on resize. The layout itself is left alone: recomputing it would
+   * move every node for what is only a change of viewport.
+   */
+  private bindResize(): void {
+    let frame: number | null = null;
+    const onResize = () => {
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        if (!this.svg || this.index < 0) return;
+        this.measureStage(this.svg);
+        this.renderer?.setCamera(this.cameraFor(this.layouts[this.index], this.steps[this.index]), 0);
+      });
+    };
+    window.addEventListener('resize', onResize);
+    this.cleanups.push(() => {
+      window.removeEventListener('resize', onResize);
+      if (frame !== null) window.cancelAnimationFrame(frame);
+    });
+  }
+
+  /** Reads the stage box; the camera fits content to it, so this can change with the window. */
+  private measureStage(svg: SVGSVGElement): void {
+    const rect = svg.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+    this.stageWidthPx = rect.width;
+    this.viewAspect =
+      this.trigger === 'scroll' ? Math.min(2.2, Math.max(0.55, rect.width / rect.height)) : (this.spec.aspect ?? 1.6);
+  }
+
+  /**
+   * Aspect the graph is laid out in. A very tall canvas pushes groups far
+   * apart, which forces the camera to zoom out until the labels are unreadable,
+   * so the canvas stays close to square however tall the stage is.
+   */
+  private layoutAspect(): number {
+    return Math.min(2, Math.max(0.95, this.viewAspect));
   }
 
   /** Computes the remaining layouts in idle time so jumping ahead never stalls the main thread. */
@@ -228,28 +276,27 @@ export default class GraphStory {
     return count > 0 ? { x: sumX / count, y: sumY / count } : null;
   }
 
-  /** Frames the step's focus (or everything), padded and matched to the stage aspect. */
+  /**
+   * Frames the step's focus so it lands in a square-ish region at the centre
+   * of the stage. Fitting to the stage aspect instead would stretch the
+   * content along whichever axis the window happens to be long in, and on a
+   * tall stage it would cut the focus off at top and bottom.
+   */
   private cameraFor(layout: Layout, step: ResolvedStep): Box {
     const full = boundsOf(layout) ?? { x: 0, y: 0, width: layout.width, height: layout.height };
-    // Portrait stages cannot show the whole graph legibly, so the "all" view
-    // there frames the top-level groups touched most recently instead.
-    const portrait = this.viewAspect < 1;
-    const focused = step.focus.all && !portrait ? null : this.framedBounds(layout, step, portrait);
+    // Only a genuinely narrow stage (a phone) trades completeness for size.
+    const narrow = this.stageWidthPx > 0 && this.stageWidthPx < NARROW_STAGE_PX;
+    const focused = step.focus.all ? null : this.framedBounds(layout, step, narrow);
     const box = focused ?? full;
 
-    const padding = portrait ? CAMERA_PADDING * 0.6 : CAMERA_PADDING;
-    const needWidth = box.width + padding * 2;
-    const needHeight = box.height + padding * 2;
+    // Side of the centred square the content has to fit inside.
+    const side = Math.max(box.width, box.height) / CONTENT_FILL;
+    let width = this.viewAspect >= 1 ? side * this.viewAspect : side;
+    width = Math.max(width, layout.width * MIN_VIEW_SHARE);
 
-    // Never frame less than the whole graph would need, so zooming out is monotone-ish.
-    const cap = Math.max(full.width + padding * 2, (full.height + padding * 2) * this.viewAspect);
-    const minShare = portrait ? PORTRAIT_MIN_SHARE : MIN_VIEW_SHARE;
-    let width = Math.max(needWidth, needHeight * this.viewAspect, layout.width * minShare);
-    if (focused) width = Math.min(width, Math.max(cap, needWidth, needHeight * this.viewAspect));
-
-    // A narrow stage cannot hold a wide spread at a readable size. Cap the
-    // zoom-out and let the far side fade off-frame instead of shrinking text.
-    if (portrait) width = Math.min(width, layout.width * PORTRAIT_MAX_SHARE);
+    // A phone cannot hold a wide spread at a readable size: cap the zoom-out
+    // and let the far side fade off-frame rather than shrink the text.
+    if (narrow) width = Math.min(Math.max(width, layout.width * PORTRAIT_MIN_SHARE), layout.width * PORTRAIT_MAX_SHARE);
     const height = width / this.viewAspect;
 
     // Centre on the action when the frame is too small to hold the whole box.
@@ -286,11 +333,9 @@ export default class GraphStory {
 
     // Scroll mode fills the viewport, so lay the graph out in the stage's real
     // aspect (portrait on phones) instead of a fixed landscape canvas.
-    const svgBox = svg.getBoundingClientRect();
-    const measured = svgBox.width > 0 && svgBox.height > 0 ? svgBox.width / svgBox.height : null;
-    const aspect = this.trigger === 'scroll' && measured ? Math.min(2.2, Math.max(0.55, measured)) : (this.spec.aspect ?? 1.6);
-    this.viewAspect = aspect;
-    this.layout = new GraphLayout(aspect, this.spec.seed ?? 'graph-story');
+    this.svg = svg;
+    this.measureStage(svg);
+    this.layout = new GraphLayout(this.layoutAspect(), this.spec.seed ?? 'graph-story');
     this.renderer = new GraphRenderer(svg, this.layout.width, this.layout.height);
 
     const figcaption = el('figcaption', 'graph-story__caption');
