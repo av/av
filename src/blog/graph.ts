@@ -24,12 +24,19 @@ function mount(container: HTMLElement): void {
   }).init();
 }
 
-function boot() {
+async function boot() {
+  // Cards are sized from measured text, so the pixel font has to be loaded
+  // before the first layout or every card comes out the wrong width.
+  try {
+    await document.fonts?.ready;
+  } catch {
+    // Font loading is a progressive enhancement; fall back to whatever is ready.
+  }
   document.querySelectorAll<HTMLElement>('.graph-story[data-graph]').forEach(mount);
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', boot, { once: true });
+  document.addEventListener('DOMContentLoaded', () => void boot(), { once: true });
 } else {
-  boot();
+  void boot();
 }

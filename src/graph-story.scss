@@ -21,7 +21,8 @@ $gs-tones: (
   "purple":  var(--fx-tx3),
   "magenta": var(--fx-tx3),
 );
-$gs-pixel: 'Geist Pixel', ui-monospace, monospace;
+$gs-pixel: 'Geist Pixel', 'Geist Mono', ui-monospace, monospace;
+$gs-chrome: 22px;
 
 .graph-story {
   --gs-accent: var(--fx-tx2);
@@ -44,6 +45,56 @@ $gs-pixel: 'Geist Pixel', ui-monospace, monospace;
     border-radius: 0;
     margin-left: -1rem;
     margin-right: -1rem;
+  }
+}
+
+.graph-story__screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--fx-border);
+  border-radius: 0.15rem;
+  background: color-mix(in srgb, var(--fx-bg) 88%, transparent);
+  overflow: hidden;
+}
+
+.graph-story__chrome {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: $gs-chrome;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0 0.7rem;
+  border-bottom: 1px solid var(--fx-ui);
+  background: color-mix(in srgb, var(--fx-bg2) 70%, transparent);
+  font-family: $gs-pixel;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--fx-tx3);
+  pointer-events: none;
+}
+
+.graph-story__chrome-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  &::before {
+    content: '> ';
+    color: var(--fx-green);
+  }
+}
+
+.graph-story__chrome-counter {
+  flex: none;
+
+  // The nav already carries the counter on a phone; one is enough.
+  @include media(lt-md) {
+    display: none;
   }
 }
 
@@ -260,8 +311,11 @@ $gs-pixel: 'Geist Pixel', ui-monospace, monospace;
   }
 
   .graph-story__svg {
+    position: absolute;
+    top: $gs-chrome;
+    left: 0;
     width: 100%;
-    height: 100%;
+    height: calc(100% - #{$gs-chrome});
   }
 
   .graph-story__caption {
@@ -323,7 +377,6 @@ $gs-pixel: 'Geist Pixel', ui-monospace, monospace;
     pointer-events: auto;
     padding: 1.25rem 1.5rem;
     border: 1px solid var(--fx-ui);
-    border-left: 2px solid var(--fx-green);
     border-radius: 0.15rem;
     background: color-mix(in srgb, var(--fx-bg) 90%, transparent);
     backdrop-filter: blur(6px);
@@ -502,10 +555,17 @@ $gs-pixel: 'Geist Pixel', ui-monospace, monospace;
   fill: var(--fx-green);
 }
 
+// Running nodes get a marching selection outline and a blinking cursor,
+// which is what a terminal does, rather than a soft pulse.
 .gs-node.is-state-active .gs-node__shape {
-  stroke-width: 2;
+  stroke-width: 1.5;
+  stroke-dasharray: 7 3;
   filter: drop-shadow(0 0 3px color-mix(in srgb, var(--gs-accent) 50%, transparent));
-  animation: gs-pulse 1.8s ease-in-out infinite;
+  animation: gs-march 0.75s linear infinite;
+}
+
+.gs-node.is-state-active .gs-node__sigil {
+  animation: gs-blink 1.1s steps(1, end) infinite;
 }
 
 // Only the green accent blooms when it goes live; grey stays restrained.
@@ -614,9 +674,13 @@ $gs-pixel: 'Geist Pixel', ui-monospace, monospace;
   stroke: color-mix(in srgb, var(--fx-border) 70%, transparent);
 }
 
-@keyframes gs-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
+@keyframes gs-march {
+  to { stroke-dashoffset: -20; }
+}
+
+@keyframes gs-blink {
+  0%, 62% { opacity: 1; }
+  63%, 100% { opacity: 0.2; }
 }
 
 @keyframes gs-flow {
@@ -625,6 +689,7 @@ $gs-pixel: 'Geist Pixel', ui-monospace, monospace;
 
 @media (prefers-reduced-motion: reduce) {
   .gs-node.is-state-active .gs-node__shape,
+  .gs-node.is-state-active .gs-node__sigil,
   .gs-edge.is-style-flow .gs-edge__line {
     animation: none;
   }

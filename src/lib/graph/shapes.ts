@@ -8,8 +8,9 @@ import type { NodeShape } from './types';
 
 export const LABEL_SIZE = 15;
 export const SUBLABEL_SIZE = 11;
-/** Advance width of the pixel font, as a fraction of font size. */
-const CHAR_ADVANCE = 0.64;
+export const PIXEL_FONT = "'Geist Pixel', 'Geist Mono', ui-monospace, monospace";
+/** Fallback advance width, as a fraction of font size, when nothing can measure text. */
+const CHAR_ADVANCE = 0.68;
 const SIGIL_WIDTH = 15;
 const PAD_X = 11;
 const CARD_HEIGHT = 30;
@@ -34,8 +35,30 @@ export function sigilForKind(kind: string | undefined): string {
   return (kind && KIND_SIGILS[kind]) || '·';
 }
 
-function textWidth(text: string, size: number): number {
-  return text.length * size * CHAR_ADVANCE;
+/** Measures a run of text at a font size, in user units. */
+export type TextMeasurer = (text: string, fontSize: number) => number;
+
+export const estimateTextWidth: TextMeasurer = (text, size) => text.length * size * CHAR_ADVANCE;
+
+/**
+ * Real measurement against the actual webfont. Estimating advance widths
+ * overflowed cards whenever the guess ran short, which is most of the time
+ * for a proportional fallback.
+ */
+export function createTextMeasurer(): TextMeasurer {
+  const context = typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d');
+  if (!context) return estimateTextWidth;
+
+  const cache = new Map<string, number>();
+  return (text, size) => {
+    const key = `${size}:${text}`;
+    const cached = cache.get(key);
+    if (cached !== undefined) return cached;
+    context.font = `500 ${size}px ${PIXEL_FONT}`;
+    const width = context.measureText(text).width;
+    cache.set(key, width);
+    return width;
+  };
 }
 
 export interface CardSize {
@@ -44,10 +67,10 @@ export interface CardSize {
 }
 
 /** Natural size of a card, before any `size` multiplier. */
-export function measureCard(label: string, sublabel: string): CardSize {
-  const width = Math.max(textWidth(label, LABEL_SIZE), textWidth(sublabel, SUBLABEL_SIZE));
+export function measureCard(label: string, sublabel: string, measure: TextMeasurer = estimateTextWidth): CardSize {
+  const width = Math.max(measure(label, LABEL_SIZE), measure(sublabel, SUBLABEL_SIZE));
   return {
-    width: Math.max(72, Math.round(width + SIGIL_WIDTH + PAD_X * 2)),
+    width: Math.max(72, Math.ceil(width + SIGIL_WIDTH + PAD_X * 2)),
     height: sublabel ? CARD_HEIGHT_TWO_LINE : CARD_HEIGHT,
   };
 }

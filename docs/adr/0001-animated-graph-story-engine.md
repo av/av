@@ -65,6 +65,16 @@ Cards are opaque, so an unavoidable overlap occludes cleanly rather than
 turning into a tangle, and context is dimmed by darkening strokes and text
 rather than by lowering opacity, which would let edges show through the cards.
 
+## Long edges are routed, short ones are not
+
+Drawn as diagonals, the links that cross the whole diagram meet at every angle
+and turn a busy step into spaghetti. Edges longer than a threshold are routed
+orthogonally instead: out of the source's face, along a shared channel, into
+the target's face, with the channel nudged off centre by a hash of the edge id
+so parallel runs separate and a reversed pair never lands on the same line.
+Short edges stay straight, because an elbow between two adjacent cards is
+noise. The result reads as a schematic, which is also the look we want.
+
 ## Site theme: greyscale plus one accent
 
 The engine supports the full Flexoki accent set, but the blog renders graph

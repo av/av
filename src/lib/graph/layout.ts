@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 
-import { measureCard } from './shapes';
+import { estimateTextWidth, measureCard } from './shapes';
+import type { TextMeasurer } from './shapes';
 import { edgeId } from './story';
 import type { Accent, EdgeSpec, GraphState, GroupSpec, NodeShape, NodeSpec } from './types';
 
@@ -140,11 +141,13 @@ export default class GraphLayout {
 
   private readonly nodes = new Map<string, LayoutNode>();
   private readonly random: () => number;
+  private readonly measure: TextMeasurer;
   private first = true;
 
-  constructor(aspect: number, seed: string) {
+  constructor(aspect: number, seed: string, measure: TextMeasurer = estimateTextWidth) {
     this.height = Math.round(STAGE_WIDTH / aspect);
     this.random = seededRandom(seed);
+    this.measure = measure;
   }
 
   compute(state: GraphState): Layout {
@@ -243,7 +246,7 @@ export default class GraphLayout {
       }
 
       const scale = spec.size ?? 1;
-      const card = measureCard(spec.label ?? spec.id, spec.sublabel ?? '');
+      const card = measureCard(spec.label ?? spec.id, spec.sublabel ?? '', this.measure);
       const width = card.width * scale;
       const height = card.height * scale;
       const existing = this.nodes.get(spec.id);

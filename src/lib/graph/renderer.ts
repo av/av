@@ -13,10 +13,19 @@ const MOVE = 'gs-move';
 const CAMERA = 'gs-camera';
 /** Advance width of the edge-label font, for sizing its plate. */
 const EDGE_LABEL_ADVANCE = 7.4;
-/** Baselines inside the card, relative to its centre. */
-const LABEL_BASELINE = 5;
-const LABEL_BASELINE_TWO_LINE = -2;
-const SUBLABEL_BASELINE = 13;
+/** Edges longer than this are routed orthogonally instead of drawn as diagonals. */
+const LONG_EDGE = 260;
+/** Corner radius on a routed edge. */
+const ELBOW_RADIUS = 10;
+/** How far a routed edge's channel is nudged off centre, to separate parallel runs. */
+const CHANNEL_SPREAD = 44;
+/**
+ * Text centres inside the card, relative to its centre. Two lines are centred
+ * as a block: 15px over 11px with a small gap is 29 units tall.
+ */
+const LABEL_BASELINE = 0;
+const LABEL_BASELINE_TWO_LINE = -7;
+const SUBLABEL_BASELINE = 9;
 
 type GroupSel = d3.Selection<SVGGElement, LayoutGroup, SVGGElement, unknown>;
 type EdgeSel = d3.Selection<SVGGElement, LayoutEdge, SVGGElement, unknown>;
@@ -304,8 +313,10 @@ export default class GraphRenderer {
     }
   }
 
-  private edgeGeometry(e: LayoutEdge): { x0: number; y0: number; x1: number; y1: number; cx: number; cy: number } {
-    const { source, target } = e;
+  /** Points a straight edge runs between, trimmed to the two card borders. */
+  private straightPoints(e: LayoutEdge): Point[] {
+    const source = e.source;
+    const target = e.target;
     const s = { ...this.paintedOf(source), width: source.width, height: source.height };
     const t = { ...this.paintedOf(target), width: target.width, height: target.height };
     const dx = t.x - s.x;
@@ -316,32 +327,85 @@ export default class GraphRenderer {
     const uy = dy / length;
 
     const startTrim = cardRadius(s.width, s.height, theta) + 2;
-    const endTrim = cardRadius(t.width, t.height, theta + Math.PI) + (e.spec.directed === false ? 2 : ARROW_GAP);
-    const x0 = s.x + ux * startTrim;
-    const y0 = s.y + uy * startTrim;
-    const x1 = t.x - ux * endTrim;
-    const y1 = t.y - uy * endTrim;
+    const endTrim = cardRadius(t.width, t.height, theta + Math.PI) + this.endGap(e);
+    return [
+      { x: s.x + ux * startTrim, y: s.y + uy * startTrim },
+      { x: t.x - ux * endTrim, y: t.y - uy * endTrim },
+    ];
+  }
 
-    // Bend when an edge in the opposite direction exists so both stay visible.
-    const reverse = this.edgeIndex.has(`${e.spec.to}->${e.spec.from}`);
-    const bend = reverse ? 0.16 * length : 0;
-    const cx = (x0 + x1) / 2 - uy * bend;
-    const cy = (y0 + y1) / 2 + ux * bend;
+  private endGap(e: LayoutEdge): number {
+    return e.spec.directed === false ? 2 : ARROW_GAP;
+  }
 
-    return { x0, y0, x1, y1, cx, cy };
+  /**
+   * Long edges are routed as elbows down a shared channel. Drawn as diagonals
+   * they cross the whole diagram at every angle, which is what turns a busy
+   * step into spaghetti; orthogonal runs read as a schematic instead.
+   */
+  private routedPoints(e: LayoutEdge): Point[] {
+    const source = e.source;
+    const target = e.target;
+    const s = { ...this.paintedOf(source), width: source.width, height: source.height };
+    const t = { ...this.paintedOf(target), width: target.width, height: target.height };
+    const dx = t.x - s.x;
+    const dy = t.y - s.y;
+    const gap = this.endGap(e);
+
+    // Opposite directions between the same pair take opposite offsets so the
+    // two runs never land on top of each other.
+    const reversed = this.edgeIndex.has(`${e.spec.to}->${e.spec.from}`) && e.spec.from > e.spec.to;
+    const offset = (hashUnit(e.id) - 0.5) * CHANNEL_SPREAD * (reversed ? -1 : 1);
+
+    if (Math.abs(dx) >= Math.abs(dy)) {
+      const sx = s.x + Math.sign(dx) * (s.width / 2 + 2);
+      const tx = t.x - Math.sign(dx) * (t.width / 2 + gap);
+      const midX = (sx + tx) / 2 + offset;
+      return [
+        { x: sx, y: s.y },
+        { x: midX, y: s.y },
+        { x: midX, y: t.y },
+        { x: tx, y: t.y },
+      ];
+    }
+
+    const sy = s.y + Math.sign(dy) * (s.height / 2 + 2);
+    const ty = t.y - Math.sign(dy) * (t.height / 2 + gap);
+    const midY = (sy + ty) / 2 + offset;
+    return [
+      { x: s.x, y: sy },
+      { x: s.x, y: midY },
+      { x: t.x, y: midY },
+      { x: t.x, y: ty },
+    ];
+  }
+
+  private edgePoints(e: LayoutEdge): Point[] {
+    const s = this.paintedOf(e.source);
+    const t = this.paintedOf(e.target);
+    return Math.hypot(t.x - s.x, t.y - s.y) >= LONG_EDGE ? this.routedPoints(e) : this.straightPoints(e);
   }
 
   private edgePath(e: LayoutEdge): string {
-    const g = this.edgeGeometry(e);
-    return `M${g.x0.toFixed(1)},${g.y0.toFixed(1)}Q${g.cx.toFixed(1)},${g.cy.toFixed(1)} ${g.x1.toFixed(1)},${g.y1.toFixed(1)}`;
+    const points = this.edgePoints(e);
+    if (points.length === 2) {
+      // Short edges bend only when a reverse edge would otherwise sit on top.
+      const [a, b] = points;
+      if (!this.edgeIndex.has(`${e.spec.to}->${e.spec.from}`)) {
+        return `M${a.x.toFixed(1)},${a.y.toFixed(1)}L${b.x.toFixed(1)},${b.y.toFixed(1)}`;
+      }
+      const length = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+      const bend = 0.16 * length;
+      const cx = (a.x + b.x) / 2 - ((b.y - a.y) / length) * bend;
+      const cy = (a.y + b.y) / 2 + ((b.x - a.x) / length) * bend;
+      return `M${a.x.toFixed(1)},${a.y.toFixed(1)}Q${cx.toFixed(1)},${cy.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
+    }
+    return roundedPolyline(points, ELBOW_RADIUS);
   }
 
   private edgeLabelTransform(e: LayoutEdge): string {
-    const g = this.edgeGeometry(e);
-    // Point on the quadratic curve at t = 0.5.
-    const x = 0.25 * g.x0 + 0.5 * g.cx + 0.25 * g.x1;
-    const y = 0.25 * g.y0 + 0.5 * g.cy + 0.25 * g.y1;
-    return `translate(${x.toFixed(1)},${y.toFixed(1)})`;
+    const point = polylineMidpoint(this.edgePoints(e));
+    return `translate(${point.x.toFixed(1)},${point.y.toFixed(1)})`;
   }
 }
 
@@ -414,4 +478,72 @@ function placeLegend(sel: GroupPlacement): void {
     .attr('y', (g) => g.box.y - 7)
     .attr('width', (g) => (g.spec.label ? g.spec.label.length * GROUP_LABEL_ADVANCE + 8 : 0))
     .attr('height', (g) => (g.spec.label ? 14 : 0));
+}
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+function hashUnit(input: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0) / 4294967296;
+}
+
+/** Polyline with the corners rounded, clamped so short segments stay clean. */
+function roundedPolyline(points: Point[], radius: number): string {
+  const parts = [`M${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`];
+
+  for (let i = 1; i < points.length - 1; i++) {
+    const previous = points[i - 1];
+    const corner = points[i];
+    const next = points[i + 1];
+    const inLength = Math.hypot(corner.x - previous.x, corner.y - previous.y);
+    const outLength = Math.hypot(next.x - corner.x, next.y - corner.y);
+    const r = Math.min(radius, inLength / 2, outLength / 2);
+
+    if (r < 1) {
+      parts.push(`L${corner.x.toFixed(1)},${corner.y.toFixed(1)}`);
+      continue;
+    }
+
+    const enter = {
+      x: corner.x + ((previous.x - corner.x) / inLength) * r,
+      y: corner.y + ((previous.y - corner.y) / inLength) * r,
+    };
+    const leave = {
+      x: corner.x + ((next.x - corner.x) / outLength) * r,
+      y: corner.y + ((next.y - corner.y) / outLength) * r,
+    };
+    parts.push(`L${enter.x.toFixed(1)},${enter.y.toFixed(1)}`);
+    parts.push(`Q${corner.x.toFixed(1)},${corner.y.toFixed(1)} ${leave.x.toFixed(1)},${leave.y.toFixed(1)}`);
+  }
+
+  const last = points[points.length - 1];
+  parts.push(`L${last.x.toFixed(1)},${last.y.toFixed(1)}`);
+  return parts.join('');
+}
+
+/** Point halfway along a polyline, by length. */
+function polylineMidpoint(points: Point[]): Point {
+  let total = 0;
+  for (let i = 1; i < points.length; i++) total += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
+
+  let travelled = 0;
+  for (let i = 1; i < points.length; i++) {
+    const segment = Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
+    if (travelled + segment >= total / 2) {
+      const t = segment === 0 ? 0 : (total / 2 - travelled) / segment;
+      return {
+        x: points[i - 1].x + (points[i].x - points[i - 1].x) * t,
+        y: points[i - 1].y + (points[i].y - points[i - 1].y) * t,
+      };
+    }
+    travelled += segment;
+  }
+  return points[points.length - 1];
 }

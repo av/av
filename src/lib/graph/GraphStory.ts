@@ -1,6 +1,7 @@
 import GraphLayout, { boundsOf } from './layout';
 import type { Box, Layout } from './layout';
 import GraphRenderer from './renderer';
+import { createTextMeasurer } from './shapes';
 import { resolveStory } from './story';
 import type { GraphStorySpec, ResolvedStep, StoryTrigger } from './types';
 
@@ -60,6 +61,8 @@ export default class GraphStory {
   private reduceMotion = false;
 
   private figure!: HTMLElement;
+  private chromeTitle!: HTMLElement;
+  private chromeCounter!: HTMLElement;
   private panels: HTMLElement[] = [];
   private title!: HTMLElement;
   private caption!: HTMLElement;
@@ -324,10 +327,19 @@ export default class GraphStory {
 
     this.figure = el('figure', 'graph-story__figure');
     const stage = el('div', 'graph-story__stage');
+    // A framed screen so the diagram reads as a window over the page's
+    // animated background rather than floating on top of it.
+    const screen = el('div', 'graph-story__screen');
+    const chrome = el('div', 'graph-story__chrome');
+    this.chromeTitle = el('span', 'graph-story__chrome-title');
+    this.chromeCounter = el('span', 'graph-story__chrome-counter');
+    chrome.append(this.chromeTitle, this.chromeCounter);
+
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('class', 'graph-story__svg');
     svg.setAttribute('role', 'img');
-    stage.append(svg);
+    screen.append(chrome, svg);
+    stage.append(screen);
     this.figure.append(stage);
     container.append(this.figure);
 
@@ -335,7 +347,7 @@ export default class GraphStory {
     // aspect (portrait on phones) instead of a fixed landscape canvas.
     this.svg = svg;
     this.measureStage(svg);
-    this.layout = new GraphLayout(this.layoutAspect(), this.spec.seed ?? 'graph-story');
+    this.layout = new GraphLayout(this.layoutAspect(), this.spec.seed ?? 'graph-story', createTextMeasurer());
     this.renderer = new GraphRenderer(svg, this.layout.width, this.layout.height);
 
     const figcaption = el('figcaption', 'graph-story__caption');
@@ -492,6 +504,8 @@ export default class GraphStory {
     this.title.textContent = step.title;
     this.caption.innerHTML = step.caption;
     this.counter.textContent = `${this.index + 1} / ${this.steps.length}`;
+    this.chromeTitle.textContent = step.title;
+    this.chromeCounter.textContent = `${this.index + 1}/${this.steps.length}`;
     this.prevButton.disabled = this.index === 0;
     this.nextButton.disabled = this.index === this.steps.length - 1;
     this.dots.forEach((dot, i) => {

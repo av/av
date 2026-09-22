@@ -146,7 +146,10 @@ Posts can embed an animated, step-by-step graph diagram (see
 4. Steps may set `body` (a longer explanation, shown in scroll mode) and
    `focus` (`'all'` or a list of ids). Focus defaults to the ids a step's ops
    touch: the camera frames them and everything else dims.
-5. Colour on the blog is greyscale plus green — `$gs-tones` in
+5. Card widths come from measured text (`createTextMeasurer`), so the pixel
+   font must be loaded before the first layout — `src/blog/graph.ts` awaits
+   `document.fonts.ready` before mounting.
+6. Colour on the blog is greyscale plus green — `$gs-tones` in
    `src/graph-story.scss` collapses every accent onto three greys plus green,
    which is reserved for agentic nodes. Prefer `green` / `tx` / `tx2` / `tx3`
    in story data.
