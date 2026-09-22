@@ -1,86 +1,126 @@
 import type { NodeShape } from './types';
 
-const POINTS = 36;
+/**
+ * Nodes are drawn as terminal-style cards: a box sized to its own text, with
+ * the label inside. Kind is carried by a sigil and by the corner treatment,
+ * not by an outline silhouette, so labels can never collide with the graph.
+ */
 
-interface Superellipse {
-  a: number;
-  b: number;
-  n: number;
-}
+export const LABEL_SIZE = 15;
+export const SUBLABEL_SIZE = 11;
+/** Advance width of the pixel font, as a fraction of font size. */
+const CHAR_ADVANCE = 0.64;
+const SIGIL_WIDTH = 15;
+const PAD_X = 11;
+const CARD_HEIGHT = 30;
+const CARD_HEIGHT_TWO_LINE = 44;
+const CHAMFER = 6;
+const ROUND = 4;
 
-const SUPERELLIPSES: Record<'circle' | 'rect' | 'diamond', Superellipse> = {
-  circle: { a: 1, b: 1, n: 2 },
-  // A high exponent gives near-square corners.
-  rect: { a: 1.3, b: 0.95, n: 14 },
-  diamond: { a: 1.25, b: 1.25, n: 1 },
+/** ASCII sigils read as terminal markers rather than decoration. */
+const KIND_SIGILS: Record<string, string> = {
+  human: '@',
+  agent: '*',
+  service: '#',
+  tool: '>',
+  repo: '/',
+  skill: '+',
+  model: '%',
+  chat: '?',
+  machine: '=',
 };
 
-function superellipsePoint(shape: Superellipse, r: number, theta: number): [number, number] {
-  const c = Math.cos(theta);
-  const s = Math.sin(theta);
-  const e = 2 / shape.n;
+export function sigilForKind(kind: string | undefined): string {
+  return (kind && KIND_SIGILS[kind]) || '·';
+}
+
+function textWidth(text: string, size: number): number {
+  return text.length * size * CHAR_ADVANCE;
+}
+
+export interface CardSize {
+  width: number;
+  height: number;
+}
+
+/** Natural size of a card, before any `size` multiplier. */
+export function measureCard(label: string, sublabel: string): CardSize {
+  const width = Math.max(textWidth(label, LABEL_SIZE), textWidth(sublabel, SUBLABEL_SIZE));
+  return {
+    width: Math.max(72, Math.round(width + SIGIL_WIDTH + PAD_X * 2)),
+    height: sublabel ? CARD_HEIGHT_TWO_LINE : CARD_HEIGHT,
+  };
+}
+
+/** Where the label text starts, relative to the card centre. */
+export function labelOffsetX(width: number): number {
+  return -width / 2 + PAD_X + SIGIL_WIDTH;
+}
+
+export function sigilOffsetX(width: number): number {
+  return -width / 2 + PAD_X;
+}
+
+type Corner = 'square' | 'round' | 'chamfer';
+
+const CORNERS: Record<NodeShape, Corner> = {
+  rect: 'square',
+  hex: 'chamfer',
+  diamond: 'chamfer',
+  pill: 'round',
+  circle: 'round',
+};
+
+/** Card outline. Corners differ per shape so kinds stay distinguishable. */
+export function cardPath(shape: NodeShape, width: number, height: number): string {
+  const w = width / 2;
+  const h = height / 2;
+  const corner = CORNERS[shape];
+
+  if (corner === 'square') {
+    return `M${-w},${-h}H${w}V${h}H${-w}Z`;
+  }
+
+  if (corner === 'chamfer') {
+    const c = Math.min(CHAMFER, w, h);
+    return [
+      `M${-w + c},${-h}`,
+      `H${w - c}`,
+      `L${w},${-h + c}`,
+      `V${h - c}`,
+      `L${w - c},${h}`,
+      `H${-w + c}`,
+      `L${-w},${h - c}`,
+      `V${-h + c}`,
+      'Z',
+    ].join('');
+  }
+
+  const r = Math.min(ROUND, w, h);
   return [
-    r * shape.a * Math.sign(c) * Math.abs(c) ** e,
-    r * shape.b * Math.sign(s) * Math.abs(s) ** e,
-  ];
-}
-
-type Polygon = [number, number][];
-
-/** Chamfered rectangle (octagon), unit radius. */
-const PILL: Polygon = [
-  [-1.15, -0.8], [1.15, -0.8], [1.45, -0.45], [1.45, 0.45], [1.15, 0.8], [-1.15, 0.8], [-1.45, 0.45], [-1.45, -0.45],
-];
-
-/** Flat-topped hexagon, unit radius. */
-const HEX: Polygon = Array.from({ length: 6 }, (_, i) => {
-  const angle = (i / 6) * Math.PI * 2;
-  return [1.1 * Math.cos(angle), 1.1 * Math.sin(angle)];
-});
-
-/** Distance from the origin to a convex polygon's boundary along `theta`. */
-function polygonRadius(polygon: Polygon, theta: number): number {
-  const dx = Math.cos(theta);
-  const dy = Math.sin(theta);
-  let best = Infinity;
-  for (let i = 0; i < polygon.length; i++) {
-    const [x0, y0] = polygon[i];
-    const [x1, y1] = polygon[(i + 1) % polygon.length];
-    const ex = x1 - x0;
-    const ey = y1 - y0;
-    const denominator = dx * ey - dy * ex;
-    if (Math.abs(denominator) < 1e-9) continue;
-    const t = (x0 * ey - y0 * ex) / denominator;
-    const u = (x0 * dy - y0 * dx) / denominator;
-    if (t > 0 && u >= -1e-9 && u <= 1 + 1e-9) best = Math.min(best, t);
-  }
-  return best === Infinity ? 1 : best;
-}
-
-function pointFor(shape: NodeShape, r: number, theta: number): [number, number] {
-  if (shape === 'hex' || shape === 'pill') {
-    const radius = r * polygonRadius(shape === 'hex' ? HEX : PILL, theta);
-    return [radius * Math.cos(theta), radius * Math.sin(theta)];
-  }
-  return superellipsePoint(SUPERELLIPSES[shape], r, theta);
+    `M${-w + r},${-h}`,
+    `H${w - r}`,
+    `A${r},${r} 0 0 1 ${w},${-h + r}`,
+    `V${h - r}`,
+    `A${r},${r} 0 0 1 ${w - r},${h}`,
+    `H${-w + r}`,
+    `A${r},${r} 0 0 1 ${-w},${h - r}`,
+    `V${-h + r}`,
+    `A${r},${r} 0 0 1 ${-w + r},${-h}`,
+    'Z',
+  ].join('');
 }
 
 /**
- * Every shape is sampled into the same number of points so the renderer can
- * tween one `d` string into another when a node changes kind or size.
+ * Distance from a card's centre to its edge along `theta`. Used to trim edges
+ * so they stop at the box rather than running under it.
  */
-export function shapePath(shape: NodeShape, r: number): string {
-  const parts: string[] = [];
-  for (let i = 0; i < POINTS; i++) {
-    const theta = (i / POINTS) * Math.PI * 2 - Math.PI / 2;
-    const [x, y] = pointFor(shape, r, theta);
-    parts.push(`${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`);
-  }
-  return `${parts.join('')}Z`;
-}
-
-/** Horizontal / vertical extents of a shape, used to trim edges at the node boundary. */
-export function shapeRadius(shape: NodeShape, r: number, theta: number): number {
-  const [x, y] = pointFor(shape, r, theta);
-  return Math.hypot(x, y);
+export function cardRadius(width: number, height: number, theta: number): number {
+  const dx = Math.cos(theta);
+  const dy = Math.sin(theta);
+  const w = width / 2;
+  const h = height / 2;
+  const tx = Math.abs(dx) < 1e-6 ? Infinity : w / Math.abs(dx);
+  const ty = Math.abs(dy) < 1e-6 ? Infinity : h / Math.abs(dy);
+  return Math.min(tx, ty);
 }

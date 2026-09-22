@@ -20,6 +20,12 @@ const CAMERA_PADDING = 70;
 const PENDING_TTL = 1200;
 /** A focused view never zooms in past this share of the layout width. */
 const MIN_VIEW_SHARE = 0.4;
+/**
+ * A phone can only hold two or three cards across at a readable size, so a
+ * narrow stage frames the action tightly and lets context fade off-frame.
+ */
+const PORTRAIT_MIN_SHARE = 0.24;
+const PORTRAIT_MAX_SHARE = 0.38;
 const SCROLL_STEP_HEIGHT_VH = 65;
 
 /**
@@ -191,29 +197,75 @@ export default class GraphStory {
     this.options.onStep?.(index, this.steps[index]);
   }
 
+  /**
+   * What the camera should frame: the step's focus, plus the panels the action
+   * sits in. Half a panel in frame reads as a rendering mistake.
+   */
+  private framedBounds(layout: Layout, step: ResolvedStep, portrait: boolean): Box | null {
+    // On a wide stage, whole panels around the action: half a panel in frame
+    // reads as a rendering mistake. On a narrow one there is no room for that,
+    // so the frame holds the changed nodes and nothing else.
+    const groups = new Set(step.focus.groups);
+    if (!portrait) {
+      for (const node of layout.nodes) {
+        if (step.focus.nodes.has(node.id)) for (const id of node.path) groups.add(id);
+      }
+    }
+    return boundsOf(layout, step.focus.nodes, groups);
+  }
+
+  /** Centre of the focused nodes, so a frame too small to hold them all keeps the action middle. */
+  private focusCentre(layout: Layout, step: ResolvedStep): { x: number; y: number } | null {
+    let sumX = 0;
+    let sumY = 0;
+    let count = 0;
+    for (const node of layout.nodes) {
+      if (!step.focus.nodes.has(node.id)) continue;
+      sumX += node.x;
+      sumY += node.y;
+      count++;
+    }
+    return count > 0 ? { x: sumX / count, y: sumY / count } : null;
+  }
+
   /** Frames the step's focus (or everything), padded and matched to the stage aspect. */
   private cameraFor(layout: Layout, step: ResolvedStep): Box {
     const full = boundsOf(layout) ?? { x: 0, y: 0, width: layout.width, height: layout.height };
     // Portrait stages cannot show the whole graph legibly, so the "all" view
     // there frames the top-level groups touched most recently instead.
     const portrait = this.viewAspect < 1;
-    const focused = step.focus.all && !portrait ? null : boundsOf(layout, step.focus.nodes, step.focus.groups);
+    const focused = step.focus.all && !portrait ? null : this.framedBounds(layout, step, portrait);
     const box = focused ?? full;
 
-    let width = Math.max(box.width + CAMERA_PADDING * 2, layout.width * MIN_VIEW_SHARE);
-    let height = Math.max(box.height + CAMERA_PADDING * 2, width / this.viewAspect);
-    if (width / height < this.viewAspect) width = height * this.viewAspect;
-    else height = width / this.viewAspect;
+    const padding = portrait ? CAMERA_PADDING * 0.6 : CAMERA_PADDING;
+    const needWidth = box.width + padding * 2;
+    const needHeight = box.height + padding * 2;
 
     // Never frame less than the whole graph would need, so zooming out is monotone-ish.
-    if (focused) {
-      width = Math.min(width, Math.max(full.width + CAMERA_PADDING * 2, (full.height + CAMERA_PADDING * 2) * this.viewAspect));
-      height = width / this.viewAspect;
-    }
+    const cap = Math.max(full.width + padding * 2, (full.height + padding * 2) * this.viewAspect);
+    const minShare = portrait ? PORTRAIT_MIN_SHARE : MIN_VIEW_SHARE;
+    let width = Math.max(needWidth, needHeight * this.viewAspect, layout.width * minShare);
+    if (focused) width = Math.min(width, Math.max(cap, needWidth, needHeight * this.viewAspect));
 
-    const cx = box.x + box.width / 2;
-    const cy = box.y + box.height / 2;
-    return { x: cx - width / 2, y: cy - height / 2, width, height };
+    // A narrow stage cannot hold a wide spread at a readable size. Cap the
+    // zoom-out and let the far side fade off-frame instead of shrinking text.
+    if (portrait) width = Math.min(width, layout.width * PORTRAIT_MAX_SHARE);
+    const height = width / this.viewAspect;
+
+    // Centre on the action when the frame is too small to hold the whole box.
+    const centre = this.focusCentre(layout, step);
+    const tooSmall = centre !== null && (width < box.width || height < box.height);
+    const cx = tooSmall && centre ? centre.x : box.x + box.width / 2;
+    const cy = tooSmall && centre ? centre.y : box.y + box.height / 2;
+
+    // Keep the frame inside the focus box so a slice stays full of content
+    // instead of drifting into empty canvas.
+    return {
+      x: clampSpan(cx - width / 2, width, box.x, box.width),
+      y: clampSpan(cy - height / 2, height, box.y, box.height),
+      width,
+      height,
+    };
   }
 
   private buildDom(): void {
@@ -403,6 +455,12 @@ export default class GraphStory {
     });
     this.panels.forEach((panel, i) => panel.classList.toggle('is-active', i === this.index));
   }
+}
+
+/** Slides a span of `size` back inside `[start, start + extent]` when it fits. */
+function clampSpan(value: number, size: number, start: number, extent: number): number {
+  if (size >= extent) return value;
+  return Math.min(Math.max(value, start), start + extent - size);
 }
 
 function el(tag: string, className: string): HTMLElement {

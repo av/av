@@ -46,6 +46,25 @@ Requirements that drove the choice:
   and keep the story in `content/blog/graphs/name.json`. The generator inlines
   the JSON and a plain `<ol>` fallback so the page stays readable without JS.
 
+## Nodes are cards, not glyphs
+
+A node is a box sized to its own text, with the label, a kind sigil and an
+optional sublabel inside it. The first version drew a small shape with the
+label floating underneath, which does not survive a dense graph: labels
+collide with each other, with edges and with group panels, and no amount of
+layout tuning fixes it because the label is not part of the thing being
+laid out.
+
+Making the label the node removes the whole class of problem. Card boxes are
+what the force layout separates (`boxCollide` pushes axis-aligned rectangles
+apart along their shallower overlap), what group panels are measured from, and
+what edges are trimmed against. Kind is carried by an ASCII sigil and the
+corner treatment instead of a silhouette, which also suits the terminal look.
+
+Cards are opaque, so an unavoidable overlap occludes cleanly rather than
+turning into a tangle, and context is dimmed by darkening strokes and text
+rather than by lowering opacity, which would let edges show through the cards.
+
 ## Site theme: greyscale plus one accent
 
 The engine supports the full Flexoki accent set, but the blog renders graph

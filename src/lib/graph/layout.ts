@@ -1,10 +1,10 @@
 import * as d3 from 'd3';
 
+import { measureCard } from './shapes';
 import { edgeId } from './story';
 import type { Accent, EdgeSpec, GraphState, GroupSpec, NodeShape, NodeSpec } from './types';
 
-export const STAGE_WIDTH = 1300;
-export const BASE_RADIUS = 24;
+export const STAGE_WIDTH = 1500;
 
 const CLUSTER_PULL = 0.16;
 const ROOT_PULL = 0.03;
@@ -12,13 +12,13 @@ const ROOT_PULL = 0.03;
 const INERTIA = 0.35;
 const TICKS = 320;
 const NESTED_SPREAD = 170;
-const CHARGE = -170;
-const LINK_DISTANCE = 52;
-const COLLIDE_PADDING = 20;
-const GROUP_PADDING = 16;
-const GROUP_LABEL_HEIGHT = 20;
-const NODE_LABEL_HEIGHT = 18;
-const STAGE_MARGIN = 36;
+const CHARGE = -260;
+const LINK_DISTANCE = 64;
+/** Clear space kept between two cards. */
+const CARD_GAP = 26;
+const GROUP_PADDING = 20;
+const GROUP_LABEL_HEIGHT = 6;
+const STAGE_MARGIN = 30;
 
 export interface LayoutNode extends d3.SimulationNodeDatum {
   id: string;
@@ -32,7 +32,9 @@ export interface LayoutNode extends d3.SimulationNodeDatum {
   /** Where the node was before this step; unchanged nodes are held near it. */
   homeX: number;
   homeY: number;
-  r: number;
+  /** Card size, already scaled by the spec's `size` multiplier. */
+  width: number;
+  height: number;
   shape: NodeShape;
   color: Accent;
   /** Outermost-first chain of group ids. */
@@ -77,10 +79,10 @@ export function boundsOf(layout: Layout, nodeIds?: Set<string>, groupIds?: Set<s
   const all = !nodeIds && !groupIds;
   for (const n of layout.nodes) {
     if (!all && !nodeIds?.has(n.id)) continue;
-    x0 = Math.min(x0, n.x - n.r);
-    y0 = Math.min(y0, n.y - n.r);
-    x1 = Math.max(x1, n.x + n.r);
-    y1 = Math.max(y1, n.y + n.r + NODE_LABEL_HEIGHT * 2);
+    x0 = Math.min(x0, n.x - n.width / 2);
+    y0 = Math.min(y0, n.y - n.height / 2);
+    x1 = Math.max(x1, n.x + n.width / 2);
+    y1 = Math.max(y1, n.y + n.height / 2);
   }
   for (const g of layout.groups) {
     if (!all && !groupIds?.has(g.id)) continue;
@@ -179,7 +181,8 @@ export default class GraphLayout {
         spec: node.spec,
         x: node.x,
         y: node.y,
-        r: node.r,
+        width: node.width,
+        height: node.height,
         shape: node.shape,
         color: node.color,
         path: [...node.path],
@@ -239,12 +242,16 @@ export default class GraphLayout {
         groupId = groups.get(groupId)?.spec.parent;
       }
 
-      const r = BASE_RADIUS * (spec.size ?? 1);
+      const scale = spec.size ?? 1;
+      const card = measureCard(spec.label ?? spec.id, spec.sublabel ?? '');
+      const width = card.width * scale;
+      const height = card.height * scale;
       const existing = this.nodes.get(spec.id);
 
       if (existing) {
         existing.spec = spec;
-        existing.r = r;
+        existing.width = width;
+        existing.height = height;
         existing.shape = spec.shape ?? shapeForKind(spec.kind);
         existing.color = spec.color ?? 'tx2';
         // Only a change of the innermost group counts as a move; a re-parented
@@ -261,7 +268,8 @@ export default class GraphLayout {
         spec,
         x: 0,
         y: 0,
-        r,
+        width,
+        height,
         shape: spec.shape ?? shapeForKind(spec.kind),
         color: spec.color ?? 'tx2',
         path,
@@ -429,20 +437,21 @@ export default class GraphLayout {
         d3
           .forceLink<LayoutNode, LayoutEdge>(edges)
           .id((n) => n.id)
-          .distance((e) => e.source.r + e.target.r + LINK_DISTANCE)
+          .distance((e) => (e.source.width + e.target.width) / 2 + LINK_DISTANCE)
           .strength((e) => (sameCluster(e.source, e.target) ? 0.5 : 0.04)),
       )
-      .force('charge', d3.forceManyBody<LayoutNode>().strength(CHARGE).distanceMax(220))
-      .force('collide', d3.forceCollide<LayoutNode>().radius((n) => n.r + COLLIDE_PADDING).iterations(2))
+      .force('charge', d3.forceManyBody<LayoutNode>().strength(CHARGE).distanceMax(320))
+      .force('collide', boxCollide(nodes, CARD_GAP))
       .force('x', d3.forceX<LayoutNode>((n) => this.anchorFor(n, groups).x).strength(pullStrength))
       .force('y', d3.forceY<LayoutNode>((n) => this.anchorFor(n, groups).y).strength(pullStrength))
       .force('inertia', rigidInertia(nodes, inertia))
       .force('separate', groupSeparation(nodes, groupList))
       .force('bounds', (alpha) => {
         for (const node of nodes) {
-          const pad = node.r + STAGE_MARGIN;
-          node.x = Math.max(pad, Math.min(width - pad, node.x));
-          node.y = Math.max(pad, Math.min(height - pad - NODE_LABEL_HEIGHT, node.y));
+          const padX = node.width / 2 + STAGE_MARGIN;
+          const padY = node.height / 2 + STAGE_MARGIN;
+          node.x = Math.max(padX, Math.min(width - padX, node.x));
+          node.y = Math.max(padY, Math.min(height - padY, node.y));
           void alpha;
         }
       })
@@ -493,7 +502,7 @@ export default class GraphLayout {
 
       for (const node of nodes) {
         if (node.path[node.path.length - 1] === group.id) {
-          extend(node.x - node.r, node.y - node.r, node.x + node.r, node.y + node.r + NODE_LABEL_HEIGHT);
+          extend(node.x - node.width / 2, node.y - node.height / 2, node.x + node.width / 2, node.y + node.height / 2);
         }
       }
       for (const child of groups) {
@@ -551,10 +560,10 @@ function groupSeparation(nodes: LayoutNode[], groups: LayoutGroup[]): d3.Force<L
     const pad = members.length > 1 ? GROUP_PADDING : 4;
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (const n of members) {
-      x0 = Math.min(x0, n.x - n.r - pad);
-      y0 = Math.min(y0, n.y - n.r - pad);
-      x1 = Math.max(x1, n.x + n.r + pad);
-      y1 = Math.max(y1, n.y + n.r + pad + NODE_LABEL_HEIGHT);
+      x0 = Math.min(x0, n.x - n.width / 2 - pad);
+      y0 = Math.min(y0, n.y - n.height / 2 - pad);
+      x1 = Math.max(x1, n.x + n.width / 2 + pad);
+      y1 = Math.max(y1, n.y + n.height / 2 + pad);
     }
     return { x0, y0, x1, y1 };
   };
@@ -614,6 +623,38 @@ function rigidInertia(nodes: LayoutNode[], strength: (node: LayoutNode) => numbe
         const k = strength(n) * alpha;
         n.vx = (n.vx ?? 0) + (n.homeX + shiftX - n.x) * k;
         n.vy = (n.vy ?? 0) + (n.homeY + shiftY - n.y) * k;
+      }
+    }
+  };
+}
+
+/**
+ * Keeps cards from overlapping. Circles waste space around wide boxes, so this
+ * separates axis-aligned rectangles along whichever axis they overlap least.
+ */
+function boxCollide(nodes: LayoutNode[], gap: number): d3.Force<LayoutNode, undefined> {
+  return (alpha) => {
+    for (let i = 0; i < nodes.length; i++) {
+      const a = nodes[i];
+      for (let j = i + 1; j < nodes.length; j++) {
+        const b = nodes[j];
+        const overlapX = (a.width + b.width) / 2 + gap - Math.abs(a.x - b.x);
+        if (overlapX <= 0) continue;
+        const overlapY = (a.height + b.height) / 2 + gap - Math.abs(a.y - b.y);
+        if (overlapY <= 0) continue;
+
+        // Push along the cheaper axis, scaled so wide cards separate sideways.
+        const horizontal = overlapX / (a.width + b.width) < overlapY / (a.height + b.height);
+        const push = (horizontal ? overlapX : overlapY) * 0.5 * alpha * 2;
+        const sign = horizontal ? Math.sign(b.x - a.x) || 1 : Math.sign(b.y - a.y) || 1;
+
+        if (horizontal) {
+          a.vx = (a.vx ?? 0) - push * sign;
+          b.vx = (b.vx ?? 0) + push * sign;
+        } else {
+          a.vy = (a.vy ?? 0) - push * sign;
+          b.vy = (b.vy ?? 0) + push * sign;
+        }
       }
     }
   };

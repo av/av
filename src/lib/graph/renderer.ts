@@ -1,18 +1,22 @@
 import * as d3 from 'd3';
 
-import { shapePath, shapeRadius } from './shapes';
+import { cardPath, cardRadius, labelOffsetX, sigilForKind, sigilOffsetX } from './shapes';
 import type { Box, Layout, LayoutEdge, LayoutGroup, LayoutNode } from './layout';
 import type { Accent, StepFocus } from './types';
 
 const ACCENTS: Accent[] = ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'magenta', 'tx', 'tx2', 'tx3'];
-const ARROW_GAP = 5;
+const ARROW_GAP = 6;
 // Named transitions so fades and geometry tweens on one element run together
 // instead of interrupting each other.
 const FADE = 'gs-fade';
 const MOVE = 'gs-move';
 const CAMERA = 'gs-camera';
-const LABEL_OFFSET = 15;
-const SUBLABEL_OFFSET = 30;
+/** Advance width of the edge-label font, for sizing its plate. */
+const EDGE_LABEL_ADVANCE = 7.4;
+/** Baselines inside the card, relative to its centre. */
+const LABEL_BASELINE = 5;
+const LABEL_BASELINE_TWO_LINE = -2;
+const SUBLABEL_BASELINE = 13;
 
 type GroupSel = d3.Selection<SVGGElement, LayoutGroup, SVGGElement, unknown>;
 type EdgeSel = d3.Selection<SVGGElement, LayoutEdge, SVGGElement, unknown>;
@@ -114,16 +118,14 @@ export default class GraphRenderer {
       .append('g')
       .attr('class', 'gs-group')
       .style('opacity', 0);
-    enter.append('rect').attr('rx', 2).attr('ry', 2);
+    enter.append('rect').attr('class', 'gs-group__panel');
+    // A plate that knocks the label out of the panel border, like a TUI title.
+    enter.append('rect').attr('class', 'gs-group__legend');
     enter.append('text').attr('class', 'gs-group__label');
 
-    enter
-      .select('rect')
-      .attr('x', (g) => g.box.x)
-      .attr('y', (g) => g.box.y)
-      .attr('width', (g) => g.box.width)
-      .attr('height', (g) => g.box.height);
-    enter.select('text').attr('x', (g) => g.box.x + 14).attr('y', (g) => g.box.y + 20);
+    enter.select('rect.gs-group__panel').call(placePanel);
+    enter.select('text.gs-group__label').call(placeGroupLabel);
+    enter.select('rect.gs-group__legend').call(placeLegend);
     enter.transition(FADE).delay(timing.enter.delay).duration(timing.enter.duration).style('opacity', 1);
 
     sel
@@ -140,19 +142,12 @@ export default class GraphRenderer {
       'class',
       (g) => `gs-group is-color-${g.color} is-depth-${g.depth}${this.lit && !this.lit.groups.has(g.id) ? ' is-dim' : ''}`,
     );
-    merged.select<SVGTextElement>('text').text((g) => (g.spec.label ? `[ ${g.spec.label} ]` : ''));
+    merged.select<SVGTextElement>('text.gs-group__label').text((g) => g.spec.label ?? '');
 
     const updated = sel.transition(MOVE).delay(timing.move.delay).duration(timing.move.duration).ease(d3.easeCubicInOut);
-    updated
-      .select('rect')
-      .attr('x', (g) => g.box.x)
-      .attr('y', (g) => g.box.y)
-      .attr('width', (g) => g.box.width)
-      .attr('height', (g) => g.box.height);
-    updated
-      .select('text')
-      .attr('x', (g) => g.box.x + 14)
-      .attr('y', (g) => g.box.y + 20);
+    updated.select('rect.gs-group__panel').call(placePanel);
+    updated.select('text.gs-group__label').call(placeGroupLabel);
+    updated.select('rect.gs-group__legend').call(placeLegend);
   }
 
   private renderNodes(nodes: LayoutNode[], timing: Timing): void {
@@ -169,10 +164,24 @@ export default class GraphRenderer {
     enter
       .append('path')
       .attr('class', 'gs-node__shape')
-      .attr('d', (n) => shapePath(n.shape, n.r))
-      .attr('transform', 'scale(0.2)');
-    enter.append('text').attr('class', 'gs-node__label').attr('y', (n) => n.r + LABEL_OFFSET);
-    enter.append('text').attr('class', 'gs-node__sublabel').attr('y', (n) => n.r + SUBLABEL_OFFSET);
+      .attr('d', (n) => cardPath(n.shape, n.width, n.height))
+      .attr('transform', 'scale(0.86)');
+    enter
+      .append('text')
+      .attr('class', 'gs-node__sigil')
+      .attr('x', (n) => sigilOffsetX(n.width))
+      .attr('y', LABEL_BASELINE)
+      .text((n) => sigilForKind(n.spec.kind));
+    enter
+      .append('text')
+      .attr('class', 'gs-node__label')
+      .attr('x', (n) => labelOffsetX(n.width))
+      .attr('y', (n) => (n.spec.sublabel ? LABEL_BASELINE_TWO_LINE : LABEL_BASELINE));
+    enter
+      .append('text')
+      .attr('class', 'gs-node__sublabel')
+      .attr('x', (n) => labelOffsetX(n.width))
+      .attr('y', SUBLABEL_BASELINE);
 
     const entering = enter.transition(FADE).delay(timing.enter.delay).duration(timing.enter.duration).ease(d3.easeBackOut);
     entering.style('opacity', 1);
@@ -185,7 +194,7 @@ export default class GraphRenderer {
       .delay(timing.exit.delay)
       .duration(timing.exit.duration)
       .style('opacity', 0);
-    exiting.select('path').attr('transform', 'scale(0.2)');
+    exiting.select('path').attr('transform', 'scale(0.86)');
     exiting.remove();
 
     const merged: NodeSel = enter.merge(sel);
@@ -194,6 +203,7 @@ export default class GraphRenderer {
       (n) =>
         `gs-node is-shape-${n.shape} is-color-${n.color} is-state-${n.spec.state ?? 'default'}${n.spec.kind ? ` is-kind-${n.spec.kind}` : ''}${this.dimNode(n) ? ' is-dim' : ''}`,
     );
+    merged.select<SVGTextElement>('text.gs-node__sigil').text((n) => sigilForKind(n.spec.kind));
     merged.select<SVGTextElement>('text.gs-node__sublabel').call(swapText, (n: LayoutNode) => n.spec.sublabel ?? '', timing);
     merged.select<SVGTextElement>('text.gs-node__label').call(swapText, (n: LayoutNode) => n.spec.label ?? n.id, timing);
 
@@ -212,9 +222,13 @@ export default class GraphRenderer {
         return `translate(${p.x},${p.y})`;
       };
     });
-    moving.select('path').attr('d', (n) => shapePath(n.shape, n.r));
-    moving.select('text.gs-node__label').attr('y', (n) => n.r + LABEL_OFFSET);
-    moving.select('text.gs-node__sublabel').attr('y', (n) => n.r + SUBLABEL_OFFSET);
+    moving.select('path').attr('d', (n) => cardPath(n.shape, n.width, n.height));
+    moving.select('text.gs-node__sigil').attr('x', (n) => sigilOffsetX(n.width));
+    moving
+      .select('text.gs-node__label')
+      .attr('x', (n) => labelOffsetX(n.width))
+      .attr('y', (n) => (n.spec.sublabel ? LABEL_BASELINE_TWO_LINE : LABEL_BASELINE));
+    moving.select('text.gs-node__sublabel').attr('x', (n) => labelOffsetX(n.width));
 
     if (timing.move.duration === 0) {
       for (const n of nodes) this.painted.set(n.id, { x: n.x, y: n.y });
@@ -237,6 +251,8 @@ export default class GraphRenderer {
 
     const enter = sel.enter().append('g').attr('class', 'gs-edge').style('opacity', 0);
     enter.append('path').attr('class', 'gs-edge__line');
+    // A plate behind the label so the line does not run through the text.
+    enter.append('rect').attr('class', 'gs-edge__plate').attr('rx', 1);
     enter.append('text').attr('class', 'gs-edge__label');
     enter.transition(FADE).delay(timing.enter.delay).duration(timing.enter.duration).style('opacity', 1);
 
@@ -259,6 +275,16 @@ export default class GraphRenderer {
       .select<SVGPathElement>('path')
       .attr('marker-end', (e) => (e.spec.directed === false ? null : `url(#${this.uid}-arrow-${e.color})`));
     merged.select<SVGTextElement>('text').text((e) => e.spec.label ?? '');
+    merged.each(function (e) {
+      const label = e.spec.label ?? '';
+      const plate = d3.select(this).select<SVGRectElement>('rect.gs-edge__plate');
+      if (!label) {
+        plate.attr('width', 0).attr('height', 0);
+        return;
+      }
+      const width = label.length * EDGE_LABEL_ADVANCE + 8;
+      plate.attr('x', -width / 2).attr('y', -8).attr('width', width).attr('height', 16);
+    });
 
     // Edges follow their endpoints' painted position every frame, whether the
     // endpoints are moving, entering, or standing still.
@@ -267,17 +293,21 @@ export default class GraphRenderer {
     follow
       .select<SVGTextElement>('text')
       .attrTween('transform', (e) => () => this.edgeLabelTransform(e));
+    follow
+      .select<SVGRectElement>('rect.gs-edge__plate')
+      .attrTween('transform', (e) => () => this.edgeLabelTransform(e));
 
     if (timing.move.duration === 0) {
       merged.select<SVGPathElement>('path').attr('d', (e) => this.edgePath(e));
       merged.select<SVGTextElement>('text').attr('transform', (e) => this.edgeLabelTransform(e));
+      merged.select<SVGRectElement>('rect.gs-edge__plate').attr('transform', (e) => this.edgeLabelTransform(e));
     }
   }
 
   private edgeGeometry(e: LayoutEdge): { x0: number; y0: number; x1: number; y1: number; cx: number; cy: number } {
     const { source, target } = e;
-    const s = { ...this.paintedOf(source), shape: source.shape, r: source.r };
-    const t = { ...this.paintedOf(target), shape: target.shape, r: target.r };
+    const s = { ...this.paintedOf(source), width: source.width, height: source.height };
+    const t = { ...this.paintedOf(target), width: target.width, height: target.height };
     const dx = t.x - s.x;
     const dy = t.y - s.y;
     const theta = Math.atan2(dy, dx);
@@ -285,8 +315,8 @@ export default class GraphRenderer {
     const ux = dx / length;
     const uy = dy / length;
 
-    const startTrim = shapeRadius(s.shape, s.r, theta) + 2;
-    const endTrim = shapeRadius(t.shape, t.r, theta + Math.PI) + (e.spec.directed === false ? 2 : ARROW_GAP);
+    const startTrim = cardRadius(s.width, s.height, theta) + 2;
+    const endTrim = cardRadius(t.width, t.height, theta + Math.PI) + (e.spec.directed === false ? 2 : ARROW_GAP);
     const x0 = s.x + ux * startTrim;
     const y0 = s.y + uy * startTrim;
     const x1 = t.x - ux * endTrim;
@@ -356,4 +386,32 @@ function litSet(layout: Layout, focus: StepFocus): { nodes: Set<string>; groups:
     if (nodes.has(n.id)) for (const g of n.path) groups.add(g);
   }
   return { nodes, groups };
+}
+
+const GROUP_LABEL_X = 12;
+const GROUP_LABEL_ADVANCE = 8.4;
+
+interface GroupPlacement {
+  attr(name: string, value: (datum: LayoutGroup) => number | string): GroupPlacement;
+}
+
+function placePanel(sel: GroupPlacement): void {
+  sel
+    .attr('x', (g) => g.box.x)
+    .attr('y', (g) => g.box.y)
+    .attr('width', (g) => g.box.width)
+    .attr('height', (g) => g.box.height);
+}
+
+function placeGroupLabel(sel: GroupPlacement): void {
+  sel.attr('x', (g) => g.box.x + GROUP_LABEL_X).attr('y', (g) => g.box.y);
+}
+
+/** Sized to the label so the panel border is interrupted, not overdrawn. */
+function placeLegend(sel: GroupPlacement): void {
+  sel
+    .attr('x', (g) => g.box.x + GROUP_LABEL_X - 4)
+    .attr('y', (g) => g.box.y - 7)
+    .attr('width', (g) => (g.spec.label ? g.spec.label.length * GROUP_LABEL_ADVANCE + 8 : 0))
+    .attr('height', (g) => (g.spec.label ? 14 : 0));
 }
