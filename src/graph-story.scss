@@ -4,7 +4,23 @@
 // ---------------------------------------------------------------------------
 @import "./vars.scss";
 
-$gs-accents: red, orange, yellow, green, cyan, blue, purple, magenta, tx, tx2, tx3;
+// Monochrome theme. The diagram is greyscale in three tones; green is reserved
+// for what is agentic — agents and the infrastructure that runs them. The
+// engine still supports the full Flexoki palette, but on the blog every accent
+// collapses onto this vocabulary so no story can reintroduce hue.
+$gs-tones: (
+  green:   var(--fx-green),
+  tx:      var(--fx-tx),
+  tx2:     var(--fx-tx2),
+  tx3:     var(--fx-tx3),
+  cyan:    var(--fx-green),
+  red:     var(--fx-tx),
+  orange:  var(--fx-tx2),
+  yellow:  var(--fx-tx2),
+  blue:    var(--fx-tx2),
+  purple:  var(--fx-tx3),
+  magenta: var(--fx-tx3),
+);
 $gs-pixel: 'Geist Pixel', ui-monospace, monospace;
 
 .graph-story {
@@ -201,7 +217,7 @@ $gs-pixel: 'Geist Pixel', ui-monospace, monospace;
     flex: 1 1 auto;
     min-height: 0;
     display: flex;
-    padding: 1.5rem 36% 1rem 1.5rem;
+    padding: 1.5rem 36% 3.5rem 1.5rem;
 
     @include media(lt-md) {
       padding: 3rem 0.5rem 0;
@@ -337,9 +353,9 @@ $gs-pixel: 'Geist Pixel', ui-monospace, monospace;
 // ---------------------------------------------------------------------------
 // SVG parts
 // ---------------------------------------------------------------------------
-@each $accent in $gs-accents {
+@each $accent, $tone in $gs-tones {
   .graph-story .is-color-#{$accent} {
-    --gs-accent: var(--fx-#{$accent});
+    --gs-accent: #{$tone};
   }
 }
 
@@ -349,9 +365,11 @@ $gs-pixel: 'Geist Pixel', ui-monospace, monospace;
 
 // Light mode: the site drops phosphor glow there too.
 @media not all and (prefers-color-scheme: dark) {
-  .gs-node__shape,
-  .gs-edge__line,
-  .gs-node.is-state-active .gs-node__shape {
+  .graph-story .gs-node__shape,
+  .graph-story .gs-edge__line,
+  .graph-story .is-color-green .gs-node__shape,
+  .graph-story .is-color-green .gs-edge__line,
+  .graph-story .gs-node.is-state-active .gs-node__shape {
     filter: none;
   }
 }
@@ -387,10 +405,21 @@ $gs-pixel: 'Geist Pixel', ui-monospace, monospace;
   stroke: var(--gs-accent);
   stroke-width: 1.5;
   stroke-linejoin: miter;
-  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--gs-accent) 70%, transparent));
+  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--gs-accent) 45%, transparent));
   transition: fill 0.5s ease, stroke 0.5s ease, stroke-width 0.3s ease, opacity 0.4s ease;
   transform-box: fill-box;
   transform-origin: center;
+}
+
+// Green is the live accent, so only it keeps the phosphor bloom.
+.graph-story .is-color-green .gs-node__shape {
+  fill: color-mix(in srgb, var(--fx-green) 16%, var(--fx-bg));
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--fx-green) 65%, transparent));
+}
+
+.graph-story .is-color-green .gs-edge__line {
+  stroke-width: 1.6;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--fx-green) 50%, transparent));
 }
 
 .gs-node__label,
@@ -418,8 +447,13 @@ $gs-pixel: 'Geist Pixel', ui-monospace, monospace;
 
 .gs-node.is-state-active .gs-node__shape {
   stroke-width: 2.5;
-  filter: drop-shadow(0 0 4px var(--gs-accent)) drop-shadow(0 0 12px color-mix(in srgb, var(--gs-accent) 60%, transparent));
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--gs-accent) 50%, transparent));
   animation: gs-pulse 1.8s ease-in-out infinite;
+}
+
+// Only the green accent blooms when it goes live; grey stays restrained.
+.graph-story .gs-node.is-color-green.is-state-active .gs-node__shape {
+  filter: drop-shadow(0 0 4px var(--fx-green)) drop-shadow(0 0 12px color-mix(in srgb, var(--fx-green) 55%, transparent));
 }
 
 .gs-node.is-state-muted .gs-node__shape,
@@ -437,8 +471,9 @@ $gs-pixel: 'Geist Pixel', ui-monospace, monospace;
 }
 
 .gs-node.is-state-error .gs-node__shape {
-  stroke: var(--fx-red);
-  fill: color-mix(in srgb, var(--fx-red) 25%, var(--fx-bg));
+  stroke: var(--fx-tx);
+  stroke-dasharray: 3 3;
+  fill: color-mix(in srgb, var(--fx-tx) 16%, var(--fx-bg));
 }
 
 .gs-edge__line {
@@ -446,7 +481,6 @@ $gs-pixel: 'Geist Pixel', ui-monospace, monospace;
   stroke: var(--gs-accent);
   stroke-width: 1.4;
   stroke-linecap: square;
-  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--gs-accent) 50%, transparent));
   transition: stroke 0.5s ease, opacity 0.4s ease;
 }
 
@@ -487,12 +521,12 @@ $gs-pixel: 'Geist Pixel', ui-monospace, monospace;
 .gs-node.is-dim text,
 .gs-edge.is-dim .gs-edge__line,
 .gs-edge.is-dim text {
-  opacity: 0.38;
+  opacity: 0.45;
 }
 
 .gs-group.is-dim rect,
 .gs-group.is-dim text {
-  opacity: 0.5;
+  opacity: 0.55;
 }
 
 .gs-node.is-dim .gs-node__shape {

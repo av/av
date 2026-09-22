@@ -16,6 +16,8 @@ interface GraphStoryOptions {
 const DEFAULT_DURATION = 900;
 const DEFAULT_INTERVAL = 2600;
 const CAMERA_PADDING = 70;
+/** How long a queued scroll-mode jump keeps steering next/prev, in ms. */
+const PENDING_TTL = 1200;
 /** A focused view never zooms in past this share of the layout width. */
 const MIN_VIEW_SHARE = 0.4;
 const SCROLL_STEP_HEIGHT_VH = 65;
@@ -55,6 +57,9 @@ export default class GraphStory {
   private nextButton!: HTMLButtonElement;
   private playButton: HTMLButtonElement | null = null;
 
+  /** Step a scroll-mode jump is heading for, so rapid clicks queue instead of fighting the scroll handler. */
+  private pendingIndex: number | null = null;
+  private pendingAt = 0;
   private timer: number | null = null;
   private playing = false;
   private scrollFrame: number | null = null;
@@ -121,17 +126,29 @@ export default class GraphStory {
   }
 
   next(): void {
-    this.goTo(Math.min(this.steps.length - 1, this.index + 1));
+    this.goTo(Math.min(this.steps.length - 1, this.stepCursor() + 1));
   }
 
   prev(): void {
-    this.goTo(Math.max(0, this.index - 1));
+    this.goTo(Math.max(0, this.stepCursor() - 1));
+  }
+
+  /**
+   * Where the next step should be counted from. In scroll mode a jump is a
+   * smooth scroll, so a click that lands mid-flight must continue from the
+   * pending target rather than from whatever the scroll handler last saw.
+   */
+  private stepCursor(): number {
+    if (this.pendingIndex === null) return this.index;
+    return performance.now() - this.pendingAt < PENDING_TTL ? this.pendingIndex : this.index;
   }
 
   goTo(index: number, immediate = false): void {
     if (index === this.index || index < 0 || index >= this.steps.length) return;
 
     if (this.trigger === 'scroll' && !immediate) {
+      this.pendingIndex = index;
+      this.pendingAt = performance.now();
       this.scrollToStep(index);
       return;
     }
@@ -313,7 +330,9 @@ export default class GraphStory {
   private bindScroll(): void {
     const update = () => {
       this.scrollFrame = null;
-      this.applyStep(this.stepFromScroll(), this.index === -1);
+      const step = this.stepFromScroll();
+      if (step === this.pendingIndex) this.pendingIndex = null;
+      this.applyStep(step, this.index === -1);
     };
     const schedule = () => {
       if (this.scrollFrame === null) this.scrollFrame = window.requestAnimationFrame(update);

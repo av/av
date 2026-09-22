@@ -25,7 +25,8 @@ const STORY_INDEX = Number(process.argv[4] ?? 0);
 const OUT = join(ROOT, process.argv[3] ?? 'docs/graph-story-demo');
 const VIEWPORT = { width: 960, height: 800 };
 const STEP_HOLD_MS = 2400;
-const POSTER_STEP = 4;
+/** Poster frame is taken this far into the story. */
+const POSTER_AT = 0.7;
 
 const MIME = {
   '.html': 'text/html',
@@ -65,8 +66,8 @@ function serve() {
 function pickH264Encoder() {
   const probe = spawnSync('ffmpeg', ['-hide_banner', '-encoders'], { encoding: 'utf8' });
   const available = probe.stdout ?? '';
-  if (/\blibx264\b/.test(available)) return ['-c:v', 'libx264', '-crf', '20'];
-  if (/\blibopenh264\b/.test(available)) return ['-c:v', 'libopenh264', '-b:v', '2500k'];
+  if (/\blibx264\b/.test(available)) return ['-c:v', 'libx264', '-crf', '28'];
+  if (/\blibopenh264\b/.test(available)) return ['-c:v', 'libopenh264', '-b:v', '900k'];
   throw new Error('no H.264 encoder in ffmpeg (need libx264 or libopenh264)');
 }
 
@@ -102,12 +103,36 @@ async function main() {
   if (!box) throw new Error('graph story figure not found');
 
   const steps = await story.locator('.graph-story__dot').count();
+  const isScroll = (await story.getAttribute('class'))?.includes('is-trigger-scroll') ?? false;
   const next = story.locator('.graph-story__button--next');
+
+  // Scroll-driven stories are advanced by scrolling, not by clicking: that is
+  // how a reader sees them, and clicking would fight Playwright's own
+  // scroll-into-view before each click.
+  const advance = async (index) => {
+    if (!isScroll) {
+      await next.click();
+      return;
+    }
+    await page.evaluate(
+      ([storyIndex, panelIndex]) => {
+        const target = document.querySelectorAll('.graph-story.is-ready')[storyIndex];
+        const panel = target.querySelectorAll('.graph-story__panel')[panelIndex];
+        window.scrollTo({ top: window.scrollY + panel.getBoundingClientRect().top - window.innerHeight * 0.25, behavior: 'smooth' });
+      },
+      [STORY_INDEX, index],
+    );
+  };
+
+  // Only scroll stories need an opening move; click stories already show step 1.
+  if (isScroll) await advance(0);
   await page.waitForTimeout(STEP_HOLD_MS);
 
+  const posterStep = Math.max(1, Math.round((steps - 1) * POSTER_AT));
+
   for (let i = 1; i < steps; i++) {
-    await next.click();
-    if (i === POSTER_STEP) {
+    await advance(i);
+    if (i === posterStep) {
       await page.waitForTimeout(1200);
       await figure.screenshot({ path: `${OUT}.png` });
       await page.waitForTimeout(STEP_HOLD_MS - 1200);
@@ -127,7 +152,7 @@ async function main() {
   const even = 'scale=trunc(iw/2)*2:trunc(ih/2)*2';
 
   ffmpeg(['-i', rawPath, '-vf', `${crop},${even}`, ...pickH264Encoder(), '-pix_fmt', 'yuv420p', '-an', `${OUT}.mp4`]);
-  ffmpeg(['-i', rawPath, '-vf', `${crop},${even}`, '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '32', '-an', `${OUT}.webm`]);
+  ffmpeg(['-i', rawPath, '-vf', `${crop},${even}`, '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '40', '-an', `${OUT}.webm`]);
   await rm(videoDir, { recursive: true, force: true });
 
   console.log(`recorded ${steps} steps → ${OUT}.{mp4,webm,png}`);

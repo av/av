@@ -46,6 +46,20 @@ Requirements that drove the choice:
   and keep the story in `content/blog/graphs/name.json`. The generator inlines
   the JSON and a plain `<ol>` fallback so the page stays readable without JS.
 
+## Site theme: greyscale plus one accent
+
+The engine supports the full Flexoki accent set, but the blog renders graph
+stories in a monochrome theme (`$gs-tones` in `src/graph-story.scss`): three
+greys plus green. Every accent a story uses collapses onto that vocabulary, so
+no story can reintroduce hue on the site.
+
+Green is reserved for what is *agentic* — agents and the infrastructure that
+runs them. That makes the accent carry meaning rather than decoration: the
+early steps of a story about adopting agents are pure greyscale, the first
+green node is the first agent, and green spreads as agents take over the loop.
+Phosphor bloom and the `active` glow are green-only for the same reason; grey
+nodes stay flat. `error` reads as a broken outline rather than a red one.
+
 ## Alternatives rejected
 
 - **Canvas renderer** (used by `src/career/*`): better for thousands of items,

@@ -20,13 +20,13 @@
           {
             "id": "editor",
             "label": "Editor",
-            "color": "blue",
+            "color": "tx3",
             "parent": "laptop"
           },
           {
             "id": "questions",
             "label": "Web",
-            "color": "tx2",
+            "color": "tx3",
             "x": 46,
             "y": 78
           }
@@ -36,7 +36,7 @@
             "id": "ivan",
             "label": "Ivan",
             "kind": "human",
-            "color": "yellow",
+            "color": "tx",
             "x": 11,
             "y": 50
           },
@@ -45,14 +45,14 @@
             "label": "VS Code",
             "sublabel": "manual coding",
             "kind": "tool",
-            "color": "blue",
+            "color": "tx",
             "group": "editor"
           },
           {
             "id": "repo",
             "label": "code",
             "kind": "repo",
-            "color": "purple",
+            "color": "tx",
             "group": "editor"
           },
           {
@@ -68,17 +68,20 @@
           {
             "from": "ivan",
             "to": "vscode",
-            "label": "types"
+            "label": "types",
+            "color": "tx2"
           },
           {
             "from": "vscode",
-            "to": "repo"
+            "to": "repo",
+            "color": "tx3"
           },
           {
             "from": "ivan",
             "to": "browser",
             "style": "dashed",
-            "label": "searches"
+            "label": "searches",
+            "color": "tx2"
           }
         ]
       }
@@ -95,7 +98,7 @@
             "label": "ChatGPT",
             "sublabel": "questions",
             "kind": "chat",
-            "color": "green",
+            "color": "tx2",
             "group": "questions"
           }
         },
@@ -105,7 +108,8 @@
             "from": "ivan",
             "to": "chatgpt",
             "style": "dashed",
-            "label": "asks"
+            "label": "asks",
+            "color": "tx2"
           }
         }
       ]
@@ -121,7 +125,7 @@
             "from": "chatgpt",
             "to": "vscode",
             "style": "flow",
-            "color": "green",
+            "color": "tx3",
             "label": "paste code"
           }
         },
@@ -131,7 +135,7 @@
             "from": "vscode",
             "to": "chatgpt",
             "style": "flow",
-            "color": "green",
+            "color": "tx3",
             "label": "paste errors"
           }
         },
@@ -154,7 +158,7 @@
             "label": "Phind",
             "sublabel": "code search",
             "kind": "chat",
-            "color": "green",
+            "color": "tx2",
             "group": "questions",
             "state": "pending"
           }
@@ -166,7 +170,7 @@
             "label": "Perplexity",
             "sublabel": "answers · sources",
             "kind": "chat",
-            "color": "green",
+            "color": "tx2",
             "group": "questions",
             "state": "pending"
           }
@@ -177,7 +181,8 @@
             "from": "ivan",
             "to": "phind",
             "style": "dashed",
-            "state": "pending"
+            "state": "pending",
+            "color": "tx2"
           }
         },
         {
@@ -186,7 +191,8 @@
             "from": "ivan",
             "to": "perplexity",
             "style": "dashed",
-            "state": "pending"
+            "state": "pending",
+            "color": "tx2"
           }
         }
       ]
@@ -211,7 +217,7 @@
             "label": "Kagi Assistant",
             "sublabel": "questions · sources",
             "kind": "chat",
-            "color": "green",
+            "color": "tx2",
             "group": "questions"
           }
         },
@@ -221,7 +227,8 @@
             "from": "ivan",
             "to": "kagi",
             "style": "dashed",
-            "label": "asks"
+            "label": "asks",
+            "color": "tx2"
           }
         },
         {
@@ -260,7 +267,7 @@
             "label": "Copilot",
             "sublabel": "completions",
             "kind": "agent",
-            "color": "cyan",
+            "color": "green",
             "group": "editor"
           }
         },
@@ -269,7 +276,8 @@
           "edge": {
             "from": "copilot",
             "to": "vscode",
-            "label": "ghost text"
+            "label": "ghost text",
+            "color": "tx3"
           }
         },
         {
@@ -278,7 +286,8 @@
             "from": "vscode",
             "to": "copilot",
             "style": "dashed",
-            "label": "open files"
+            "label": "open files",
+            "color": "tx3"
           }
         }
       ]
@@ -293,7 +302,7 @@
           "group": {
             "id": "local",
             "label": "Local",
-            "color": "orange",
+            "color": "tx3",
             "parent": "laptop"
           }
         },
@@ -304,7 +313,7 @@
             "label": "Ollama",
             "sublabel": "small models",
             "kind": "model",
-            "color": "orange",
+            "color": "tx2",
             "group": "local"
           }
         },
@@ -314,7 +323,8 @@
             "from": "ivan",
             "to": "ollama",
             "style": "dashed",
-            "label": "local inference"
+            "label": "local inference",
+            "color": "tx2"
           }
         }
       ]
@@ -331,7 +341,7 @@
             "label": "Harbor",
             "sublabel": "local LLM stacks",
             "kind": "tool",
-            "color": "orange",
+            "color": "tx",
             "group": "local",
             "state": "active"
           }
@@ -342,7 +352,7 @@
             "id": "webui",
             "label": "Open WebUI",
             "kind": "service",
-            "color": "orange",
+            "color": "tx2",
             "group": "local",
             "size": 0.85
           }
@@ -353,7 +363,7 @@
             "from": "harbor",
             "to": "ollama",
             "label": "runs",
-            "color": "orange"
+            "color": "tx3"
           }
         },
         {
@@ -361,7 +371,7 @@
           "edge": {
             "from": "harbor",
             "to": "webui",
-            "color": "orange"
+            "color": "tx3"
           }
         },
         {
@@ -383,7 +393,7 @@
             "label": "Aider",
             "sublabel": "terminal",
             "kind": "agent",
-            "color": "magenta",
+            "color": "green",
             "state": "pending"
           }
         },
@@ -393,7 +403,8 @@
             "from": "aider",
             "to": "repo",
             "style": "dashed",
-            "state": "pending"
+            "state": "pending",
+            "color": "tx3"
           }
         },
         {
@@ -403,7 +414,8 @@
             "to": "ollama",
             "style": "dashed",
             "state": "pending",
-            "label": "local"
+            "label": "local",
+            "color": "tx3"
           }
         }
       ]
@@ -426,7 +438,7 @@
             "label": "Roo Code",
             "sublabel": "extension",
             "kind": "agent",
-            "color": "magenta",
+            "color": "green",
             "group": "editor",
             "state": "pending"
           }
@@ -437,7 +449,8 @@
             "from": "roo",
             "to": "repo",
             "style": "dashed",
-            "state": "pending"
+            "state": "pending",
+            "color": "tx3"
           }
         }
       ]
@@ -464,7 +477,7 @@
             "label": "claude.ai",
             "sublabel": "copy-paste prompts",
             "kind": "chat",
-            "color": "cyan",
+            "color": "tx2",
             "group": "questions",
             "state": "active"
           }
@@ -474,7 +487,8 @@
           "edge": {
             "from": "ivan",
             "to": "claude-ai",
-            "label": "prompts"
+            "label": "prompts",
+            "color": "tx2"
           }
         },
         {
@@ -483,7 +497,7 @@
             "from": "claude-ai",
             "to": "vscode",
             "style": "flow",
-            "color": "cyan",
+            "color": "tx3",
             "label": "paste"
           }
         },
@@ -493,7 +507,7 @@
             "from": "vscode",
             "to": "claude-ai",
             "style": "flow",
-            "color": "cyan",
+            "color": "tx3",
             "label": "files"
           }
         }
@@ -520,7 +534,8 @@
             "from": "copilot",
             "to": "repo",
             "label": "reads",
-            "style": "dashed"
+            "style": "dashed",
+            "color": "tx3"
           }
         },
         {
@@ -623,7 +638,8 @@
           "edge": {
             "from": "ivan",
             "to": "rustdesk",
-            "label": "from anywhere"
+            "label": "from anywhere",
+            "color": "tx2"
           }
         },
         {
@@ -631,7 +647,8 @@
           "edge": {
             "from": "rustdesk",
             "to": "vscode",
-            "style": "dashed"
+            "style": "dashed",
+            "color": "tx3"
           }
         }
       ]
@@ -646,7 +663,7 @@
           "group": {
             "id": "lifeos",
             "label": "lifeos",
-            "color": "yellow",
+            "color": "tx3",
             "x": 48,
             "y": 87
           }
@@ -663,7 +680,7 @@
             "id": "lifeos-repo",
             "label": "lifeos",
             "kind": "repo",
-            "color": "yellow",
+            "color": "tx",
             "group": "lifeos"
           }
         },
@@ -673,7 +690,7 @@
             "id": "skills",
             "label": "skills",
             "kind": "skill",
-            "color": "yellow",
+            "color": "tx",
             "group": "lifeos"
           }
         },
@@ -684,7 +701,7 @@
             "label": "agents",
             "sublabel": "personas",
             "kind": "agent",
-            "color": "yellow",
+            "color": "tx2",
             "group": "lifeos"
           }
         },
@@ -694,7 +711,7 @@
             "id": "notes",
             "label": "notes",
             "kind": "tool",
-            "color": "yellow",
+            "color": "tx2",
             "group": "lifeos",
             "size": 0.85
           }
@@ -705,7 +722,7 @@
             "from": "skills",
             "to": "copilot",
             "style": "flow",
-            "color": "yellow",
+            "color": "tx2",
             "label": "loads"
           }
         },
@@ -714,7 +731,8 @@
           "edge": {
             "from": "ivan",
             "to": "lifeos-repo",
-            "style": "dashed"
+            "style": "dashed",
+            "color": "tx2"
           }
         }
       ]
@@ -731,7 +749,7 @@
             "label": "RUG",
             "sublabel": "orchestrator",
             "kind": "agent",
-            "color": "red",
+            "color": "green",
             "group": "editor",
             "state": "active"
           }
@@ -742,7 +760,7 @@
             "id": "swe",
             "label": "SWE",
             "kind": "agent",
-            "color": "red",
+            "color": "green",
             "group": "editor",
             "size": 0.75
           }
@@ -753,7 +771,7 @@
             "id": "qa",
             "label": "QA",
             "kind": "agent",
-            "color": "red",
+            "color": "green",
             "group": "editor",
             "size": 0.75
           }
@@ -764,7 +782,7 @@
             "from": "rug",
             "to": "copilot",
             "label": "drives",
-            "color": "red"
+            "color": "green"
           }
         },
         {
@@ -773,7 +791,7 @@
             "from": "rug",
             "to": "swe",
             "style": "dashed",
-            "color": "red"
+            "color": "green"
           }
         },
         {
@@ -782,7 +800,7 @@
             "from": "rug",
             "to": "qa",
             "style": "dashed",
-            "color": "red"
+            "color": "green"
           }
         },
         {
@@ -791,7 +809,7 @@
             "from": "agents",
             "to": "rug",
             "style": "flow",
-            "color": "yellow"
+            "color": "tx3"
           }
         },
         {
@@ -813,7 +831,7 @@
             "label": "DRUG",
             "sublabel": "milestone level",
             "kind": "agent",
-            "color": "red",
+            "color": "green",
             "group": "editor",
             "state": "active",
             "size": 1.15
@@ -825,7 +843,7 @@
             "from": "drug",
             "to": "rug",
             "label": "launches",
-            "color": "red"
+            "color": "green"
           }
         },
         {
@@ -921,7 +939,7 @@
             "label": "Claude Code",
             "sublabel": "sub + extension",
             "kind": "agent",
-            "color": "cyan",
+            "color": "green",
             "group": "editor",
             "state": "active",
             "size": 1.3
@@ -932,7 +950,8 @@
           "edge": {
             "from": "claude-code",
             "to": "repo",
-            "label": "edits"
+            "label": "edits",
+            "color": "tx3"
           }
         },
         {
@@ -940,7 +959,8 @@
           "edge": {
             "from": "ivan",
             "to": "claude-code",
-            "label": "tasks"
+            "label": "tasks",
+            "color": "tx2"
           }
         },
         {
@@ -954,7 +974,7 @@
             "from": "skills",
             "to": "claude-code",
             "style": "flow",
-            "color": "yellow"
+            "color": "tx2"
           }
         },
         {
@@ -988,7 +1008,7 @@
             "label": "mi",
             "sublabel": "minimal harness",
             "kind": "agent",
-            "color": "yellow",
+            "color": "green",
             "group": "laptop",
             "size": 0.9
           }
@@ -999,7 +1019,7 @@
             "from": "skills",
             "to": "mi",
             "style": "flow",
-            "color": "yellow"
+            "color": "tx2"
           }
         },
         {
@@ -1015,7 +1035,7 @@
             "label": "dstask",
             "sublabel": "task list",
             "kind": "tool",
-            "color": "yellow",
+            "color": "tx2",
             "group": "lifeos",
             "size": 0.85
           }
@@ -1036,7 +1056,7 @@
           "group": {
             "id": "pop-os",
             "label": "pop-os",
-            "color": "green",
+            "color": "tx2",
             "x": 86,
             "y": 12
           }
@@ -1046,7 +1066,7 @@
           "group": {
             "id": "fedora",
             "label": "fedora",
-            "color": "green",
+            "color": "tx2",
             "x": 86,
             "y": 46
           }
@@ -1079,7 +1099,7 @@
             "from": "ivan",
             "to": "opencode-pop",
             "label": "tailscale",
-            "color": "green"
+            "color": "tx2"
           }
         },
         {
@@ -1087,7 +1107,7 @@
           "edge": {
             "from": "ivan",
             "to": "opencode-fed",
-            "color": "green"
+            "color": "tx2"
           }
         },
         {
@@ -1096,7 +1116,7 @@
             "from": "agents",
             "to": "opencode-pop",
             "style": "dashed",
-            "color": "yellow"
+            "color": "tx3"
           }
         },
         {
@@ -1105,7 +1125,7 @@
             "from": "agents",
             "to": "opencode-fed",
             "style": "dashed",
-            "color": "yellow"
+            "color": "tx3"
           }
         },
         {
@@ -1114,7 +1134,7 @@
             "from": "backlog",
             "to": "opencode-fed",
             "style": "dashed",
-            "color": "yellow",
+            "color": "tx3",
             "label": "dispatch"
           }
         },
@@ -1161,7 +1181,7 @@
           "edge": {
             "from": "ivan",
             "to": "hermes",
-            "color": "green",
+            "color": "tx2",
             "label": "api"
           }
         },
@@ -1171,7 +1191,7 @@
             "from": "skills",
             "to": "hermes",
             "style": "flow",
-            "color": "yellow"
+            "color": "tx2"
           }
         },
         {
@@ -1190,7 +1210,8 @@
           "edge": {
             "from": "rustdesk",
             "to": "relay",
-            "style": "dashed"
+            "style": "dashed",
+            "color": "tx3"
           }
         }
       ]
@@ -1205,7 +1226,7 @@
           "group": {
             "id": "harnesses",
             "label": "Harnesses",
-            "color": "cyan",
+            "color": "tx3",
             "parent": "laptop",
             "x": 32,
             "y": 50
@@ -1217,7 +1238,7 @@
             "id": "cursor",
             "label": "Cursor",
             "kind": "agent",
-            "color": "cyan",
+            "color": "green",
             "group": "harnesses",
             "size": 0.9
           }
@@ -1228,7 +1249,7 @@
             "id": "droid",
             "label": "Droid",
             "kind": "agent",
-            "color": "cyan",
+            "color": "green",
             "group": "harnesses",
             "size": 0.9
           }
@@ -1240,7 +1261,7 @@
             "label": "Grok",
             "sublabel": "grokc · sandbox",
             "kind": "agent",
-            "color": "cyan",
+            "color": "green",
             "group": "harnesses",
             "size": 0.9
           }
@@ -1251,7 +1272,7 @@
             "id": "codex",
             "label": "Codex",
             "kind": "agent",
-            "color": "cyan",
+            "color": "green",
             "group": "harnesses",
             "size": 0.9
           }
@@ -1281,7 +1302,7 @@
             "from": "skills",
             "to": "cursor",
             "style": "flow",
-            "color": "yellow"
+            "color": "tx2"
           }
         },
         {
@@ -1290,7 +1311,7 @@
             "from": "skills",
             "to": "codex",
             "style": "flow",
-            "color": "yellow"
+            "color": "tx2"
           }
         },
         {
@@ -1298,7 +1319,8 @@
           "edge": {
             "from": "ivan",
             "to": "codex",
-            "label": "tasks"
+            "label": "tasks",
+            "color": "tx2"
           }
         },
         {
@@ -1306,7 +1328,8 @@
           "edge": {
             "from": "ivan",
             "to": "grok",
-            "style": "dashed"
+            "style": "dashed",
+            "color": "tx2"
           }
         },
         {
@@ -1341,7 +1364,7 @@
             "label": "tracequest",
             "sublabel": "session logs",
             "kind": "tool",
-            "color": "purple",
+            "color": "tx2",
             "group": "lifeos"
           }
         },
@@ -1352,7 +1375,7 @@
             "label": "skilled",
             "sublabel": "skill usage",
             "kind": "tool",
-            "color": "purple",
+            "color": "tx2",
             "group": "lifeos",
             "size": 0.85
           }
@@ -1363,7 +1386,7 @@
             "from": "codex",
             "to": "tracequest",
             "style": "dashed",
-            "color": "purple",
+            "color": "tx3",
             "label": "logs"
           }
         },
@@ -1373,7 +1396,7 @@
             "from": "claude-code",
             "to": "tracequest",
             "style": "dashed",
-            "color": "purple"
+            "color": "tx3"
           }
         },
         {
@@ -1382,7 +1405,7 @@
             "from": "grok",
             "to": "tracequest",
             "style": "dashed",
-            "color": "purple"
+            "color": "tx3"
           }
         },
         {
@@ -1391,7 +1414,7 @@
             "from": "skills",
             "to": "skilled",
             "style": "dashed",
-            "color": "purple"
+            "color": "tx2"
           }
         },
         {
@@ -1411,7 +1434,7 @@
           "group": {
             "id": "cloud",
             "label": "Cloud",
-            "color": "blue",
+            "color": "tx2",
             "x": 86,
             "y": 86
           }
@@ -1423,7 +1446,7 @@
             "label": "Cursor Cloud",
             "sublabel": "6h runs",
             "kind": "agent",
-            "color": "blue",
+            "color": "green",
             "group": "cloud",
             "state": "active"
           }
@@ -1433,7 +1456,8 @@
           "edge": {
             "from": "ivan",
             "to": "cursor-cloud",
-            "label": "task + duration"
+            "label": "task + duration",
+            "color": "tx2"
           }
         },
         {
@@ -1442,7 +1466,7 @@
             "from": "skills",
             "to": "cursor-cloud",
             "style": "flow",
-            "color": "yellow",
+            "color": "tx2",
             "label": "timeboxed"
           }
         },
@@ -1452,7 +1476,7 @@
             "from": "cursor-cloud",
             "to": "tracequest",
             "style": "dashed",
-            "color": "purple"
+            "color": "tx3"
           }
         }
       ]
@@ -1527,7 +1551,7 @@
             "label": "claude",
             "sublabel": "session",
             "kind": "agent",
-            "color": "cyan",
+            "color": "green",
             "group": "fedora"
           }
         },
@@ -1546,7 +1570,7 @@
             "from": "ivan",
             "to": "kandev-fed",
             "label": "tasks",
-            "color": "green"
+            "color": "tx2"
           }
         },
         {
@@ -1629,7 +1653,7 @@
           "group": {
             "id": "hetzner",
             "label": "hetzner",
-            "color": "orange",
+            "color": "tx2",
             "x": 86,
             "y": 10
           }
@@ -1639,7 +1663,7 @@
           "group": {
             "id": "av",
             "label": "sandbox-av",
-            "color": "magenta",
+            "color": "tx2",
             "x": 16,
             "y": 86
           }
@@ -1739,7 +1763,7 @@
             "from": "ivan",
             "to": "kandev-mac",
             "label": "tasks",
-            "color": "green"
+            "color": "tx2"
           }
         },
         {
@@ -1806,7 +1830,7 @@
             "label": "fleet",
             "sublabel": "CLI",
             "kind": "tool",
-            "color": "yellow",
+            "color": "tx2",
             "group": "lifeos"
           }
         },
@@ -1816,7 +1840,7 @@
             "from": "fleet",
             "to": "kandev-hz",
             "style": "dashed",
-            "color": "yellow",
+            "color": "tx3",
             "label": "doctor"
           }
         },
@@ -1826,7 +1850,7 @@
             "from": "skills",
             "to": "kandev-mac",
             "style": "flow",
-            "color": "yellow",
+            "color": "tx2",
             "label": "sync"
           }
         },
@@ -1836,7 +1860,7 @@
             "from": "skills",
             "to": "kandev-hz",
             "style": "flow",
-            "color": "yellow"
+            "color": "tx2"
           }
         },
         {
@@ -1845,7 +1869,7 @@
             "from": "skills",
             "to": "kandev-av",
             "style": "flow",
-            "color": "yellow"
+            "color": "tx2"
           }
         },
         {
@@ -1854,7 +1878,7 @@
             "from": "skills",
             "to": "kandev-fed",
             "style": "flow",
-            "color": "yellow"
+            "color": "tx2"
           }
         },
         {
@@ -1885,7 +1909,7 @@
             "label": "controller",
             "sublabel": "agent session",
             "kind": "agent",
-            "color": "red",
+            "color": "green",
             "group": "laptop",
             "state": "active",
             "size": 1.15
@@ -1897,7 +1921,7 @@
             "from": "controller",
             "to": "kandev-hz",
             "style": "dashed",
-            "color": "red",
+            "color": "green",
             "label": "collect · act"
           }
         },
@@ -1907,7 +1931,7 @@
             "from": "controller",
             "to": "kandev-av",
             "style": "dashed",
-            "color": "red"
+            "color": "green"
           }
         },
         {
@@ -1916,7 +1940,7 @@
             "from": "controller",
             "to": "kandev-fed",
             "style": "dashed",
-            "color": "red"
+            "color": "green"
           }
         },
         {
@@ -1925,7 +1949,7 @@
             "from": "fleet",
             "to": "controller",
             "style": "flow",
-            "color": "yellow"
+            "color": "tx3"
           }
         },
         {

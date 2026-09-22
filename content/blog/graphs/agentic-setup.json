@@ -22,7 +22,7 @@
             "id": "ivan",
             "label": "Ivan",
             "kind": "human",
-            "color": "yellow",
+            "color": "tx",
             "x": 14,
             "y": 50
           },
@@ -31,14 +31,14 @@
             "label": "claude",
             "sublabel": "terminal",
             "kind": "agent",
-            "color": "cyan",
+            "color": "green",
             "group": "mac"
           },
           {
             "id": "harbor",
             "label": "harbor",
             "kind": "repo",
-            "color": "purple",
+            "color": "tx",
             "group": "mac"
           }
         ],
@@ -46,12 +46,14 @@
           {
             "from": "ivan",
             "to": "agent-1",
-            "label": "prompts"
+            "label": "prompts",
+            "color": "tx2"
           },
           {
             "from": "agent-1",
             "to": "harbor",
-            "label": "edits"
+            "label": "edits",
+            "color": "tx3"
           }
         ]
       }
@@ -67,7 +69,7 @@
             "label": "codex",
             "sublabel": "terminal",
             "kind": "agent",
-            "color": "cyan",
+            "color": "green",
             "group": "mac"
           }
         },
@@ -78,7 +80,7 @@
             "label": "claude",
             "sublabel": "terminal",
             "kind": "agent",
-            "color": "cyan",
+            "color": "green",
             "group": "mac"
           }
         },
@@ -89,7 +91,7 @@
             "label": "droid",
             "sublabel": "terminal",
             "kind": "agent",
-            "color": "cyan",
+            "color": "green",
             "group": "mac"
           }
         },
@@ -99,7 +101,7 @@
             "id": "av",
             "label": "av.codes",
             "kind": "repo",
-            "color": "purple",
+            "color": "tx",
             "group": "mac"
           }
         },
@@ -109,7 +111,7 @@
             "id": "lifeos",
             "label": "lifeos",
             "kind": "repo",
-            "color": "purple",
+            "color": "tx",
             "group": "mac"
           }
         },
@@ -117,42 +119,48 @@
           "op": "add",
           "edge": {
             "from": "ivan",
-            "to": "agent-2"
+            "to": "agent-2",
+            "color": "tx2"
           }
         },
         {
           "op": "add",
           "edge": {
             "from": "ivan",
-            "to": "agent-3"
+            "to": "agent-3",
+            "color": "tx2"
           }
         },
         {
           "op": "add",
           "edge": {
             "from": "ivan",
-            "to": "agent-4"
+            "to": "agent-4",
+            "color": "tx2"
           }
         },
         {
           "op": "add",
           "edge": {
             "from": "agent-2",
-            "to": "harbor"
+            "to": "harbor",
+            "color": "tx3"
           }
         },
         {
           "op": "add",
           "edge": {
             "from": "agent-3",
-            "to": "av"
+            "to": "av",
+            "color": "tx3"
           }
         },
         {
           "op": "add",
           "edge": {
             "from": "agent-4",
-            "to": "lifeos"
+            "to": "lifeos",
+            "color": "tx3"
           }
         },
         {
@@ -177,7 +185,7 @@
           "group": {
             "id": "kandev-mac",
             "label": "Kandev",
-            "color": "green",
+            "color": "tx3",
             "parent": "mac"
           }
         },
@@ -256,7 +264,7 @@
             "from": "ivan",
             "to": "kandev-1",
             "label": "tasks",
-            "color": "green"
+            "color": "tx2"
           }
         },
         {
@@ -345,7 +353,7 @@
           "group": {
             "id": "hetzner",
             "label": "Hetzner",
-            "color": "orange",
+            "color": "tx2",
             "x": 74,
             "y": 30
           }
@@ -355,7 +363,7 @@
           "group": {
             "id": "fedora",
             "label": "Fedora",
-            "color": "blue",
+            "color": "tx2",
             "x": 74,
             "y": 74
           }
@@ -365,7 +373,7 @@
           "group": {
             "id": "sandbox",
             "label": "sandbox-av",
-            "color": "magenta",
+            "color": "tx2",
             "x": 30,
             "y": 76
           }
@@ -493,7 +501,7 @@
             "label": "claude",
             "sublabel": "gpu",
             "kind": "agent",
-            "color": "cyan",
+            "color": "green",
             "group": "fedora"
           }
         },
@@ -503,7 +511,7 @@
             "id": "llama",
             "label": "llama.cpp",
             "kind": "service",
-            "color": "blue",
+            "color": "tx2",
             "group": "fedora"
           }
         },
@@ -522,7 +530,7 @@
             "from": "agent-5",
             "to": "llama",
             "label": "models",
-            "color": "blue"
+            "color": "tx3"
           }
         },
         {
@@ -542,7 +550,7 @@
             "label": "droid",
             "sublabel": "untrusted",
             "kind": "agent",
-            "color": "magenta",
+            "color": "green",
             "group": "sandbox",
             "state": "active"
           }
@@ -573,7 +581,7 @@
             "label": "skills",
             "sublabel": "git repo",
             "kind": "skill",
-            "color": "yellow",
+            "color": "tx",
             "size": 1.15,
             "group": "mac",
             "state": "active"
@@ -584,7 +592,7 @@
           "edge": {
             "from": "skills",
             "to": "kandev-2",
-            "color": "yellow",
+            "color": "tx2",
             "style": "flow",
             "label": "sync"
           }
@@ -594,7 +602,7 @@
           "edge": {
             "from": "skills",
             "to": "kandev-3",
-            "color": "yellow",
+            "color": "tx2",
             "style": "flow"
           }
         },
@@ -603,7 +611,7 @@
           "edge": {
             "from": "skills",
             "to": "kandev-4",
-            "color": "yellow",
+            "color": "tx2",
             "style": "flow"
           }
         }
@@ -619,7 +627,7 @@
             "id": "sup-h",
             "label": "supervisor",
             "kind": "agent",
-            "color": "red",
+            "color": "green",
             "group": "hetzner",
             "state": "pending"
           }
@@ -630,7 +638,7 @@
             "id": "sup-f",
             "label": "supervisor",
             "kind": "agent",
-            "color": "red",
+            "color": "green",
             "group": "fedora",
             "state": "pending"
           }
@@ -640,7 +648,7 @@
           "edge": {
             "from": "sup-h",
             "to": "agent-1",
-            "color": "red",
+            "color": "green",
             "style": "dashed",
             "state": "pending"
           }
@@ -650,7 +658,7 @@
           "edge": {
             "from": "sup-h",
             "to": "agent-2",
-            "color": "red",
+            "color": "green",
             "style": "dashed",
             "state": "pending"
           }
@@ -660,7 +668,7 @@
           "edge": {
             "from": "sup-f",
             "to": "agent-5",
-            "color": "red",
+            "color": "green",
             "style": "dashed",
             "state": "pending"
           }
@@ -671,7 +679,7 @@
             "from": "sup-h",
             "to": "kandev-1",
             "label": "reports",
-            "color": "red",
+            "color": "green",
             "style": "dashed",
             "state": "pending"
           }
@@ -681,7 +689,7 @@
           "edge": {
             "from": "sup-f",
             "to": "kandev-1",
-            "color": "red",
+            "color": "green",
             "style": "dashed",
             "state": "pending"
           }

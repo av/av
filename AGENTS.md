@@ -143,6 +143,13 @@ Posts can embed an animated, step-by-step graph diagram (see
 3. `npm run blog:generate` validates the story (dangling ids fail the build),
    inlines the JSON plus a no-JS fallback list, and adds `src/blog/graph.ts`
    to the page. Engine code lives in `src/lib/graph/`; keep it story-agnostic.
+4. Steps may set `body` (a longer explanation, shown in scroll mode) and
+   `focus` (`'all'` or a list of ids). Focus defaults to the ids a step's ops
+   touch: the camera frames them and everything else dims.
+5. Colour on the blog is greyscale plus green — `$gs-tones` in
+   `src/graph-story.scss` collapses every accent onto three greys plus green,
+   which is reserved for agentic nodes. Prefer `green` / `tx` / `tx2` / `tx3`
+   in story data.
 
 ## TypeScript Configuration
 
