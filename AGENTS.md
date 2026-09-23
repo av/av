@@ -34,7 +34,7 @@ npm run dev                 # blog:generate, then Parcel serve (all entries)
 npm run dev:qr              # Parcel serve for QR page only
 npm run build               # blog:generate → Parcel build → copy public/ → verify:grain
 npm run verify:grain        # headless geometry gate (also runs at end of build)
-npm run record:graph        # record a blog graph story from dist/ → docs/graph-story-demo.{mp4,webm,png}
+npm run record:graph        # record a blog graph story from dist/ → docs/graph-story-tooling.{mp4,webm,png}
 npm run deploy              # rm dist/, npm run build, vercel --prod
 npm run cache:bust          # rm -rf .parcel-cache
 npm test                    # node:test suites: blog decor frontmatter, graph story validation + layout

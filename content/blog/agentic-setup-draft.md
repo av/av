@@ -13,14 +13,8 @@ decor:
   color: green
 ---
 
-*Draft. The prose between the diagrams is placeholder; the diagram sequence is the real story.*
+*Draft. The prose around the diagram is placeholder; the diagram sequence is the real story.*
 
 Every write-up of an agent setup shows the final picture. The final picture is the least interesting part. What matters is the order in which the pieces arrived and what each one fixed, so this post is told as one diagram that changes as you scroll. Four years, one graph: tools appear, get tried and dropped, move between machines, and the loop that started in my hands ends up in a fleet.
 
 <div class="graph-story" data-graph="tooling-history" data-trigger="scroll"></div>
-
-## The fleet, in short
-
-The last few steps again, as a clickable recap of the current setup.
-
-<div class="graph-story" data-graph="agentic-setup" data-trigger="click"></div>

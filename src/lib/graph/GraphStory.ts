@@ -69,7 +69,6 @@ export default class GraphStory {
 
   private figure!: HTMLElement;
   private chromeTitle!: HTMLElement;
-  private chromeCounter!: HTMLElement;
   private panels: HTMLElement[] = [];
   private panelTops: number[] = [];
   private title!: HTMLElement;
@@ -346,8 +345,7 @@ export default class GraphStory {
     const screen = el('div', 'graph-story__screen');
     const chrome = el('div', 'graph-story__chrome');
     this.chromeTitle = el('span', 'graph-story__chrome-title');
-    this.chromeCounter = el('span', 'graph-story__chrome-counter');
-    chrome.append(this.chromeTitle, this.chromeCounter);
+    chrome.append(this.chromeTitle);
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('class', 'graph-story__svg');
@@ -373,8 +371,8 @@ export default class GraphStory {
     figcaption.append(this.title, this.caption);
 
     const nav = el('div', 'graph-story__nav');
-    this.prevButton = button('graph-story__button graph-story__button--prev', 'Previous step', '←');
-    this.nextButton = button('graph-story__button graph-story__button--next', 'Next step', '→');
+    this.prevButton = button('graph-story__button graph-story__button--prev', 'Previous step', '<');
+    this.nextButton = button('graph-story__button graph-story__button--next', 'Next step', '>');
     const dots = el('div', 'graph-story__dots');
     this.dots = this.steps.map((step, i) => {
       const dot = button('graph-story__dot', `Step ${i + 1}${step.title ? `: ${step.title}` : ''}`, '');
@@ -389,7 +387,9 @@ export default class GraphStory {
       nav.append(this.playButton);
     }
 
-    this.figure.append(figcaption, nav);
+    // The stepper is the screen's status bar, the counterpart of its title bar.
+    screen.append(nav);
+    this.figure.append(figcaption);
 
     if (this.trigger === 'scroll') {
       // Full-screen scrollytelling: one explanation panel per step scrolls
@@ -526,13 +526,14 @@ export default class GraphStory {
     const step = this.steps[this.index];
     this.title.textContent = step.title;
     this.caption.innerHTML = step.caption;
-    this.counter.textContent = `${this.index + 1} / ${this.steps.length}`;
+    const width = String(this.steps.length).length;
+    this.counter.textContent = `${String(this.index + 1).padStart(width, '0')}/${this.steps.length}`;
     this.chromeTitle.textContent = step.title;
-    this.chromeCounter.textContent = `${this.index + 1}/${this.steps.length}`;
     this.prevButton.disabled = this.index === 0;
     this.nextButton.disabled = this.index === this.steps.length - 1;
     this.dots.forEach((dot, i) => {
       dot.classList.toggle('is-active', i === this.index);
+      dot.classList.toggle('is-done', i < this.index);
       dot.setAttribute('aria-current', i === this.index ? 'step' : 'false');
     });
     this.panels.forEach((panel, i) => panel.classList.toggle('is-active', i === this.index));

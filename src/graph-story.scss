@@ -23,6 +23,8 @@ $gs-tones: (
 );
 $gs-pixel: 'Geist Pixel', 'Geist Mono', ui-monospace, monospace;
 $gs-chrome: 22px;
+// The stepper is the screen's bottom bar, the counterpart of the title bar.
+$gs-status: 28px;
 
 .graph-story {
   --gs-accent: var(--fx-tx2);
@@ -72,6 +74,7 @@ $gs-chrome: 22px;
   position: relative;
   width: 100%;
   height: 100%;
+  padding-bottom: $gs-status;
   border: 1px solid var(--fx-border);
   border-radius: 0.15rem;
   background: var(--fx-bg);
@@ -118,15 +121,6 @@ $gs-chrome: 22px;
   &::before {
     content: '> ';
     color: var(--fx-green);
-  }
-}
-
-.graph-story__chrome-counter {
-  flex: none;
-
-  // The nav already carries the counter on a phone; one is enough.
-  @include media(lt-md) {
-    display: none;
   }
 }
 
@@ -200,104 +194,130 @@ $gs-chrome: 22px;
 }
 
 .graph-story__nav {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  height: $gs-status;
   display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.35rem 0.75rem 0.7rem;
+  align-items: stretch;
+  border-top: 1px solid var(--fx-ui);
+  background: var(--fx-bg2);
+  font-family: $gs-pixel;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--fx-tx3);
 }
 
+// Square keys with hard edges, like a TUI's function keys.
 .graph-story__button {
-  display: inline-grid;
+  flex: none;
+  display: grid;
   place-items: center;
-  width: 1.8rem;
-  height: 1.8rem;
-  border: 1px solid var(--fx-border);
-  border-radius: 999px;
-  background: var(--fx-bg);
-  color: var(--fx-tx);
+  width: $gs-status + 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--fx-tx2);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: 13px;
+  line-height: 1;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
-
-  &:hover,
-  &:focus,
-  &:active {
-    background: var(--fx-bg);
-    outline: 0;
-  }
 
   &:hover:not(:disabled),
   &:focus-visible {
-    border-color: var(--fx-tx2);
+    background: var(--fx-ui);
+    color: var(--fx-tx);
+    outline: 0;
+  }
+
+  &:active:not(:disabled) {
+    background: var(--fx-green);
+    color: var(--fx-bg);
   }
 
   &:disabled {
-    opacity: 0.35;
+    color: var(--fx-ui);
     cursor: default;
   }
 }
 
-.graph-story__button--play {
-  margin-left: auto;
+.graph-story__button--prev {
+  border-right: 1px solid var(--fx-ui);
+}
 
+.graph-story__button--next,
+.graph-story__button--play {
+  border-left: 1px solid var(--fx-ui);
+}
+
+.graph-story__button--play {
   &::before {
     content: '';
     display: block;
     width: 0;
     height: 0;
-    margin-left: 2px;
     border-style: solid;
-    border-width: 5px 0 5px 8px;
+    border-width: 4px 0 4px 7px;
     border-color: transparent transparent transparent currentColor;
   }
 
   &.is-playing::before {
-    width: 8px;
-    height: 10px;
-    margin-left: 0;
-    border-width: 0 3px;
+    width: 7px;
+    height: 8px;
+    border-width: 0 2px;
     border-color: currentColor;
   }
 }
 
+// One block per step: the story reads as a progress bar you can click into.
 .graph-story__dots {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
-  gap: 0.35rem;
+  align-items: center;
+  gap: 2px;
+  padding: 0 0.6rem;
 }
 
 .graph-story__dot {
-  width: 0.5rem;
-  height: 0.5rem;
+  flex: 1 1 0;
+  min-width: 2px;
+  max-width: 1.25rem;
+  height: 10px;
   padding: 0;
   border: 0;
-  border-radius: 999px;
-  background: var(--fx-border);
+  border-radius: 0;
+  background: var(--fx-ui);
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease;
+
+  &.is-done {
+    background: var(--fx-tx3);
+  }
 
   &:hover,
-  &:focus,
-  &:active {
+  &:focus-visible {
     background: var(--fx-tx2);
+    outline: 0;
   }
 
   &.is-active,
   &.is-active:hover {
-    background: var(--fx-tx);
-    transform: scale(1.3);
-  }
-
-  &:focus-visible {
-    outline: 1px solid var(--fx-tx2);
-    outline-offset: 2px;
+    background: var(--fx-green);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--fx-green) 55%, transparent);
   }
 }
 
 .graph-story__counter {
-  font-family: 'Geist Pixel', ui-monospace, monospace;
-  font-size: 0.7rem;
-  color: var(--fx-tx3);
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding: 0 0.6rem;
+  border-left: 1px solid var(--fx-ui);
+  color: var(--fx-tx2);
+  font-variant-numeric: tabular-nums;
 }
 
 // Pre-hydration fallback: a plain list of the steps.
@@ -341,14 +361,14 @@ $gs-chrome: 22px;
     flex: 1 1 auto;
     min-height: 0;
     display: flex;
-    padding: 1.5rem 36% 3.5rem 1.5rem;
+    padding: 1.5rem 36% 1.5rem 1.5rem;
 
     @media screen and (max-width: 1400px) {
-      padding: 1.25rem 30% 3.25rem 1rem;
+      padding: 1.25rem 30% 1.25rem 1rem;
     }
 
     @include media(lt-md) {
-      padding: 2.5rem 0.25rem 0;
+      padding: 0.5rem 0.25rem 0;
       flex: 0 0 66vh;
     }
   }
@@ -359,29 +379,11 @@ $gs-chrome: 22px;
     top: $gs-chrome;
     left: 0;
     width: 100%;
-    height: calc(100% - #{$gs-chrome});
+    height: calc(100% - #{$gs-chrome} - #{$gs-status});
   }
 
   .graph-story__caption {
     display: none;
-  }
-
-  .graph-story__nav {
-    position: absolute;
-    left: 2rem;
-    bottom: 1.25rem;
-    padding: 0;
-
-    @include media(lt-md) {
-      left: auto;
-      right: 1rem;
-      top: 0.75rem;
-      bottom: auto;
-
-      .graph-story__dots {
-        display: none;
-      }
-    }
   }
 
   .graph-story__panels {

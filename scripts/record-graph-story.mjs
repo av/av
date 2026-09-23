@@ -2,7 +2,7 @@
 /**
  * Records a graph story from the built site playing through all its steps.
  *
- * Usage: node scripts/record-graph-story.mjs [/blog/agentic-setup/index.html] [docs/graph-story-demo] [story index on page]
+ * Usage: node scripts/record-graph-story.mjs [/blog/agentic-setup/index.html] [docs/graph-story-tooling] [story index on page]
  *
  * Requires `npm run build` first (dist/ and the Playwright install that
  * verify:grain bootstraps into scripts/.verify-deps). Needs ffmpeg on PATH.
@@ -22,7 +22,7 @@ const DEPS = join(SCRIPT_DIR, '.verify-deps');
 
 const PAGE = process.argv[2] ?? '/blog/agentic-setup/index.html';
 const STORY_INDEX = Number(process.argv[4] ?? 0);
-const OUT = join(ROOT, process.argv[3] ?? 'docs/graph-story-demo');
+const OUT = join(ROOT, process.argv[3] ?? 'docs/graph-story-tooling');
 const VIEWPORT = { width: 960, height: 800 };
 const STEP_HOLD_MS = 2400;
 /** Poster frame is taken this far into the story. */
