@@ -6,8 +6,8 @@
   "steps": [
     {
       "title": "Manual coding",
-      "caption": "2022. One computer, one editor, one repository, and a browser tab for the docs. Nothing in the loop but me.",
-      "body": "Every line typed by hand. The rhythm was read the docs, write the code, run it, read the error, search for it. The browser was already part of the workflow, just not a collaborator.",
+      "caption": "In 2022 the whole setup fit on one laptop: an editor, a repository and a browser tab open to the documentation. Every line of code went through my hands.",
+      "body": "The routine was old and familiar. I read the docs, wrote the code, ran it and searched for whatever error came back. The browser was already part of the work, though nobody would have called it a collaborator.",
       "state": {
         "groups": [
           {
@@ -88,8 +88,8 @@
     },
     {
       "title": "ChatGPT arrives",
-      "caption": "Late 2022. ChatGPT joins the browser for questions from time to time. Same tab bar, a different kind of answer.",
-      "body": "At first it was a better search box: explain this error, what does this API do, write a regex. The answer still had to be read, judged, and typed over by hand.",
+      "caption": "ChatGPT showed up late that year, in the same tab bar as everything else. It took the occasional question, and its answers came in a different register.",
+      "body": "At first I used it as a better search box, for explaining an error, describing an API or writing a regex. Whatever it said still had to be read, weighed and retyped by hand.",
       "ops": [
         {
           "op": "add",
@@ -116,8 +116,8 @@
     },
     {
       "title": "The clipboard loop",
-      "caption": "Code goes from chat to editor and back. Paste the function in, paste the error out, repeat until it runs.",
-      "body": "This was the first real workflow change: the chat became a second editor without a file system. Every round trip was manual, and context was whatever fit in the paste.",
+      "caption": "Soon code was traveling between the chat and the editor. I pasted a function in, pasted the error back out and kept going until something ran.",
+      "body": "It was the first real change in how I worked. The chat became a second editor, one without access to any files, and every round trip was manual. The model knew only what I had thought to paste.",
       "ops": [
         {
           "op": "add",
@@ -148,8 +148,8 @@
     },
     {
       "title": "Phind and Perplexity",
-      "caption": "Search engines that answer: Phind for code, Perplexity for everything else. Free tiers only, for a while.",
-      "body": "They were better at citing than ChatGPT and worse at conversation. Good enough to try, not good enough to pay for.",
+      "caption": "Next came search engines that answered instead of listing links: Phind for code, Perplexity for the rest. I stayed on their free tiers.",
+      "body": "Both cited their sources more carefully than ChatGPT did, and both were worse at holding a conversation. They were good enough to try and not quite good enough to pay for.",
       "ops": [
         {
           "op": "add",
@@ -199,8 +199,8 @@
     },
     {
       "title": "Kagi Assistant",
-      "caption": "Kagi Assistant takes over the question traffic. Answers come with sources, and it lives where search already was. Phind and Perplexity go.",
-      "body": "Search and answer merged into one place. The browser stopped being a separate step; asking and searching became the same motion.",
+      "caption": "Kagi Assistant eventually took over the questions. Its answers came with sources and it sat where I already searched, so Phind and Perplexity fell away.",
+      "body": "Searching and asking became a single gesture. The browser stopped being a separate stop on the way to an answer.",
       "ops": [
         {
           "op": "remove",
@@ -241,8 +241,8 @@
     },
     {
       "title": "ChatGPT dropped",
-      "caption": "With Kagi answering the same questions, ChatGPT goes. The clipboard loop goes with it, for now.",
-      "body": "One tool fewer. The copy-paste habit did not disappear, it just waited for a better model to come back to.",
+      "caption": "With Kagi handling the same questions, I let ChatGPT go, and the clipboard loop went with it, at least for a while.",
+      "body": "It left one less tool to keep track of. The copy-and-paste habit hadn't died, though. It was waiting for a model good enough to bring it back.",
       "ops": [
         {
           "op": "remove",
@@ -257,8 +257,8 @@
     },
     {
       "title": "Copilot completions",
-      "caption": "2023. GitHub Copilot in VS Code. Ghost text finishes the line, sometimes the function. The first assistant inside the editor.",
-      "body": "Completions changed the unit of work from a line to a sketch: write the signature and a comment, accept or reject what appears. No prompts, no copy-paste, just typing with a faster echo.",
+      "caption": "In 2023 GitHub Copilot arrived inside VS Code. Gray ghost text finished my lines and sometimes whole functions, the first assistant that lived in the editor itself.",
+      "body": "Completions shifted the unit of work from a line to a sketch. I would write a signature and a comment, then accept or reject what appeared. There were no prompts and no pasting, only typing with a faster echo.",
       "ops": [
         {
           "op": "add",
@@ -294,8 +294,8 @@
     },
     {
       "title": "Ollama: local models",
-      "caption": "2024. Ollama runs small models on the laptop. Local inference for anything that should not leave the machine, and for curiosity.",
-      "body": "Local models were slower and dumber, but always on and free. They became the playground for prompts, evals and tooling experiments.",
+      "caption": "By 2024 I was running small models on the laptop with Ollama, for work that shouldn't leave the machine and, honestly, out of curiosity.",
+      "body": "Local models were slower and less capable, but they were always on and cost nothing. They became my playground for prompts, evaluations and tooling experiments.",
       "ops": [
         {
           "op": "add",
@@ -331,8 +331,8 @@
     },
     {
       "title": "Harbor",
-      "caption": "The local stack grows into Harbor: one command for backends, UIs and services. It becomes a project of its own. OpenRouter comes in right after, for one-off tests and small API jobs.",
-      "body": "Managing the local zoo by hand stopped scaling, so the tooling became a product: Harbor spins up the whole stack, pre-configured. Later it collected a few thousand stars.",
+      "caption": "The local setup grew into Harbor, a single command that brings up backends, interfaces and services, and it became a project in its own right. OpenRouter followed soon after, for one-off tests and small jobs through an API.",
+      "body": "Tending that zoo of local services by hand had stopped scaling, so I turned the tooling into a product that starts the whole stack preconfigured. It later collected a few thousand stars.",
       "ops": [
         {
           "op": "add",
@@ -403,8 +403,8 @@
     },
     {
       "title": "Aider",
-      "caption": "Tried Aider in the terminal, pointed at the repo and at local models. It never stuck.",
-      "body": "The first real coding agent I ran: it edited files directly. But the loop lived outside the editor, and the diffs it produced needed as much review as writing them.",
+      "caption": "I tried Aider in the terminal, pointed at the repository and at local models. It never quite stuck.",
+      "body": "It was the first real coding agent I ran, and it edited files directly. But the loop lived outside the editor, and reviewing its diffs took about as long as writing the code myself.",
       "ops": [
         {
           "op": "add",
@@ -442,8 +442,8 @@
     },
     {
       "title": "Roo Code",
-      "caption": "Tried Roo Code, as it was named then, inside VS Code. It did not attach either.",
-      "body": "Same idea, inside the editor: an agent proposing edits with a chat panel. The tooling was ahead of the models that were affordable to run through it.",
+      "caption": "Roo Code, as it was called then, brought the same idea inside VS Code. It didn't take hold either.",
+      "body": "An agent proposed edits from a chat panel next to the code. The tools had simply gotten ahead of the models I could afford to run through them.",
       "ops": [
         {
           "op": "set",
@@ -477,8 +477,8 @@
     },
     {
       "title": "claude.ai and the clipboard, again",
-      "caption": "2025. claude.ai for bigger tasks by copy-pasting prompts and files. The clipboard loop returns with a stronger model.",
-      "body": "Whole files went in, whole files came out. It worked well enough to be worth the friction, which is exactly the signal that the friction should be automated.",
+      "caption": "In 2025 the clipboard loop came back, this time with claude.ai and a stronger model. For the larger tasks I pasted in prompts and whole files.",
+      "body": "Entire files went in and entire files came out. It worked well enough to justify the friction, which is usually the sign that the friction should be automated.",
       "ops": [
         {
           "op": "remove",
@@ -535,8 +535,8 @@
     },
     {
       "title": "Copilot ask chat",
-      "caption": "Copilot adds ask chat. Codebase questions move from the browser into the editor, with the open files as context.",
-      "body": "Questions about my own code no longer needed a paste. The browser chats kept the general questions; the editor got the specific ones.",
+      "caption": "Copilot added a chat for asking questions, and questions about my own code moved from the browser into the editor, where the open files served as context.",
+      "body": "I no longer had to paste anything to ask about my own project. General questions stayed in the browser; specific ones moved next to the code.",
       "ops": [
         {
           "op": "remove",
@@ -577,8 +577,8 @@
     },
     {
       "title": "Copilot agent mode",
-      "caption": "Copilot agent mode: function and module level changes, reviewed in the diff view. The editor is now where the work happens.",
-      "body": "The first time an agent edited across files inside the editor and I reviewed rather than typed. The clipboard loop finally went quiet.",
+      "caption": "Copilot's agent mode could change whole functions and modules, and I reviewed its work in the diff view. The editor became the place where the work happened.",
+      "body": "For the first time, an agent edited across files inside the editor while I reviewed instead of typing. The clipboard finally went quiet.",
       "ops": [
         {
           "op": "set",
@@ -620,8 +620,8 @@
     },
     {
       "title": "RustDesk",
-      "caption": "RustDesk on the phone, pointed at the laptop. Not one app but the whole desktop: the editor, the terminal, whatever was running.",
-      "body": "The moment the machine was reachable from the phone, the question changed from which tool to which machine. Long runs could keep going while I was away from the desk. It was the first of several ways into the setup from the phone.",
+      "caption": "RustDesk put the laptop on my phone, and not just one app but the whole desktop: the editor, the terminal, whatever happened to be running.",
+      "body": "Once the machine was reachable from my pocket, the question shifted from which tool to use to which machine to reach. Long runs could continue while I was away from the desk. It was the first of several ways into the setup from the phone.",
       "ops": [
         {
           "op": "set",
@@ -684,8 +684,8 @@
     },
     {
       "title": "Three windows at once",
-      "caption": "Three VS Code windows side by side, each with Copilot agent on a different project. The way to run more work was to open another editor.",
-      "body": "Parallelism meant windows. Each instance had its own agent, its own repo and its own quota, and keeping track of which one needed attention was the job.",
+      "caption": "Soon I had three VS Code windows open side by side, each with a Copilot agent working on a different project. Doing more work meant opening another editor.",
+      "body": "Parallelism, at that stage, meant windows. Each one had its own agent, its own repository and its own quota, and my job was mostly noticing which one needed me.",
       "ops": [
         {
           "op": "set",
@@ -833,8 +833,8 @@
     },
     {
       "title": "A devbox for inference",
-      "caption": "A Strix Halo devbox joins the home network for inference and homelab services. Harbor and its stack move off the laptop.",
-      "body": "The laptop went back to being a laptop. Models, UIs and the rest of the homelab run on a box that is always on and has the memory for bigger models.",
+      "caption": "A Strix Halo devbox joined the home network to handle inference and the rest of the homelab, and Harbor and its stack moved off the laptop.",
+      "body": "The laptop went back to being a laptop. Models, interfaces and other services now ran on a box that is always on and has the memory for larger models.",
       "ops": [
         {
           "op": "add",
@@ -858,8 +858,8 @@
     },
     {
       "title": "Tailscale",
-      "caption": "Tailscale on the home network. The phone reaches the laptop and the devbox from anywhere, and their web UIs open in the phone's browser.",
-      "body": "No ports opened, no VPN to babysit: every machine joins one private network, and the phone is just another node on it.",
+      "caption": "Tailscale went onto the home network, and the phone could reach the laptop and the devbox from anywhere. Their web interfaces opened in the phone's browser.",
+      "body": "There were no ports to open and no VPN to babysit. Every machine joined one private network, and the phone became just another node on it.",
       "ops": [
         {
           "op": "add",
@@ -914,8 +914,8 @@
     },
     {
       "title": "Haven and Zellij",
-      "caption": "A terminal on the phone: Termius first, then Haven, a far better SSH client. After trying most multiplexers, Zellij stuck, because its controls are on screen for when I forget them.",
-      "body": "SSH from the phone into a session that outlives the connection. Whatever was running on the devbox is still there after the train goes through a tunnel.",
+      "caption": "I wanted a real terminal on the phone. Termius came first, then Haven, a much better SSH client. Of the many multiplexers I tried, Zellij stuck, because its controls stay on screen for the moments I forget them, which is most of them.",
+      "body": "SSH from the phone lands in a session that outlives the connection. Whatever was running on the devbox is still there after the train comes out of the tunnel.",
       "ops": [
         {
           "op": "add",
@@ -952,8 +952,8 @@
     },
     {
       "title": "lifeos",
-      "caption": "December 2025. lifeos starts as the host for skills, agent personas, notes and infrastructure. One repo the agents can read, on the devbox.",
-      "body": "Everything an agent needed to know about me and my projects was scattered. lifeos put it in one place: notes, a task list, agent definitions, and later the machines themselves.",
+      "caption": "In December 2025 I started lifeos, a single repository on the devbox for skills, agent personas, notes and infrastructure. The idea was to give the agents one place to read.",
+      "body": "Everything an agent needed to know about me and my projects had been scattered. lifeos gathered it: notes, a task list, agent definitions and, later, the machines themselves.",
       "ops": [
         {
           "op": "add",
@@ -1035,8 +1035,8 @@
     },
     {
       "title": "RUG: Repeat Until Good",
-      "caption": "A custom multi-layer agent system for Copilot. RUG is a pure orchestrator: it never edits, it launches SWE and QA subagents until the check passes.",
-      "body": "The rule was strict: the orchestrator may only delegate and track todos. Fresh subagent contexts did the work, so the manager never got dumber as the session grew.",
+      "caption": "RUG, short for Repeat Until Good, was a layered agent system I built for Copilot. The orchestrator never edited code itself; it launched SWE and QA subagents until the checks passed.",
+      "body": "The rule was strict: the orchestrator could only delegate and keep the to-do list. Fresh subagents did the actual work, so the manager's judgment didn't degrade as the session grew longer.",
       "ops": [
         {
           "op": "add",
@@ -1117,8 +1117,8 @@
     },
     {
       "title": "DRUG: Develop, Run, Until Good",
-      "caption": "An extra layer on top of RUG at milestone level. DRUG expands a spec into milestones and launches a RUG per milestone.",
-      "body": "Three levels: DRUG decides what to build and in what order, RUG decomposes a milestone into features, SWE and QA do the work. It was a workflow engine with a model at each node.",
+      "caption": "DRUG, for Develop, Run, Until Good, added a layer above RUG. It broke a specification into milestones and started a RUG for each one.",
+      "body": "That made three levels. DRUG decided what to build and in what order, RUG split each milestone into features, and SWE and QA agents did the work. It was, in effect, a workflow engine with a model at every node.",
       "ops": [
         {
           "op": "add",
@@ -1156,8 +1156,8 @@
     },
     {
       "title": "VS Code limits",
-      "caption": "The VS Code limits become tight: quotas, context, one window at a time, and an orchestrator that cannot leave the editor.",
-      "body": "The whole system lived inside one editor process on one machine. When the quota ran out or the window closed, everything stopped.",
+      "caption": "Then the limits of VS Code began to pinch: quotas, context size, one window at a time and an orchestrator that couldn't leave the editor.",
+      "body": "The whole system lived inside a single editor process on a single machine. When the quota ran out or the window closed, everything stopped.",
       "ops": [
         {
           "op": "set",
@@ -1239,8 +1239,8 @@
     },
     {
       "title": "Claude Code",
-      "caption": "Early 2026. A Claude Code subscription plus the VS Code extension. The agent stops being a feature of the editor.",
-      "body": "Claude Code ran in a terminal with the repo as its world. The editor became a diff viewer. RUG and DRUG were retired: the model could plan and delegate on its own.",
+      "caption": "In early 2026 I took out a Claude Code subscription and added its VS Code extension. The agent stopped being a feature of the editor.",
+      "body": "Claude Code worked from a terminal with the repository as its world, and the editor became a place to read diffs. I retired RUG and DRUG, because the model could now plan and delegate on its own.",
       "ops": [
         {
           "op": "remove",
@@ -1366,8 +1366,8 @@
     },
     {
       "title": "mi and the skills repo",
-      "caption": "March 2026. mi, a minimal self-extending harness running mostly on local models, and a skills repo that any harness can load. Skills become the unit of reuse.",
-      "body": "Instead of teaching each tool separately, the know-how moved into skills: discipline, bugbash, integration testing, ideate. mi was the smallest harness that could load them.",
+      "caption": "In March 2026 I built mi, a minimal harness that extends itself and mostly runs on local models, alongside a skills repository any harness can load. Skills became the unit of reuse.",
+      "body": "Instead of teaching each tool separately, I wrote the know-how down as skills: discipline, bugbash, integration testing, ideate. mi was the smallest harness that could load them.",
       "ops": [
         {
           "op": "add",
@@ -1426,8 +1426,8 @@
     },
     {
       "title": "control/: a persistent daemon",
-      "caption": "March 2026. lifeos grows a control module: an OpenCode daemon over Tailscale on pop-os and fedora, with custom agents and a task list it can pick from.",
-      "body": "Agents no longer needed the laptop awake. A systemd service on two Linux boxes ran OpenCode with the LHE, BUILDER, CRITIC and PLANNER personas, dispatching tasks from dstask.",
+      "caption": "That same month lifeos grew a control module: an OpenCode daemon on pop-os and fedora, reachable over Tailscale, with custom agents and a task list to pick from.",
+      "body": "Agents no longer needed the laptop to be awake. A systemd service on two Linux machines ran OpenCode with four personas, LHE, BUILDER, CRITIC and PLANNER, and took its tasks from dstask.",
       "ops": [
         {
           "op": "add",
@@ -1539,8 +1539,8 @@
     },
     {
       "title": "Hermes gateway",
-      "caption": "April 2026. Hermes takes the gateway role: an always-on agent with an OpenAI-compatible API on fedora, reachable from any device.",
-      "body": "Where OpenCode was a worker, Hermes was a front door: Telegram, YouTube uploads, daily activity summaries. The two ran side by side for a while.",
+      "caption": "In April 2026 Hermes took on the role of a gateway: an always-on agent on fedora with an OpenAI-compatible API, reachable from any device.",
+      "body": "If OpenCode was a worker, Hermes was a front door, handling Telegram, YouTube uploads and daily summaries of what had happened. For a while the two ran side by side.",
       "ops": [
         {
           "op": "add",
@@ -1596,8 +1596,8 @@
     },
     {
       "title": "More harnesses",
-      "caption": "April to May 2026. Cursor, Droid, Grok CLI in a sandbox container, Codex. Each gets the same skills; none gets to be the only one.",
-      "body": "Different models were good at different things, and subscriptions had quotas. Running several harnesses in parallel turned model choice into a scheduling problem.",
+      "caption": "Through April and May more harnesses arrived: Cursor, Droid, Grok CLI in a sandbox container, and Codex. Each got the same skills, and none got to be the only one.",
+      "body": "Different models were good at different things, and every subscription had a quota. Running several harnesses at once turned the choice of model into a scheduling problem.",
       "ops": [
         {
           "op": "add",
@@ -1732,8 +1732,8 @@
     },
     {
       "title": "Watching the agents",
-      "caption": "May 2026. skilled shows which skills the harnesses actually use; tracequest turns session logs into a live dashboard. Observability before scale.",
-      "body": "With five harnesses running, reading logs stopped working. tracequest indexed thousands of sessions and later mined 1,200 of them for failure patterns.",
+      "caption": "By May 2026 I needed to see what the agents were doing. skilled showed which skills the harnesses actually used, and tracequest turned session logs into a live dashboard.",
+      "body": "With five harnesses running, reading logs by hand had stopped working. tracequest indexed thousands of sessions and later mined 1,200 of them for patterns of failure.",
       "ops": [
         {
           "op": "add",
@@ -1804,8 +1804,8 @@
     },
     {
       "title": "Long runs in the cloud",
-      "caption": "Summer 2026. Cursor Cloud and the timeboxed-iterating skill: six-hour runs that fan out subagents and write findings back to disk.",
-      "body": "A skill that turns a task and a duration into a loop of subagents, dispatched across Claude Code, Codex, Cursor, Cursor Cloud and Grok. The human sets the clock, not the steps.",
+      "caption": "That summer, Cursor Cloud and a timeboxed-iterating skill made six-hour runs possible, with subagents fanning out and writing their findings back to disk.",
+      "body": "The skill turns a task and a time budget into a loop of subagents, dispatched across Claude Code, Codex, Cursor, Cursor Cloud and Grok. I set the clock, and the agents choose the steps.",
       "ops": [
         {
           "op": "add",
@@ -1861,8 +1861,8 @@
     },
     {
       "title": "Daemon retired, board kept",
-      "caption": "August 2026. The OpenCode daemon is retired and pop-os drops out. dstask becomes Backlog.md, the task list the agents share.",
-      "body": "The always-on worker had done its job; harness CLIs run just as well on demand. The task list outlived the daemon that used to pick from it.",
+      "caption": "In August 2026 I retired the OpenCode daemon, and pop-os dropped out. dstask gave way to Backlog.md, a task list the agents share.",
+      "body": "The always-on worker had done its job, and the harnesses' command-line tools ran just as well on demand. The task list outlived the daemon that used to read it.",
       "ops": [
         {
           "op": "remove",
@@ -1906,8 +1906,8 @@
     },
     {
       "title": "Kandev",
-      "caption": "September 2026. Kandev on fedora: tasks on a board, each executed by an agent in its own worktree. Claude Code and Codex run as sessions.",
-      "body": "Terminals became sessions something else could start, stop and read. The board replaced the shell as the place where work is visible.",
+      "caption": "In September 2026 Kandev arrived on fedora: tasks on a board, each carried out by an agent in its own worktree, with Claude Code and Codex running as sessions.",
+      "body": "Terminals became sessions that something else could start, stop and read. The board replaced the shell as the place where work is visible.",
       "ops": [
         {
           "op": "add",
@@ -1996,8 +1996,8 @@
     },
     {
       "title": "Fleet",
-      "caption": "September 19. Four Kandev instances: mac as controller, hetzner, sandbox-av and fedora over Tailscale. RustDesk retires; the laptop is a controller, not a screen.",
-      "body": "Each instance owns its database, repos and tasks. The controller talks to them natively over MCP; the only missing layer was addressing and a health check.",
+      "caption": "By Sept. 19 there were four Kandev instances, connected over Tailscale: the Mac as the controller, plus hetzner, sandbox-av and fedora. RustDesk retired, and the laptop became a controller rather than a screen.",
+      "body": "Each instance keeps its own database, repositories and tasks. The controller talks to them directly over MCP; all that was missing was a way to address them and a health check.",
       "ops": [
         {
           "op": "remove",
@@ -2207,8 +2207,8 @@
     },
     {
       "title": "fleet CLI and skills sync",
-      "caption": "One CLI over the fleet: instances, health, dispatch, and a skills sync that mirrors control/skills to every host. A skill written on the mac is everywhere a minute later.",
-      "body": "The registry is a JSON file; the CLI is stdlib Python with no install step. Restarts refuse busy hosts, and sync prunes what was removed so the hosts never drift.",
+      "caption": "A single command-line tool now covers the fleet: instances, health, dispatch and a sync that mirrors control/skills to every host. A skill written on the Mac reaches every machine a minute later.",
+      "body": "The registry is a JSON file, and the tool is plain Python with nothing to install. Restarts refuse busy hosts, and the sync prunes whatever was removed, so the machines never drift apart.",
       "ops": [
         {
           "op": "add",
@@ -2286,8 +2286,8 @@
     },
     {
       "title": "Control center",
-      "caption": "A controller task on the mac runs the loop: collect from all instances, classify by evidence, act, escalate only blockers. I read summaries instead of logs.",
-      "body": "The same fleet-control-center skill that started as an automation on sandbox-av, ported fleet-wide. Human attention is spent on goals and irreversible actions, not on watching.",
+      "caption": "A controller task on the Mac now runs the loop. It collects from every instance, sorts what it finds by evidence, acts on it and escalates only what blocks. I read summaries instead of logs.",
+      "body": "It is the same fleet-control-center skill that began as an automation on sandbox-av, now running across the whole fleet. My attention goes to goals and irreversible decisions, not to watching.",
       "ops": [
         {
           "op": "add",
@@ -2357,8 +2357,8 @@
     },
     {
       "title": "Today",
-      "caption": "A person with a phone, a controller, three workers, a devbox, a repo of skills and a log viewer. The editor is still there, mostly as a diff viewer. The clipboard loop is a memory.",
-      "body": "What changed over four years is not the model so much as where the loop lives: from my hands, to the editor, to a terminal, to a board, to a fleet.",
+      "caption": "Today the setup is one person with a phone, a controller, three workers, a devbox, a repository of skills and a log viewer. The editor is still there, mostly for reading diffs. The clipboard loop is a memory.",
+      "body": "What changed over four years was less the model than the place where the loop lives: first my hands, then the editor, a terminal, a board and, finally, a fleet.",
       "ops": [
         {
           "op": "remove",
