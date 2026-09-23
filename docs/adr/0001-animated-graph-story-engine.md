@@ -1,6 +1,7 @@
 # ADR 0001: Animated graph story engine
 
-Date: 2026-09-20. Status: accepted.
+Date: 2026-09-20. Status: accepted. Layout revised 2026-09-23 (see
+"Layered layout replaces the force layout").
 
 ## Context
 
@@ -29,13 +30,11 @@ Requirements that drove the choice:
   Every node shape is sampled to the same point count so a `d` string tweens
   into another when a node changes kind or size. Colours and states are CSS
   classes so the stylesheet owns the palette and the reduced-motion override.
-- **Layout: `d3-force`, warm-started per step, with a group-separation force.**
-  The simulation runs synchronously (`tick(n)`) into a target layout and the
-  renderer animates from the previous painted position to it. Node objects
-  persist across steps, so unchanged nodes barely move. Groups get anchors
-  (author-pinned or auto-distributed), members are pulled to their innermost
-  group anchor, and sibling groups repel when their bounding boxes overlap.
-  Group boxes are measured bottom-up so nesting works.
+- **Layout: ELK layered, top-down, in a web worker.** Groups are compound
+  nodes, edges are routed orthogonally with fixed spacing, and edge labels
+  are placed by the layout. Each step is laid out on its own and the renderer
+  animates from the previous painted geometry to it. This replaced a
+  warm-started `d3-force` layout; see below for why.
 - **Data model: steps as full states or op lists.** `GraphStorySpec` in
   `src/lib/graph/types.ts`. Steps are resolved to full states first, then laid
   out on demand and cached. A build-time validator (`scripts/blog/graph-story.mjs`)
@@ -56,36 +55,68 @@ layout tuning fixes it because the label is not part of the thing being
 laid out.
 
 Making the label the node removes the whole class of problem. Card boxes are
-what the force layout separates (`boxCollide` pushes axis-aligned rectangles
-apart along their shallower overlap), what group panels are measured from, and
-what edges are trimmed against. Kind is carried by an ASCII sigil and the
+what the layout places, what group panels are sized from, and where edge
+routes start and end. Kind is carried by an ASCII sigil and the
 corner treatment instead of a silhouette, which also suits the terminal look.
 
 Cards are opaque, so an unavoidable overlap occludes cleanly rather than
 turning into a tangle, and context is dimmed by darkening strokes and text
 rather than by lowering opacity, which would let edges show through the cards.
 
-## Overlap is an invariant, not a hope
+## Layered layout replaces the force layout
 
-The collide force only nudges velocities, so a crowded group could still
-settle with two cards on top of each other, and the fix of running more ticks
-cost more than it bought. Positions are separated directly in a short pass
-after the simulation, which makes non-overlap a property of every layout
-rather than something convergence has to achieve. That also let the tick
-counts drop: a step that only changes labels or states skips the simulation
-entirely, which is most steps.
+The force layout kept cards apart (a positional separation pass after the
+simulation made non-overlap an invariant) and routed long edges into evenly
+spaced channel buses, but nothing in it knew where the *edges* were. By the
+end of a long story, routes ran through cards, parallel runs landed on top of
+each other and labels collided: the final frame of the tooling story had 21
+routes through cards, 27 bunched pairs and 40 crossings. Tuning forces could
+not fix it, because the edges were never part of what was laid out.
 
-## Long edges are routed, short ones are not
+ELK's layered algorithm lays out cards, groups, routes and labels together:
 
-Drawn as diagonals, the links that cross the whole diagram meet at every angle
-and turn a busy step into spaghetti. Edges longer than a threshold are routed
-orthogonally instead: out of the source's face, along a shared channel, into
-the target's face. Routes that would share a channel are bucketed and their
-lanes spaced evenly, so a dense step reads as a bus. An earlier version offset
-each route by a hash of its id, which spread them randomly and still let runs
-land on top of each other.
-Short edges stay straight, because an elbow between two adjacent cards is
-noise. The result reads as a schematic, which is also the look we want.
+- **Non-overlap and clear routes are guaranteed by construction.** Cards sit
+  in layers with fixed gaps; routes are orthogonal and never cross a card;
+  parallel runs are packed into lanes a fixed distance apart
+  (`spacing.edgeEdge`), which is what the channel buses were approximating;
+  edge labels are laid out as obstacles, so they cannot sit on a card, a
+  route or another label.
+- **Backward edges between groups are laid out forwards.** A compound group
+  in a layered layout takes edges in on one side and out on the other, so an
+  edge running back to an earlier group loops around the whole drawing. Each
+  container's children are ordered by a greedy feedback-arc-set pass, and the
+  few edges still running backwards are handed to ELK reversed and drawn the
+  right way round. Every route is then short and forward.
+- **Sibling order comes from the whole story, not the step.** The ordering
+  weighs every edge that ever joins two siblings anywhere in the story, so
+  two groups do not swap places because one step happens to show a
+  different edge. Combined with ELK's model-order option (objects keep the
+  order they were added in), a new card slots in beside the ones it arrived
+  after and the rest of the picture holds still.
+- **Longest-path layering, top-down.** Sources share the top layer, so
+  sibling groups fed from the same place sit side by side instead of
+  stacking; top-down keeps both stories close to the stage's shape
+  (about 1.3:1) where left-to-right came out at nearly 4:1.
+- **Group legends stay clear of routes.** A legend sits on its panel's top
+  border and slides past any edge crossing it, falls back to the bottom
+  border, and if neither has room the step is laid out again with space
+  reserved beside the legend.
+- **Deterministic and off the main thread.** A step's layout is a pure
+  function of its state and the story, so replaying, scrolling back or jumping
+  anywhere produce identical geometry. ELK runs in a worker, so the page has
+  no long tasks while the reader scrolls; where workers are unavailable the
+  bundled build runs on the main thread instead.
+
+Routes animate by morphing: a route with the same number of corners moves
+corner by corner and stays orthogonal throughout; otherwise both routes are
+resampled by length and interpolated. `scripts/blog/graph-layout.test.mjs`
+lays out every step of every story with the page's configuration and fails
+on any overlap, route through a card, shared run or label collision.
+
+What this costs: ELK is about 420 kB gzipped. It is loaded lazily, as a
+worker, only on pages that embed a graph story, and it never touches the main
+thread's budget. Author-pinned `x`/`y` positions and the layout `seed` no
+longer mean anything and are ignored; the layered layout decides placement.
 
 ## Site theme: greyscale plus one accent
 
@@ -106,11 +137,12 @@ nodes stay flat. `error` reads as a broken outline rather than a red one.
 - **Canvas renderer** (used by `src/career/*`): better for thousands of items,
   worse for text, hit-testing, accessibility and palette switching. Not needed
   at this scale.
-- **ELK**: excellent compound-graph layouts but ~1 MB and async; overkill for
-  storytelling diagrams with 20 nodes and would dominate the blog bundle.
+- **ELK** (originally): rejected at first for its size and async API. Adopted
+  on 2026-09-23 once dense stories showed that a force layout cannot keep
+  routes and labels clean; the worker makes the async API free and keeps the
+  size out of the main bundle.
 - **dagre**: layered layout gives good DAGs but no compound groups in the
-  maintained builds, and re-running it per step produces large jumps that break
-  the "objects keep identity" feel.
+  maintained builds, and no edge-spacing or label-aware routing.
 - **WebCola**: constraint layouts with groups fit well, but it is an extra
   ~100 kB, effectively unmaintained, and its group model fights the persistent
   identity approach less elegantly than warm-started `d3-force`.
@@ -123,11 +155,11 @@ nodes stay flat. `error` reads as a broken outline rather than a red one.
 
 ## Consequences
 
-- Layouts are deterministic per seed but force-based, so an author who wants a
-  precise picture pins nodes or groups with `x`/`y` percentages.
+- Placement is the layout's call, not the author's: the order objects are
+  added in and the edges between them decide where they go.
 - All steps are resolved and validated at build time; layouts are computed
-  lazily on the client and cached per step, so going backwards replays the
-  same geometry.
+  on demand in a worker, a few steps ahead of the reader, and cached per step,
+  so going backwards replays the same geometry.
 - Engine lives in `src/lib/graph/`, styles in `src/graph-story.scss`, blog
   bootstrap in `src/blog/graph.ts`. The engine has no knowledge of the story
   content.

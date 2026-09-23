@@ -1,4 +1,4 @@
-import GraphLayout, { boundsOf } from './layout';
+import GraphLayout, { STAGE_WIDTH, boundsOf } from './layout';
 import type { Box, Layout } from './layout';
 import GraphRenderer from './renderer';
 import { createTextMeasurer } from './shapes';
@@ -32,7 +32,7 @@ const NARROW_STAGE_PX = 560;
 const PORTRAIT_MIN_SHARE = 0.24;
 const PORTRAIT_MAX_SHARE = 0.38;
 const SCROLL_STEP_HEIGHT_VH = 65;
-/** How many layouts to keep computed ahead of the reader. */
+/** How many layouts to request ahead of the reader. */
 const WARM_AHEAD = 4;
 
 /**
@@ -54,7 +54,12 @@ export default class GraphStory {
   private readonly spec: GraphStorySpec;
   private readonly options: GraphStoryOptions;
   private layout!: GraphLayout;
-  private readonly layouts: Layout[] = [];
+  /** Layout requests per step; each step is laid out once and replayed from here. */
+  private readonly layouts: Promise<Layout>[] = [];
+  /** Layouts that have arrived, for code that cannot wait (resize). */
+  private readonly ready: Layout[] = [];
+  /** Step whose layout is on screen; trails `index` while a layout is in flight. */
+  private shown = -1;
   private viewAspect = 1.6;
   private stageWidthPx = 0;
   private svg: SVGSVGElement | null = null;
@@ -81,7 +86,6 @@ export default class GraphStory {
   private timer: number | null = null;
   private playing = false;
   private scrollFrame: number | null = null;
-  private warming = false;
   private readonly cleanups: (() => void)[] = [];
 
   constructor(container: HTMLElement, spec: GraphStorySpec, options: GraphStoryOptions = {}) {
@@ -136,9 +140,9 @@ export default class GraphStory {
       frame = window.requestAnimationFrame(() => {
         frame = null;
         this.panelTops = [];
-        if (!this.svg || this.index < 0) return;
+        if (!this.svg || this.shown < 0) return;
         this.measureStage(this.svg);
-        this.renderer?.setCamera(this.cameraFor(this.layouts[this.index], this.steps[this.index]), 0);
+        this.renderer?.setCamera(this.cameraFor(this.ready[this.shown], this.steps[this.shown]), 0);
       });
     };
     window.addEventListener('resize', onResize);
@@ -158,39 +162,29 @@ export default class GraphStory {
   }
 
   /**
-   * Aspect the graph is laid out in. A very tall canvas pushes groups far
-   * apart, which forces the camera to zoom out until the labels are unreadable,
-   * so the canvas stays close to square however tall the stage is.
+   * Layout for a step, requested once. A step's layout depends only on its own
+   * state and the story, so the order steps are visited in cannot change a picture.
    */
-  private layoutAspect(): number {
-    return Math.min(2, Math.max(0.95, this.viewAspect));
+  private layoutFor(index: number): Promise<Layout> {
+    let pending = this.layouts[index];
+    if (!pending) {
+      pending = this.layout.compute(this.steps[index].state).then((layout) => {
+        this.ready[index] = layout;
+        return layout;
+      });
+      this.layouts[index] = pending;
+    }
+    return pending;
   }
 
   /**
-   * Computes a few layouts ahead of the reader in idle time. Warming all of
-   * them at load cost seconds of blocked main thread for steps most readers
-   * never reach; the rest are computed on demand as they approach.
+   * Requests the next few layouts so the reader rarely waits. Layouts are
+   * computed in a worker, so this costs the page nothing but a message; the
+   * current step was requested first and is served first.
    */
   private warmLayouts(): void {
-    if (this.warming) return;
-    const target = Math.min(this.steps.length, Math.max(this.index, 0) + WARM_AHEAD);
-    if (this.layouts.length >= target) return;
-
-    this.warming = true;
-    const schedule = (fn: () => void): void => {
-      if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(fn);
-      else window.setTimeout(fn, 32);
-    };
-    const step = () => {
-      const limit = Math.min(this.steps.length, Math.max(this.index, 0) + WARM_AHEAD);
-      if (this.layouts.length >= limit) {
-        this.warming = false;
-        return;
-      }
-      this.layouts.push(this.layout.compute(this.steps[this.layouts.length].state));
-      schedule(step);
-    };
-    schedule(step);
+    const from = Math.max(this.index, 0);
+    for (let i = from + 1; i < Math.min(this.steps.length, from + 1 + WARM_AHEAD); i++) void this.layoutFor(i);
   }
 
   destroy(): void {
@@ -250,21 +244,22 @@ export default class GraphStory {
   }
 
   private applyStep(index: number, immediate: boolean): void {
-    const jump = Math.abs(index - this.index) > 1 || this.index === -1;
+    if (index === this.index) return;
     this.index = index;
-
-    // Cached layouts keep going back deterministic; compute forward on demand.
-    while (this.layouts.length <= index) {
-      this.layouts.push(this.layout.compute(this.steps[this.layouts.length].state));
-    }
-
-    const duration = immediate || this.reduceMotion ? 0 : (this.options.duration ?? DEFAULT_DURATION) * (jump ? 0.6 : 1);
-    const step = this.steps[index];
-    this.renderer?.render(this.layouts[index], duration, step.focus);
-    this.renderer?.setCamera(this.cameraFor(this.layouts[index], step), duration);
     this.updateChrome();
-    this.warmLayouts();
     this.options.onStep?.(index, this.steps[index]);
+
+    void this.layoutFor(index).then((layout) => {
+      // The reader may have moved on while this layout was in flight.
+      if (this.index !== index) return;
+      const jump = Math.abs(index - this.shown) > 1 || this.shown === -1;
+      const duration = immediate || this.shown === -1 || this.reduceMotion ? 0 : (this.options.duration ?? DEFAULT_DURATION) * (jump ? 0.6 : 1);
+      const step = this.steps[index];
+      this.shown = index;
+      this.renderer?.render(layout, duration, step.focus);
+      this.renderer?.setCamera(this.cameraFor(layout, step), duration);
+    });
+    this.warmLayouts();
   }
 
   /**
@@ -305,7 +300,7 @@ export default class GraphStory {
    * tall stage it would cut the focus off at top and bottom.
    */
   private cameraFor(layout: Layout, step: ResolvedStep): Box {
-    const full = boundsOf(layout) ?? { x: 0, y: 0, width: layout.width, height: layout.height };
+    const full = boundsOf(layout) ?? { x: 0, y: 0, width: STAGE_WIDTH, height: STAGE_WIDTH / this.viewAspect };
     // Only a genuinely narrow stage (a phone) trades completeness for size.
     const narrow = this.stageWidthPx > 0 && this.stageWidthPx < NARROW_STAGE_PX;
     const focused = step.focus.all ? null : this.framedBounds(layout, step, narrow);
@@ -314,11 +309,11 @@ export default class GraphStory {
     // Side of the centred square the content has to fit inside.
     const side = Math.max(box.width, box.height) / CONTENT_FILL;
     let width = this.viewAspect >= 1 ? side * this.viewAspect : side;
-    width = Math.max(width, layout.width * MIN_VIEW_SHARE);
+    width = Math.max(width, STAGE_WIDTH * MIN_VIEW_SHARE);
 
     // A phone cannot hold a wide spread at a readable size: cap the zoom-out
     // and let the far side fade off-frame rather than shrink the text.
-    if (narrow) width = Math.min(Math.max(width, layout.width * PORTRAIT_MIN_SHARE), layout.width * PORTRAIT_MAX_SHARE);
+    if (narrow) width = Math.min(Math.max(width, STAGE_WIDTH * PORTRAIT_MIN_SHARE), STAGE_WIDTH * PORTRAIT_MAX_SHARE);
     const height = width / this.viewAspect;
 
     // Centre on the action when the frame is too small to hold the whole box.
@@ -362,13 +357,15 @@ export default class GraphStory {
     this.figure.append(stage);
     container.append(this.figure);
 
-    // Scroll mode fills the viewport, so lay the graph out in the stage's real
-    // aspect (portrait on phones) instead of a fixed landscape canvas.
+    // The camera fits each step to the stage's real aspect (portrait on
+    // phones); the layout itself does not depend on the window.
     this.svg = svg;
     this.measureStage(svg);
-    const measure = createTextMeasurer();
-    this.layout = new GraphLayout(this.layoutAspect(), this.spec.seed ?? 'graph-story', measure);
-    this.renderer = new GraphRenderer(svg, this.layout.width, this.layout.height, measure);
+    this.layout = new GraphLayout(
+      this.steps.map((step) => step.state),
+      createTextMeasurer(),
+    );
+    this.renderer = new GraphRenderer(svg, STAGE_WIDTH, Math.round(STAGE_WIDTH / this.viewAspect));
 
     const figcaption = el('figcaption', 'graph-story__caption');
     this.title = el('div', 'graph-story__title');

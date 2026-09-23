@@ -1,41 +1,40 @@
-import * as d3 from 'd3';
+import type { ELK } from 'elkjs/lib/elk-api';
 
+import { buildElkGraph, readElkLayout, storyAffinity } from './elkGraph';
+import type { Affinity, Direction, Point, Size } from './elkGraph';
 import { estimateTextWidth, measureCard } from './shapes';
 import type { TextMeasurer } from './shapes';
 import { edgeId } from './story';
 import type { Accent, EdgeSpec, GraphState, GroupSpec, NodeShape, NodeSpec } from './types';
 
+export type { Point } from './elkGraph';
+
+/** Nominal canvas width the camera's zoom limits are expressed against. */
 export const STAGE_WIDTH = 1500;
 
-const CLUSTER_PULL = 0.16;
-const ROOT_PULL = 0.03;
-/** Pull of an unchanged node toward where it was in the previous step. */
-const INERTIA = 0.35;
-/** Ticks for the first layout, a step that moves things, and a step that only restyles. */
-const TICKS_FIRST = 220;
-const TICKS_MOVED = 120;
-const TICKS_SETTLED = 40;
-const NESTED_SPREAD = 170;
-const CHARGE = -260;
-const LINK_DISTANCE = 64;
-/** Clear space kept between two cards. */
-const CARD_GAP = 26;
-const GROUP_PADDING = 20;
-const GROUP_LABEL_HEIGHT = 6;
-const STAGE_MARGIN = 30;
+/** Layer direction. Top-down keeps both stories close to the stage's shape. */
+const DIRECTION: Direction = 'DOWN';
+const EDGE_LABEL_SIZE = 11;
+const EDGE_LABEL_PAD_X = 10;
+const EDGE_LABEL_HEIGHT = 16;
+/** Group titles are uppercase and letter-spaced, so the plate needs slack. */
+export const GROUP_LABEL_SIZE = 12;
+const GROUP_LABEL_TRACKING = 0.12;
+export const GROUP_LABEL_PAD = 9;
+export const GROUP_LABEL_HEIGHT = 16;
+/** Where a group's legend starts, from the panel's left edge. */
+export const GROUP_LABEL_X = 12;
+/** Clear space kept between a legend plate and an edge crossing the panel border. */
+const LEGEND_CLEARANCE = 6;
+/** Layout passes allowed for making room under legends that edges crossed. */
+const LEGEND_PASSES = 3;
 
-export interface LayoutNode extends d3.SimulationNodeDatum {
+export interface LayoutNode {
   id: string;
   spec: NodeSpec;
+  /** Card centre. */
   x: number;
   y: number;
-  /** False until the node has been given a starting position. */
-  placed: boolean;
-  /** True when the node changed group in this step (it may travel far). */
-  moved: boolean;
-  /** Where the node was before this step; unchanged nodes are held near it. */
-  homeX: number;
-  homeY: number;
   /** Card size, already scaled by the spec's `size` multiplier. */
   width: number;
   height: number;
@@ -45,12 +44,16 @@ export interface LayoutNode extends d3.SimulationNodeDatum {
   path: string[];
 }
 
-export interface LayoutEdge extends d3.SimulationLinkDatum<LayoutNode> {
+export interface LayoutEdge {
   id: string;
   spec: EdgeSpec;
   source: LayoutNode;
   target: LayoutNode;
   color: Accent;
+  /** Orthogonal route from the source card's border to the target card's border. */
+  points: Point[];
+  /** Label plate, placed by the layout so it never sits on a card or another edge. */
+  label: Box | null;
 }
 
 export interface Box {
@@ -66,7 +69,8 @@ export interface LayoutGroup {
   depth: number;
   color: Accent;
   box: Box;
-  anchor: { x: number; y: number };
+  /** Legend plate on the panel's top border, moved clear of any edge crossing it. */
+  legend: Box | null;
 }
 
 export interface Layout {
@@ -77,23 +81,24 @@ export interface Layout {
   groups: LayoutGroup[];
 }
 
-/** Bounding box of a set of nodes and groups (all of them when the sets are empty). */
+/** Bounding box of a set of nodes and groups (everything, routes included, when both are omitted). */
 export function boundsOf(layout: Layout, nodeIds?: Set<string>, groupIds?: Set<string>): Box | null {
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   const all = !nodeIds && !groupIds;
+  const extend = (ax: number, ay: number, bx: number, by: number) => {
+    x0 = Math.min(x0, ax);
+    y0 = Math.min(y0, ay);
+    x1 = Math.max(x1, bx);
+    y1 = Math.max(y1, by);
+  };
   for (const n of layout.nodes) {
-    if (!all && !nodeIds?.has(n.id)) continue;
-    x0 = Math.min(x0, n.x - n.width / 2);
-    y0 = Math.min(y0, n.y - n.height / 2);
-    x1 = Math.max(x1, n.x + n.width / 2);
-    y1 = Math.max(y1, n.y + n.height / 2);
+    if (all || nodeIds?.has(n.id)) extend(n.x - n.width / 2, n.y - n.height / 2, n.x + n.width / 2, n.y + n.height / 2);
   }
   for (const g of layout.groups) {
-    if (!all && !groupIds?.has(g.id)) continue;
-    x0 = Math.min(x0, g.box.x);
-    y0 = Math.min(y0, g.box.y);
-    x1 = Math.max(x1, g.box.x + g.box.width);
-    y1 = Math.max(y1, g.box.y + g.box.height);
+    if (all || groupIds?.has(g.id)) extend(g.box.x, g.box.y - GROUP_LABEL_HEIGHT / 2, g.box.x + g.box.width, g.box.y + g.box.height);
+  }
+  if (all) {
+    for (const e of layout.edges) for (const p of e.points) extend(p.x, p.y, p.x, p.y);
   }
   if (x0 === Infinity) return null;
   return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
@@ -115,635 +120,178 @@ export function shapeForKind(kind: string | undefined): NodeShape {
   return (kind && KIND_SHAPES[kind]) || 'circle';
 }
 
-function hashUnit(input: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < input.length; i++) {
-    h ^= input.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return (h >>> 0) / 4294967296;
+/** Legend width for a group label: uppercase, letter-spaced, with padding either side. */
+export function legendWidth(label: string | undefined, measure: TextMeasurer): number {
+  if (!label) return 0;
+  const text = label.toUpperCase();
+  const tracking = text.length * GROUP_LABEL_SIZE * GROUP_LABEL_TRACKING;
+  return measure(text, GROUP_LABEL_SIZE) + tracking + GROUP_LABEL_PAD * 2;
 }
 
-function seededRandom(seed: string): () => number {
-  let a = Math.floor(hashUnit(seed) * 4294967296) || 1;
-  return () => {
-    a ^= a << 13;
-    a ^= a >>> 17;
-    a ^= a << 5;
-    return (a >>> 0) / 4294967296;
-  };
+let sharedElk: Promise<ELK> | null = null;
+
+/**
+ * ELK runs in a worker: a layered layout of a busy step takes a few hundred
+ * milliseconds, which would otherwise be a long task on the reader's scroll.
+ * Where workers are unavailable the bundled build runs on the main thread.
+ */
+function elk(): Promise<ELK> {
+  if (!sharedElk) {
+    sharedElk = (async () => {
+      if (typeof Worker !== 'undefined') {
+        const { default: ElkApi } = await import('elkjs/lib/elk-api');
+        return new ElkApi({ workerFactory: () => new Worker(new URL('npm:elkjs/lib/elk-worker.min.js', import.meta.url)) });
+      }
+      const { default: ElkBundled } = await import('elkjs/lib/elk.bundled.js');
+      return new ElkBundled();
+    })();
+  }
+  return sharedElk;
 }
 
 /**
- * Incremental force layout. Keeps node objects (and therefore positions)
- * between calls so consecutive states animate from where they were.
+ * Layered layout (ELK): cards in layers, groups as compound boxes, edges
+ * routed orthogonally with even spacing and labels placed by the layout.
+ * Each step is a pure function of its state and the story it belongs to, so
+ * any step can be computed in any order and always produces the same picture.
  */
 export default class GraphLayout {
-  readonly width = STAGE_WIDTH;
-  readonly height: number;
-
-  private readonly nodes = new Map<string, LayoutNode>();
-  private readonly random: () => number;
   private readonly measure: TextMeasurer;
-  private previousNodeCount = -1;
-  private first = true;
+  private readonly affinity: Affinity;
 
-  constructor(aspect: number, seed: string, measure: TextMeasurer = estimateTextWidth) {
-    this.height = Math.round(STAGE_WIDTH / aspect);
-    this.random = seededRandom(seed);
+  /** `story` is every state the layout will be asked for; siblings are ordered by all of them. */
+  constructor(story: GraphState[], measure: TextMeasurer = estimateTextWidth) {
     this.measure = measure;
+    this.affinity = storyAffinity(story, edgeId);
   }
 
-  compute(state: GraphState): Layout {
-    const groups = this.buildGroups(state.groups);
-    const groupById = new Map(groups.map((g) => [g.id, g]));
-    const nodes = this.syncNodes(state.nodes, groupById);
-    const nodeById = new Map(nodes.map((n) => [n.id, n]));
-    const edges: LayoutEdge[] = state.edges.map((spec) => {
-      const source = nodeById.get(spec.from);
-      const target = nodeById.get(spec.to);
-      if (!source || !target) throw new Error(`edge references unknown node: ${edgeId(spec)}`);
-      return { id: edgeId(spec), spec, source, target, color: spec.color ?? 'tx3' };
-    });
+  async compute(state: GraphState): Promise<Layout> {
+    const groupById = new Map(state.groups.map((g) => [g.id, g]));
+    const cards = new Map<string, Size>();
+    for (const spec of state.nodes) {
+      const card = measureCard(spec.label ?? spec.id, spec.sublabel ?? '', this.measure);
+      const scale = spec.size ?? 1;
+      cards.set(spec.id, { width: card.width * scale, height: card.height * scale });
+    }
+    const edgeLabels = new Map<string, Size>();
+    for (const spec of state.edges) {
+      if (spec.label) edgeLabels.set(edgeId(spec), { width: this.measure(spec.label, EDGE_LABEL_SIZE) + EDGE_LABEL_PAD_X, height: EDGE_LABEL_HEIGHT });
+    }
+    const groupLabels = new Map<string, Size>();
+    for (const spec of state.groups) {
+      if (spec.label) groupLabels.set(spec.id, { width: legendWidth(spec.label, this.measure), height: GROUP_LABEL_HEIGHT });
+    }
 
-    this.assignAnchors(groups, nodes);
-    this.carryGroups(groups, nodes);
-    this.simulate(nodes, edges, groups);
-    this.measureGroups(groups, nodes);
-
-    this.first = false;
-    return this.snapshot(nodes, edges, groups);
+    // A legend with no clear run on its panel's border gets room of its own,
+    // and the step is laid out again. Rarely needed, and bounded.
+    const legendRoom = new Set<string>();
+    let layout: Layout | null = null;
+    for (let pass = 0; pass < LEGEND_PASSES; pass++) {
+      const { graph, reversed } = buildElkGraph({ state, direction: DIRECTION, cards, edgeLabels, groupLabels, edgeId, affinity: this.affinity, legendRoom });
+      const placement = readElkLayout(await (await elk()).layout(graph), new Set(groupById.keys()), reversed);
+      const { layout: attempt, blocked } = this.assemble(state, placement, cards, groupLabels);
+      layout = attempt;
+      const fresh = blocked.filter((id) => !legendRoom.has(id));
+      if (fresh.length === 0) break;
+      for (const id of fresh) legendRoom.add(id);
+    }
+    return layout!;
   }
 
-  /**
-   * The simulation keeps mutating its node objects across steps, so each step
-   * hands out an immutable copy. Replaying or jumping between steps therefore
-   * always renders exactly the geometry that was computed for that step.
-   */
-  private snapshot(nodes: LayoutNode[], edges: LayoutEdge[], groups: LayoutGroup[]): Layout {
-    const copies = new Map<string, LayoutNode>();
-    const nodeCopies = nodes.map((node) => {
-      const copy: LayoutNode = {
-        id: node.id,
-        spec: node.spec,
-        x: node.x,
-        y: node.y,
-        width: node.width,
-        height: node.height,
-        shape: node.shape,
-        color: node.color,
-        path: [...node.path],
-        placed: true,
-        moved: false,
-        homeX: node.homeX,
-        homeY: node.homeY,
-      };
-      copies.set(node.id, copy);
-      return copy;
-    });
-    const edgeCopies = edges.map((edge) => ({
-      ...edge,
-      source: copies.get(edge.source.id) ?? edge.source,
-      target: copies.get(edge.target.id) ?? edge.target,
-    }));
-    const groupCopies = groups.map((group) => ({ ...group, box: { ...group.box }, anchor: { ...group.anchor } }));
+  private assemble(
+    state: GraphState,
+    placement: ReturnType<typeof readElkLayout>,
+    cards: Map<string, Size>,
+    groupLabels: Map<string, Size>,
+  ): { layout: Layout; blocked: string[] } {
+    const groupById = new Map(state.groups.map((g) => [g.id, g]));
 
-    return { width: this.width, height: this.height, nodes: nodeCopies, edges: edgeCopies, groups: groupCopies };
-  }
-
-  private buildGroups(specs: GroupSpec[]): LayoutGroup[] {
-    const byId = new Map(specs.map((spec) => [spec.id, spec]));
     const depthOf = (spec: GroupSpec): number => {
       let depth = 0;
-      let parent = spec.parent;
-      while (parent !== undefined) {
-        depth++;
-        parent = byId.get(parent)?.parent;
-      }
+      for (let parent = spec.parent; parent !== undefined; parent = groupById.get(parent)?.parent) depth++;
       return depth;
     };
 
-    return specs
-      .map((spec) => ({
-        id: spec.id,
-        spec,
-        depth: depthOf(spec),
-        color: spec.color ?? 'tx3',
-        box: { x: 0, y: 0, width: 0, height: 0 },
-        anchor: { x: this.width / 2, y: this.height / 2 },
-      }))
-      .sort((a, b) => a.depth - b.depth);
-  }
-
-  private syncNodes(specs: NodeSpec[], groups: Map<string, LayoutGroup>): LayoutNode[] {
-    const alive = new Set(specs.map((spec) => spec.id));
-    for (const id of this.nodes.keys()) {
-      if (!alive.has(id)) this.nodes.delete(id);
-    }
-
-    return specs.map((spec) => {
+    const nodes: LayoutNode[] = state.nodes.map((spec) => {
       const path: string[] = [];
-      let groupId = spec.group;
-      while (groupId !== undefined) {
-        path.unshift(groupId);
-        groupId = groups.get(groupId)?.spec.parent;
-      }
-
-      const scale = spec.size ?? 1;
-      const card = measureCard(spec.label ?? spec.id, spec.sublabel ?? '', this.measure);
-      const width = card.width * scale;
-      const height = card.height * scale;
-      const existing = this.nodes.get(spec.id);
-
-      if (existing) {
-        existing.spec = spec;
-        existing.width = width;
-        existing.height = height;
-        existing.shape = spec.shape ?? shapeForKind(spec.kind);
-        existing.color = spec.color ?? 'tx2';
-        // Only a change of the innermost group counts as a move; a re-parented
-        // group carries its members along as one body instead.
-        existing.moved = existing.path[existing.path.length - 1] !== path[path.length - 1];
-        existing.path = path;
-        existing.homeX = existing.x;
-        existing.homeY = existing.y;
-        return existing;
-      }
-
-      const node: LayoutNode = {
+      for (let group = spec.group; group !== undefined; group = groupById.get(group)?.parent) path.unshift(group);
+      const centre = placement.nodes.get(spec.id);
+      const card = cards.get(spec.id)!;
+      if (!centre) throw new Error(`layout lost node "${spec.id}"`);
+      return {
         id: spec.id,
         spec,
-        x: 0,
-        y: 0,
-        width,
-        height,
+        x: centre.x,
+        y: centre.y,
+        width: card.width,
+        height: card.height,
         shape: spec.shape ?? shapeForKind(spec.kind),
         color: spec.color ?? 'tx2',
         path,
-        placed: false,
-        moved: false,
-        homeX: 0,
-        homeY: 0,
       };
-      this.nodes.set(spec.id, node);
-      return node;
     });
-  }
 
-  private assignAnchors(groups: LayoutGroup[], nodes: LayoutNode[]): void {
-    const { width, height } = this;
-    const deltas = new Map<string, { x: number; y: number }>();
-    const taken: { x: number; y: number }[] = nodes
-      .filter((n) => n.spec.x !== undefined && n.spec.y !== undefined)
-      .map((n) => this.explicitAnchor(n.spec) ?? { x: 0, y: 0 });
+    const nodeById = new Map(nodes.map((n) => [n.id, n]));
+    const edges: LayoutEdge[] = state.edges.map((spec) => {
+      const id = edgeId(spec);
+      const source = nodeById.get(spec.from);
+      const target = nodeById.get(spec.to);
+      const route = placement.edges.get(id);
+      if (!source || !target || !route) throw new Error(`layout lost edge "${id}"`);
+      return { id, spec, source, target, color: spec.color ?? 'tx3', points: route.points, label: route.label };
+    });
 
-    // Groups are sorted by depth, so parents are resolved before children.
-    for (const group of groups) {
-      const previous = this.previousAnchors.get(group.id);
-      const parent = group.spec.parent !== undefined ? groups.find((g) => g.id === group.spec.parent) : undefined;
-      const parentDelta = parent ? deltas.get(parent.id) : undefined;
-      const explicit = this.explicitAnchor(group.spec);
-
-      if (explicit) {
-        group.anchor = explicit;
-      } else if (previous) {
-        // Existing groups stay where they were, following a moving parent.
-        group.anchor = parentDelta ? { x: previous.x + parentDelta.x, y: previous.y + parentDelta.y } : previous;
-      } else if (parent) {
-        group.anchor = this.nestedSlot(group, parent, groups);
-      } else {
-        group.anchor = this.freeSlot(taken);
-      }
-
-      if (previous) deltas.set(group.id, { x: group.anchor.x - previous.x, y: group.anchor.y - previous.y });
-      taken.push(group.anchor);
-    }
-
-    this.groupDeltas = deltas;
-    this.looseAnchor = { x: width / 2, y: height / 2 };
-
-    // A parent with direct members of its own keeps them beside its children.
-    this.directAnchors.clear();
-    for (const parent of groups) {
-      const children = groups.filter((g) => g.spec.parent === parent.id);
-      const hasDirect = nodes.some((n) => n.path[n.path.length - 1] === parent.id);
-      if (children.length === 0 || !hasDirect) continue;
-      const maxX = Math.max(...children.map((c) => c.anchor.x));
-      this.directAnchors.set(parent.id, { x: Math.min(maxX + NESTED_SPREAD, this.width - 140), y: parent.anchor.y });
-    }
-  }
-
-  /** Anchor for a new nested group: to the right of its existing siblings, else on the parent. */
-  private nestedSlot(group: LayoutGroup, parent: LayoutGroup, groups: LayoutGroup[]): { x: number; y: number } {
-    const siblings = groups.filter((g) => g.spec.parent === parent.id && g !== group && g.anchor !== undefined);
-    const placed = siblings.filter((g) => this.previousAnchors.has(g.id) || this.explicitAnchor(g.spec));
-    if (placed.length === 0) return { x: parent.anchor.x, y: parent.anchor.y };
-    const maxX = Math.max(...placed.map((g) => g.anchor.x));
-    return { x: maxX + NESTED_SPREAD, y: parent.anchor.y };
-  }
-
-  /** Anchor for a new top-level group: the candidate point farthest from everything already placed. */
-  private freeSlot(taken: { x: number; y: number }[]): { x: number; y: number } {
-    const { width, height } = this;
-    const columns = [0.22, 0.5, 0.78];
-    const rows = [0.27, 0.5, 0.73];
-    let best = { x: width / 2, y: height / 2 };
-    let bestScore = -Infinity;
-    for (const row of rows) {
-      for (const column of columns) {
-        const candidate = { x: column * width, y: row * height };
-        const score = taken.length === 0 ? -Math.hypot(candidate.x - width / 2, candidate.y - height / 2) : Math.min(...taken.map((t) => Math.hypot(t.x - candidate.x, t.y - candidate.y)));
-        if (score > bestScore + 0.5) {
-          bestScore = score;
-          best = candidate;
-        }
-      }
-    }
-    return best;
-  }
-
-  private looseAnchor = { x: STAGE_WIDTH / 2, y: STAGE_WIDTH / 2 };
-  /** Anchors for nodes that sit directly in a group that also has child groups. */
-  private readonly directAnchors = new Map<string, { x: number; y: number }>();
-  private readonly previousAnchors = new Map<string, { x: number; y: number }>();
-  private groupDeltas = new Map<string, { x: number; y: number }>();
-
-  /**
-   * When a group's anchor moves between steps, carry its members along so the
-   * group travels as one body instead of re-flowing node by node.
-   */
-  private carryGroups(groups: LayoutGroup[], nodes: LayoutNode[]): void {
-    for (const node of nodes) {
-      if (!node.placed || node.moved) continue;
-      const innermost = node.path[node.path.length - 1];
-      const delta = innermost !== undefined ? this.groupDeltas.get(innermost) : undefined;
-      if (!delta || Math.abs(delta.x) + Math.abs(delta.y) < 0.5) continue;
-      node.x += delta.x;
-      node.y += delta.y;
-      node.homeX = node.x;
-      node.homeY = node.y;
-    }
-
-    this.previousAnchors.clear();
-    for (const group of groups) this.previousAnchors.set(group.id, { x: group.anchor.x, y: group.anchor.y });
-  }
-
-  /** True when nothing about this step can change where a node sits. */
-  private isStatic(nodes: LayoutNode[]): boolean {
-    if (this.first || nodes.length !== this.previousNodeCount) return false;
-    if (nodes.some((n) => n.moved)) return false;
-    for (const delta of this.groupDeltas.values()) {
-      if (Math.abs(delta.x) + Math.abs(delta.y) > 0.5) return false;
-    }
-    return true;
-  }
-
-  private explicitAnchor(spec: { x?: number; y?: number }): { x: number; y: number } | null {
-    if (spec.x === undefined || spec.y === undefined) return null;
-    return { x: (spec.x / 100) * this.width, y: (spec.y / 100) * this.height };
-  }
-
-  private anchorFor(node: LayoutNode, groups: Map<string, LayoutGroup>): { x: number; y: number } {
-    const innermost = node.path[node.path.length - 1];
-    const group = innermost !== undefined ? groups.get(innermost) : undefined;
-    if (!group) return this.looseAnchor;
-    return this.directAnchors.get(group.id) ?? group.anchor;
-  }
-
-  private simulate(nodes: LayoutNode[], edges: LayoutEdge[], groupList: LayoutGroup[]): void {
-    const groups = new Map(groupList.map((g) => [g.id, g]));
-    const { width, height } = this;
-
-    for (const node of nodes) {
-      const pinned = this.explicitAnchor(node.spec);
-      if (pinned) {
-        node.fx = pinned.x;
-        node.fy = pinned.y;
-      } else {
-        node.fx = undefined;
-        node.fy = undefined;
-      }
-
-      if (!node.placed) {
-        const anchor = pinned ?? this.seedPosition(node, edges, groups);
-        node.x = anchor.x;
-        node.y = anchor.y;
-        node.homeX = anchor.x;
-        node.homeY = anchor.y;
-        node.placed = true;
-      } else if (node.moved && !pinned) {
-        // Re-seed inside the new group so the node settles there instead of
-        // being dragged across other clusters by weak forces.
-        const anchor = this.anchorFor(node, groups);
-        node.x = anchor.x + (hashUnit(node.id) - 0.5) * 50;
-        node.y = anchor.y + (hashUnit(`${node.id}:y`) - 0.5) * 50;
-        node.homeX = node.x;
-        node.homeY = node.y;
-      }
-    }
-
-    const sameCluster = (a: LayoutNode, b: LayoutNode) => a.path[0] !== undefined && a.path[0] === b.path[0];
-    const pullStrength = (node: LayoutNode) => (node.path.length > 0 ? CLUSTER_PULL : ROOT_PULL);
-    const inertia = (node: LayoutNode) => (this.first || node.moved ? 0 : INERTIA);
-
-    const simulation = d3
-      .forceSimulation<LayoutNode>(nodes)
-      .randomSource(this.random)
-      .force(
-        'link',
-        d3
-          .forceLink<LayoutNode, LayoutEdge>(edges)
-          .id((n) => n.id)
-          .distance((e) => (e.source.width + e.target.width) / 2 + LINK_DISTANCE)
-          .strength((e) => (sameCluster(e.source, e.target) ? 0.5 : 0.04)),
-      )
-      .force('charge', d3.forceManyBody<LayoutNode>().strength(CHARGE).distanceMax(320))
-      .force('collide', boxCollide(nodes, CARD_GAP))
-      .force('x', d3.forceX<LayoutNode>((n) => this.anchorFor(n, groups).x).strength(pullStrength))
-      .force('y', d3.forceY<LayoutNode>((n) => this.anchorFor(n, groups).y).strength(pullStrength))
-      .force('inertia', rigidInertia(nodes, inertia))
-      .force('separate', groupSeparation(nodes, groupList))
-      .force('bounds', (alpha) => {
-        for (const node of nodes) {
-          const padX = node.width / 2 + STAGE_MARGIN;
-          const padY = node.height / 2 + STAGE_MARGIN;
-          node.x = Math.max(padX, Math.min(width - padX, node.x));
-          node.y = Math.max(padY, Math.min(height - padY, node.y));
-          void alpha;
-        }
+    const groups: LayoutGroup[] = state.groups
+      .map((spec) => {
+        const box = placement.groups.get(spec.id);
+        if (!box) throw new Error(`layout lost group "${spec.id}"`);
+        return { id: spec.id, spec, depth: depthOf(spec), color: spec.color ?? 'tx3', box, legend: null as Box | null };
       })
-      .stop();
-
-    // A step that only changes labels or states cannot move anything, and many
-    // steps are exactly that: re-settling them is pure cost.
-    const settled = this.isStatic(nodes);
-    const disturbed = nodes.some((n) => n.moved) || nodes.length !== this.previousNodeCount;
-    this.previousNodeCount = nodes.length;
-
-    if (!settled) {
-      const ticks = this.first ? TICKS_FIRST : disturbed ? TICKS_MOVED : TICKS_SETTLED;
-      simulation.alpha(this.first ? 1 : disturbed ? 0.6 : 0.25).alphaMin(0.001);
-      simulation.tick(ticks);
+      .sort((a, b) => a.depth - b.depth);
+    const blocked: string[] = [];
+    for (const group of groups) {
+      const placed = placeLegend(group, groupLabels.get(group.id), edges);
+      group.legend = placed?.box ?? null;
+      if (placed && !placed.clear) blocked.push(group.id);
     }
 
-    // The collide force only nudges velocities, so a crowded cluster can still
-    // settle overlapped. Separating positions directly makes it an invariant
-    // rather than something the simulation has to converge on.
-    separateOverlaps(nodes, CARD_GAP, width, height);
-
-    for (const node of nodes) {
-      const pinned = this.explicitAnchor(node.spec);
-      if (pinned) {
-        node.x = pinned.x;
-        node.y = pinned.y;
-      }
-      node.vx = 0;
-      node.vy = 0;
-    }
-  }
-
-  /** New nodes appear next to a neighbour that already exists, else at their anchor. */
-  private seedPosition(node: LayoutNode, edges: LayoutEdge[], groups: Map<string, LayoutGroup>): { x: number; y: number } {
-    const jitter = () => (hashUnit(node.id + this.random()) - 0.5) * 60;
-    const neighbour = edges
-      .filter((e) => e.source === node || e.target === node)
-      .map((e) => (e.source === node ? e.target : e.source))
-      .find((other) => other.placed);
-
-    const base = neighbour && node.path.length === 0 ? { x: neighbour.x, y: neighbour.y } : this.anchorFor(node, groups);
-    return { x: base.x + jitter(), y: base.y + jitter() };
-  }
-
-  private measureGroups(groups: LayoutGroup[], nodes: LayoutNode[]): void {
-    // Deepest first so parents can wrap their children's boxes.
-    const ordered = [...groups].sort((a, b) => b.depth - a.depth);
-    const boxes = new Map<string, Box>();
-
-    for (const group of ordered) {
-      let minX = Infinity;
-      let minY = Infinity;
-      let maxX = -Infinity;
-      let maxY = -Infinity;
-      const extend = (x0: number, y0: number, x1: number, y1: number) => {
-        minX = Math.min(minX, x0);
-        minY = Math.min(minY, y0);
-        maxX = Math.max(maxX, x1);
-        maxY = Math.max(maxY, y1);
-      };
-
-      for (const node of nodes) {
-        if (node.path[node.path.length - 1] === group.id) {
-          extend(node.x - node.width / 2, node.y - node.height / 2, node.x + node.width / 2, node.y + node.height / 2);
-        }
-      }
-      for (const child of groups) {
-        const childBox = child.spec.parent === group.id ? boxes.get(child.id) : undefined;
-        if (childBox) extend(childBox.x, childBox.y, childBox.x + childBox.width, childBox.y + childBox.height);
-      }
-
-      if (minX === Infinity) {
-        extend(group.anchor.x - 40, group.anchor.y - 24, group.anchor.x + 40, group.anchor.y + 24);
-      }
-
-      const labelPad = group.spec.label ? GROUP_LABEL_HEIGHT : 0;
-      const box: Box = {
-        x: minX - GROUP_PADDING,
-        y: minY - GROUP_PADDING - labelPad,
-        width: maxX - minX + GROUP_PADDING * 2,
-        height: maxY - minY + GROUP_PADDING * 2 + labelPad,
-      };
-      boxes.set(group.id, box);
-      group.box = box;
-    }
+    return { layout: { width: placement.width, height: placement.height, nodes, edges, groups }, blocked };
   }
 }
 
 /**
- * Pushes sibling clusters apart when their bounding boxes overlap, so groups
- * read as distinct regions instead of interleaving. Under each parent (or the
- * stage root) the clusters are its child groups plus its direct member nodes.
+ * The legend sits on the panel's top border, where edges entering the group
+ * cross it. It starts at the left and slides right past any crossing; a
+ * border too crowded for that puts it on the bottom border instead, where
+ * only edges leaving the group cross. No edge runs through a title.
  */
-function groupSeparation(nodes: LayoutNode[], groups: LayoutGroup[]): d3.Force<LayoutNode, undefined> {
-  const clustersByParent = new Map<string | undefined, LayoutNode[][]>();
-  const push = (parent: string | undefined, members: LayoutNode[]) => {
-    if (members.length === 0) return;
-    const list = clustersByParent.get(parent) ?? [];
-    list.push(members);
-    clustersByParent.set(parent, list);
-  };
+function placeLegend(group: LayoutGroup, size: Size | undefined, edges: LayoutEdge[]): { box: Box; clear: boolean } | null {
+  if (!size) return null;
+  const { box } = group;
+  const start = box.x + GROUP_LABEL_X - GROUP_LABEL_PAD;
+  const limit = box.x + box.width - GROUP_LABEL_PAD;
 
-  for (const group of groups) {
-    push(group.spec.parent, nodes.filter((n) => n.path.includes(group.id)));
-  }
-  for (const group of groups) {
-    push(group.id, nodes.filter((n) => n.path[n.path.length - 1] === group.id));
-  }
-  push(undefined, nodes.filter((n) => n.path.length === 0));
-
-  const pairs: [LayoutNode[], LayoutNode[]][] = [];
-  for (const clusters of clustersByParent.values()) {
-    for (let i = 0; i < clusters.length; i++) {
-      for (let j = i + 1; j < clusters.length; j++) pairs.push([clusters[i], clusters[j]]);
-    }
-  }
-
-  const bounds = (members: LayoutNode[]) => {
-    const pad = members.length > 1 ? GROUP_PADDING : 4;
-    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-    for (const n of members) {
-      x0 = Math.min(x0, n.x - n.width / 2 - pad);
-      y0 = Math.min(y0, n.y - n.height / 2 - pad);
-      x1 = Math.max(x1, n.x + n.width / 2 + pad);
-      y1 = Math.max(y1, n.y + n.height / 2 + pad);
-    }
-    return { x0, y0, x1, y1 };
-  };
-
-  // One bounds pass per cluster per tick, not one per pair: the same cluster
-  // appears in many pairs and this runs on every tick of every step.
-  const clusters = [...new Set(pairs.flat())];
-  const cache = new Map<LayoutNode[], ReturnType<typeof bounds>>();
-
-  return (alpha) => {
-    cache.clear();
-    for (const cluster of clusters) cache.set(cluster, bounds(cluster));
-
-    for (const [a, b] of pairs) {
-      const ba = cache.get(a)!;
-      const bb = cache.get(b)!;
-      const overlapX = Math.min(ba.x1, bb.x1) - Math.max(ba.x0, bb.x0);
-      const overlapY = Math.min(ba.y1, bb.y1) - Math.max(ba.y0, bb.y0);
-      if (overlapX <= 0 || overlapY <= 0) continue;
-
-      const centreA = { x: (ba.x0 + ba.x1) / 2, y: (ba.y0 + ba.y1) / 2 };
-      const centreB = { x: (bb.x0 + bb.x1) / 2, y: (bb.y0 + bb.y1) / 2 };
-      const horizontal = overlapX < overlapY;
-      const sign = horizontal ? Math.sign(centreB.x - centreA.x) || 1 : Math.sign(centreB.y - centreA.y) || 1;
-      const shove = (horizontal ? overlapX : overlapY) * 0.9 * alpha;
-
-      for (const n of a) {
-        if (horizontal) n.vx = (n.vx ?? 0) - shove * sign;
-        else n.vy = (n.vy ?? 0) - shove * sign;
-      }
-      for (const n of b) {
-        if (horizontal) n.vx = (n.vx ?? 0) + shove * sign;
-        else n.vy = (n.vy ?? 0) + shove * sign;
-      }
-    }
-  };
-}
-
-/**
- * Holds unchanged nodes in their previous arrangement relative to their
- * cluster, while letting the cluster as a whole translate. Groups therefore
- * keep their internal shape when they are pushed around by other forces.
- */
-function rigidInertia(nodes: LayoutNode[], strength: (node: LayoutNode) => number): d3.Force<LayoutNode, undefined> {
-  const clusters = new Map<string, LayoutNode[]>();
-  for (const node of nodes) {
-    if (strength(node) === 0) continue;
-    const key = node.path[node.path.length - 1] ?? '';
-    const list = clusters.get(key) ?? [];
-    list.push(node);
-    clusters.set(key, list);
-  }
-
-  return (alpha) => {
-    for (const members of clusters.values()) {
-      let shiftX = 0;
-      let shiftY = 0;
-      for (const n of members) {
-        shiftX += n.x - n.homeX;
-        shiftY += n.y - n.homeY;
-      }
-      shiftX /= members.length;
-      shiftY /= members.length;
-      for (const n of members) {
-        const k = strength(n) * alpha;
-        n.vx = (n.vx ?? 0) + (n.homeX + shiftX - n.x) * k;
-        n.vy = (n.vy ?? 0) + (n.homeY + shiftY - n.y) * k;
-      }
-    }
-  };
-}
-
-/**
- * Keeps cards from overlapping. Circles waste space around wide boxes, so this
- * separates axis-aligned rectangles along whichever axis they overlap least.
- */
-function boxCollide(nodes: LayoutNode[], gap: number, iterations = 2): d3.Force<LayoutNode, undefined> {
-  const relax = (alpha: number) => {
-    for (let i = 0; i < nodes.length; i++) {
-      const a = nodes[i];
-      for (let j = i + 1; j < nodes.length; j++) {
-        const b = nodes[j];
-        const overlapX = (a.width + b.width) / 2 + gap - Math.abs(a.x - b.x);
-        if (overlapX <= 0) continue;
-        const overlapY = (a.height + b.height) / 2 + gap - Math.abs(a.y - b.y);
-        if (overlapY <= 0) continue;
-
-        // Push along the cheaper axis, scaled so wide cards separate sideways.
-        const horizontal = overlapX / (a.width + b.width) < overlapY / (a.height + b.height);
-        const push = (horizontal ? overlapX : overlapY) * 0.5 * alpha * 2;
-        const sign = horizontal ? Math.sign(b.x - a.x) || 1 : Math.sign(b.y - a.y) || 1;
-
-        if (horizontal) {
-          a.vx = (a.vx ?? 0) - push * sign;
-          b.vx = (b.vx ?? 0) + push * sign;
-        } else {
-          a.vy = (a.vy ?? 0) - push * sign;
-          b.vy = (b.vy ?? 0) + push * sign;
+  for (const y of [box.y, box.y + box.height]) {
+    const spans: [number, number][] = [];
+    for (const edge of edges) {
+      for (let i = 1; i < edge.points.length; i++) {
+        const a = edge.points[i - 1];
+        const b = edge.points[i];
+        if (Math.min(a.y, b.y) <= y + size.height / 2 && Math.max(a.y, b.y) >= y - size.height / 2) {
+          spans.push([Math.min(a.x, b.x) - LEGEND_CLEARANCE, Math.max(a.x, b.x) + LEGEND_CLEARANCE]);
         }
       }
     }
-  };
+    spans.sort((a, b) => a[0] - b[0]);
 
-  // Several relaxation passes per tick converge far faster than the same work
-  // spread over more ticks, which keeps cards from ending up overlapped.
-  return (alpha) => {
-    for (let pass = 0; pass < iterations; pass++) relax(alpha);
-  };
-}
-
-/**
- * Pushes overlapping cards apart by moving them, not by adding velocity.
- * Runs after the simulation so two cards can never end a step on top of
- * each other, however crowded their group got.
- */
-function separateOverlaps(nodes: LayoutNode[], gap: number, width: number, height: number, passes = 14): void {
-  for (let pass = 0; pass < passes; pass++) {
-    let worst = 0;
-
-    for (let i = 0; i < nodes.length; i++) {
-      const a = nodes[i];
-      for (let j = i + 1; j < nodes.length; j++) {
-        const b = nodes[j];
-        const overlapX = (a.width + b.width) / 2 + gap - Math.abs(a.x - b.x);
-        if (overlapX <= 0) continue;
-        const overlapY = (a.height + b.height) / 2 + gap - Math.abs(a.y - b.y);
-        if (overlapY <= 0) continue;
-
-        const horizontal = overlapX / (a.width + b.width) < overlapY / (a.height + b.height);
-        const overlap = horizontal ? overlapX : overlapY;
-        worst = Math.max(worst, overlap);
-        const shift = overlap / 2 + 0.5;
-        const sign = horizontal ? Math.sign(b.x - a.x) || 1 : Math.sign(b.y - a.y) || 1;
-
-        if (horizontal) {
-          a.x -= shift * sign;
-          b.x += shift * sign;
-        } else {
-          a.y -= shift * sign;
-          b.y += shift * sign;
-        }
-      }
+    let x = start;
+    for (const [from, to] of spans) {
+      if (to < x || from > x + size.width) continue;
+      x = to;
     }
-
-    for (const node of nodes) {
-      node.x = Math.max(node.width / 2 + 4, Math.min(width - node.width / 2 - 4, node.x));
-      node.y = Math.max(node.height / 2 + 4, Math.min(height - node.height / 2 - 4, node.y));
-    }
-
-    if (worst < 0.5) break;
+    if (x + size.width <= limit) return { box: { x, y: y - size.height / 2, width: size.width, height: size.height }, clear: true };
   }
+
+  // Nowhere clear on either border: keep the conventional spot for now.
+  return { box: { x: start, y: box.y - size.height / 2, width: size.width, height: size.height }, clear: false };
 }

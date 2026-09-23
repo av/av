@@ -39,9 +39,12 @@ export interface NodeSpec {
   state?: NodeState;
   /** Innermost group id. */
   group?: string;
-  /** Optional pinned position, percent of the stage width. */
+  /**
+   * Former pinned position (percent of the stage). The layered layout places
+   * every card itself, so this is accepted for older stories and ignored.
+   */
   x?: number;
-  /** Optional pinned position, percent of the stage height. */
+  /** See `x`. */
   y?: number;
 }
 
@@ -64,9 +67,9 @@ export interface GroupSpec {
   color?: Accent;
   /** Parent group id for nested groups. */
   parent?: string;
-  /** Optional anchor, percent of the stage width. */
+  /** Former anchor (percent of the stage); accepted and ignored, like `NodeSpec.x`. */
   x?: number;
-  /** Optional anchor, percent of the stage height. */
+  /** See `x`. */
   y?: number;
 }
 
@@ -124,7 +127,7 @@ export interface GraphStorySpec {
   interval?: number;
   /** Stage aspect ratio (width / height); defaults to 1.6. */
   aspect?: number;
-  /** Seed for deterministic layout; defaults to `graph-story`. */
+  /** Former force-layout seed. The layered layout is deterministic without one; ignored. */
   seed?: string;
 }
 

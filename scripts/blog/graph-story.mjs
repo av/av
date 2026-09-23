@@ -282,6 +282,30 @@ export function validateGraphStory(spec, label = 'graph story') {
   return errors;
 }
 
+/**
+ * Every step's full state, in order. Assumes a story that already passed
+ * validateGraphStory(); throws on the first op that does not apply.
+ */
+export function resolveGraphStates(spec) {
+  const states = [];
+  let previous = { nodes: [], edges: [], groups: [] };
+  for (const step of spec.steps) {
+    const base = step.state ?? previous;
+    const state = {
+      nodes: base.nodes.map((n) => ({ ...n })),
+      edges: base.edges.map((e) => ({ ...e })),
+      groups: base.groups.map((g) => ({ ...g })),
+    };
+    for (const op of step.ops ?? []) {
+      const error = applyOp(state, op);
+      if (error) throw new Error(error);
+    }
+    states.push(state);
+    previous = state;
+  }
+  return states;
+}
+
 export async function loadGraphStory(graphsDir, name) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) {
     throw new Error(`graph story name "${name}" must be a lowercase slug.`);

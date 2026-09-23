@@ -1,7 +1,7 @@
 # AGENTS.md
 
 Guidance for coding agents working in this repository.
-Last updated: 2026-03-08.
+Last updated: 2026-09-23.
 
 ## Project Overview
 
@@ -37,13 +37,14 @@ npm run verify:grain        # headless geometry gate (also runs at end of build)
 npm run record:graph        # record a blog graph story from dist/ → docs/graph-story-demo.{mp4,webm,png}
 npm run deploy              # rm dist/, npm run build, vercel --prod
 npm run cache:bust          # rm -rf .parcel-cache
-npm test                    # node:test suites: blog decor frontmatter + graph story validation
+npm test                    # node:test suites: blog decor frontmatter, graph story validation + layout
 npx tsc --noEmit            # TypeScript static check
 ```
 
 No ESLint or Prettier is configured. Static checks: `npm test` (blog decor
 frontmatter in `scripts/blog/decor-config.test.mjs`, graph stories in
-`scripts/blog/graph-story.test.mjs`) and `npx tsc --noEmit`.
+`scripts/blog/graph-story.test.mjs`, graph layout geometry for every step of
+every story in `scripts/blog/graph-layout.test.mjs`) and `npx tsc --noEmit`.
 
 ## Repository Map
 
@@ -56,8 +57,8 @@ src/
   skills/                 D3 SVG skills map (SkillsSection.ts, skillList.ts)
   lib/                    Reusable primitives: Scene, PageSection, SmoothTransform,
                           InterpolatedValue, CanvasCursor, PointerTracker, SelectablePills
-  lib/graph/              Animated graph story engine (types, story reducer, d3-force
-                          layout with groups, SVG renderer, GraphStory controller)
+  lib/graph/              Animated graph story engine (types, story reducer, ELK layered
+                          layout in a worker, SVG renderer, GraphStory controller)
   graph-story.scss        Styles for graph stories (imported by blog.scss)
   modals/                 Modal content Pug templates (*.pug)
   mixins/                 Shared Pug mixins: splitter, modal, fixed, floater, shape, intro-section
@@ -149,7 +150,14 @@ Posts can embed an animated, step-by-step graph diagram (see
 5. Card widths come from measured text (`createTextMeasurer`), so the pixel
    font must be loaded before the first layout — `src/blog/graph.ts` awaits
    `document.fonts.ready` before mounting.
-6. Colour on the blog is greyscale plus green — `$gs-tones` in
+6. Layout is ELK layered (`src/lib/graph/elkGraph.ts` builds the ELK graph,
+   `layout.ts` runs it in a worker): top-down layers, groups as compound
+   boxes, orthogonal routes with packed lanes, labels placed by the layout.
+   Placement follows the order objects are added in and the edges between
+   them; `x`/`y` pins and `seed` are ignored. After changing a story or the
+   layout, `npm test` re-checks every step for overlaps, routes through cards,
+   shared runs and label collisions.
+7. Colour on the blog is greyscale plus green — `$gs-tones` in
    `src/graph-story.scss` collapses every accent onto three greys plus green,
    which is reserved for agentic nodes. Prefer `green` / `tx` / `tx2` / `tx3`
    in story data.
@@ -161,6 +169,8 @@ Posts can embed an animated, step-by-step graph diagram (see
   bare package specifiers to resolve in `tsc`.
 - `"allowSyntheticDefaultImports": true` — allows default imports from CommonJS
   packages (`micromodal`, `aos`, `chroma-js`) that lack a typed default export.
+- `"module": "ESNext"` — allows the dynamic `import()` and `import.meta.url`
+  that load ELK and its worker lazily in `src/lib/graph/layout.ts`.
 
 `src/types/modules.d.ts` declares `bundle-text:*` as a default `string` export.
 This types the Parcel-specific `import csv from 'bundle-text:./file.csv'` imports

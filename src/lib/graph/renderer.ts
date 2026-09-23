@@ -1,8 +1,8 @@
 import * as d3 from 'd3';
 
-import { cardPath, cardRadius, estimateTextWidth, labelOffsetX, sigilForKind, sigilOffsetX } from './shapes';
-import type { TextMeasurer } from './shapes';
-import type { Box, Layout, LayoutEdge, LayoutGroup, LayoutNode } from './layout';
+import { GROUP_LABEL_PAD } from './layout';
+import type { Box, Layout, LayoutEdge, LayoutGroup, LayoutNode, Point } from './layout';
+import { cardPath, labelOffsetX, sigilForKind, sigilOffsetX } from './shapes';
 import type { Accent, StepFocus } from './types';
 
 const ACCENTS: Accent[] = ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'magenta', 'tx', 'tx2', 'tx3'];
@@ -12,19 +12,10 @@ const ARROW_GAP = 6;
 const FADE = 'gs-fade';
 const MOVE = 'gs-move';
 const CAMERA = 'gs-camera';
-const EDGE_LABEL_SIZE = 11;
-/** Group titles are uppercase and letter-spaced, so the plate needs slack. */
-const GROUP_LABEL_SIZE = 12;
-const GROUP_LABEL_TRACKING = 0.12;
-const GROUP_LABEL_PAD = 9;
-/** Edges longer than this are routed orthogonally instead of drawn as diagonals. */
-const LONG_EDGE = 260;
-/** Corner radius on a routed edge. */
-const ELBOW_RADIUS = 10;
-/** Spacing between two routed edges sharing a channel. */
-const CHANNEL_SPACING = 16;
-/** Routes whose channels land within this distance share a bus. */
-const CHANNEL_BUCKET = 90;
+/** Corner radius on a routed edge; kept under half the layout's edge spacing. */
+const ELBOW_RADIUS = 6;
+/** Points a route is resampled to when it morphs into one with a different shape. */
+const MORPH_SAMPLES = 24;
 /**
  * Text centres inside the card, relative to its centre. Two lines are centred
  * as a block: 15px over 11px with a small gap is 29 units tall.
@@ -65,16 +56,13 @@ export default class GraphRenderer {
   private readonly groupLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
   private readonly edgeLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
   private readonly nodeLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
-  private edgeIndex = new Map<string, LayoutEdge>();
   /** Position currently painted for each node; tweens converge on the layout target. */
   private readonly painted = new Map<string, { x: number; y: number }>();
-  /** Lane offset for each routed edge, assigned once per render. */
-  private readonly channels = new Map<string, number>();
-  private readonly measure: TextMeasurer;
+  /** Route currently painted for each edge, so a changed route morphs from where it is. */
+  private readonly routes = new Map<string, Point[]>();
 
-  constructor(svg: SVGSVGElement, width: number, height: number, measure: TextMeasurer = estimateTextWidth) {
+  constructor(svg: SVGSVGElement, width: number, height: number) {
     this.uid = `gs${instanceCounter++}`;
-    this.measure = measure;
     this.svg = d3.select(svg).attr('viewBox', `0 0 ${width} ${height}`).attr('preserveAspectRatio', 'xMidYMid meet');
 
     const defs = this.svg.append('defs');
@@ -100,9 +88,7 @@ export default class GraphRenderer {
 
   render(layout: Layout, duration: number, focus?: StepFocus): void {
     const timing = timingFor(duration);
-    this.edgeIndex = new Map(layout.edges.map((e) => [e.id, e]));
     this.lit = focus && !focus.all ? litSet(layout, focus) : null;
-    this.assignChannels(layout.edges);
     this.svg.classed('is-focused', this.lit !== null);
 
     // Nodes first so their tweens run before edges read `px`/`py` each frame.
@@ -145,7 +131,7 @@ export default class GraphRenderer {
 
     enter.select('rect.gs-group__panel').call(placePanel);
     enter.select('text.gs-group__label').call(placeGroupLabel);
-    enter.select('rect.gs-group__legend').call(placeLegend, this.measure);
+    enter.select('rect.gs-group__legend').call(placeLegend);
     enter.transition(FADE).delay(timing.enter.delay).duration(timing.enter.duration).style('opacity', 1);
 
     sel
@@ -167,7 +153,7 @@ export default class GraphRenderer {
     const updated = sel.transition(MOVE).delay(timing.move.delay).duration(timing.move.duration).ease(d3.easeCubicInOut);
     updated.select('rect.gs-group__panel').call(placePanel);
     updated.select('text.gs-group__label').call(placeGroupLabel);
-    updated.select('rect.gs-group__legend').call(placeLegend, this.measure);
+    updated.select('rect.gs-group__legend').call(placeLegend);
   }
 
   private renderNodes(nodes: LayoutNode[], timing: Timing): void {
@@ -279,14 +265,17 @@ export default class GraphRenderer {
     enter.append('text').attr('class', 'gs-edge__label');
     enter.transition(FADE).delay(timing.enter.delay).duration(timing.enter.duration).style('opacity', 1);
 
+    const exiting = new Set<string>();
     sel
       .exit<LayoutEdge>()
+      .each((e) => exiting.add(e.id))
       .classed('is-exiting', true)
       .transition(FADE)
       .delay(timing.exit.delay)
       .duration(timing.exit.duration)
       .style('opacity', 0)
       .remove();
+    for (const id of exiting) this.routes.delete(id);
 
     const merged: EdgeSel = enter.merge(sel);
     merged.attr(
@@ -298,163 +287,57 @@ export default class GraphRenderer {
       .select<SVGPathElement>('path')
       .attr('marker-end', (e) => (e.spec.directed === false ? null : `url(#${this.uid}-arrow-${e.color})`));
     merged.select<SVGTextElement>('text').text((e) => e.spec.label ?? '');
-    const self = this;
-    merged.each(function (e) {
-      const label = e.spec.label ?? '';
-      const plate = d3.select(this).select<SVGRectElement>('rect.gs-edge__plate');
-      if (!label) {
-        plate.attr('width', 0).attr('height', 0);
+    merged.select<SVGRectElement>('rect.gs-edge__plate').each(function (e) {
+      const plate = d3.select(this);
+      if (!e.label) {
+        plate.attr('x', null).attr('y', null).attr('width', 0).attr('height', 0);
         return;
       }
-      const width = self.measure(label, EDGE_LABEL_SIZE) + 10;
-      plate.attr('x', -width / 2).attr('y', -8).attr('width', width).attr('height', 16);
+      plate.attr('x', -e.label.width / 2).attr('y', -e.label.height / 2).attr('width', e.label.width).attr('height', e.label.height);
     });
 
-    // Edges follow their endpoints' painted position every frame, whether the
-    // endpoints are moving, entering, or standing still.
-    const follow = merged.transition(MOVE).delay(0).duration(timing.move.delay + timing.move.duration);
-    follow.select<SVGPathElement>('path').attrTween('d', (e) => () => this.edgePath(e));
-    follow
-      .select<SVGTextElement>('text')
-      .attrTween('transform', (e) => () => this.edgeLabelTransform(e));
-    follow
-      .select<SVGRectElement>('rect.gs-edge__plate')
-      .attrTween('transform', (e) => () => this.edgeLabelTransform(e));
+    // New edges appear on their final route once the cards have arrived.
+    enter.select<SVGPathElement>('path').attr('d', (e) => roundedPolyline(this.finalRoute(e), ELBOW_RADIUS));
+    enter.select<SVGTextElement>('text').attr('transform', (e) => labelTransform(e, 1, null));
+    enter.select<SVGRectElement>('rect.gs-edge__plate').attr('transform', (e) => labelTransform(e, 1, null));
+
+    const previous = new Map<string, { route: Point[]; label: Point | null }>();
+    sel.each((e) => {
+      const route = this.routes.get(e.id);
+      if (route) previous.set(e.id, { route, label: this.labels.get(e.id) ?? null });
+    });
+
+    // Existing edges morph from the route they had into the new one, in step
+    // with the cards they connect.
+    const moving = sel.transition(MOVE).delay(timing.move.delay).duration(timing.move.duration).ease(d3.easeCubicInOut);
+    moving.select<SVGPathElement>('path').attrTween('d', (e) => {
+      const target = this.finalRoute(e);
+      const from = previous.get(e.id)?.route ?? target;
+      const morph = morphRoutes(from, target);
+      return (t) => (t >= 1 ? roundedPolyline(target, ELBOW_RADIUS) : roundedPolyline(morph(t), ELBOW_RADIUS));
+    });
+    moving.select<SVGTextElement>('text').attrTween('transform', (e) => (t) => labelTransform(e, t, previous.get(e.id)?.label ?? null));
+    moving.select<SVGRectElement>('rect.gs-edge__plate').attrTween('transform', (e) => (t) => labelTransform(e, t, previous.get(e.id)?.label ?? null));
 
     if (timing.move.duration === 0) {
-      merged.select<SVGPathElement>('path').attr('d', (e) => this.edgePath(e));
-      merged.select<SVGTextElement>('text').attr('transform', (e) => this.edgeLabelTransform(e));
-      merged.select<SVGRectElement>('rect.gs-edge__plate').attr('transform', (e) => this.edgeLabelTransform(e));
+      merged.select<SVGPathElement>('path').attr('d', (e) => roundedPolyline(this.finalRoute(e), ELBOW_RADIUS));
+      merged.select<SVGTextElement>('text').attr('transform', (e) => labelTransform(e, 1, null));
+      merged.select<SVGRectElement>('rect.gs-edge__plate').attr('transform', (e) => labelTransform(e, 1, null));
+    }
+
+    for (const e of edges) {
+      this.routes.set(e.id, this.finalRoute(e));
+      this.labels.set(e.id, labelCentre(e));
     }
   }
 
-  /** Points a straight edge runs between, trimmed to the two card borders. */
-  private straightPoints(e: LayoutEdge): Point[] {
-    const source = e.source;
-    const target = e.target;
-    const s = { ...this.paintedOf(source), width: source.width, height: source.height };
-    const t = { ...this.paintedOf(target), width: target.width, height: target.height };
-    const dx = t.x - s.x;
-    const dy = t.y - s.y;
-    const theta = Math.atan2(dy, dx);
-    const length = Math.hypot(dx, dy) || 1;
-    const ux = dx / length;
-    const uy = dy / length;
+  /** Label centre currently painted per edge. */
+  private readonly labels = new Map<string, Point | null>();
 
-    const startTrim = cardRadius(s.width, s.height, theta) + 2;
-    const endTrim = cardRadius(t.width, t.height, theta + Math.PI) + this.endGap(e);
-    return [
-      { x: s.x + ux * startTrim, y: s.y + uy * startTrim },
-      { x: t.x - ux * endTrim, y: t.y - uy * endTrim },
-    ];
-  }
-
-  private endGap(e: LayoutEdge): number {
-    return e.spec.directed === false ? 2 : ARROW_GAP;
-  }
-
-  /**
-   * Assigns every long edge a lane in a shared bus. Offsetting each route by a
-   * hash spread them randomly, so runs still landed on top of each other; here
-   * routes that would share a channel are bucketed and spaced evenly, which is
-   * what makes a dense step read as a bus rather than a tangle.
-   */
-  private assignChannels(edges: LayoutEdge[]): void {
-    this.channels.clear();
-    const buckets = new Map<string, LayoutEdge[]>();
-
-    for (const edge of edges) {
-      const plan = this.routePlan(edge);
-      if (!plan) continue;
-      const key = `${plan.axis}:${Math.round(plan.centre / CHANNEL_BUCKET)}`;
-      const bucket = buckets.get(key) ?? [];
-      bucket.push(edge);
-      buckets.set(key, bucket);
-    }
-
-    for (const bucket of buckets.values()) {
-      // A stable order keeps lanes from swapping between renders.
-      bucket.sort((a, b) => a.id.localeCompare(b.id));
-      bucket.forEach((edge, index) => {
-        this.channels.set(edge.id, (index - (bucket.length - 1) / 2) * CHANNEL_SPACING);
-      });
-    }
-  }
-
-  /** Which way a long edge runs and where its channel would sit, ignoring lanes. */
-  private routePlan(e: LayoutEdge): { axis: 'h' | 'v'; centre: number } | null {
-    const s = this.paintedOf(e.source);
-    const t = this.paintedOf(e.target);
-    const dx = t.x - s.x;
-    const dy = t.y - s.y;
-    if (Math.hypot(dx, dy) < LONG_EDGE) return null;
-    return Math.abs(dx) >= Math.abs(dy)
-      ? { axis: 'h', centre: (s.x + t.x) / 2 }
-      : { axis: 'v', centre: (s.y + t.y) / 2 };
-  }
-
-  /**
-   * Long edges leave a card face, run down their assigned lane, and enter the
-   * other face. Drawn as diagonals they cross at every angle, which is what
-   * turns a busy step into spaghetti.
-   */
-  private routedPoints(e: LayoutEdge): Point[] {
-    const source = e.source;
-    const target = e.target;
-    const s = { ...this.paintedOf(source), width: source.width, height: source.height };
-    const t = { ...this.paintedOf(target), width: target.width, height: target.height };
-    const dx = t.x - s.x;
-    const dy = t.y - s.y;
-    const gap = this.endGap(e);
-    const lane = this.channels.get(e.id) ?? 0;
-
-    if (Math.abs(dx) >= Math.abs(dy)) {
-      const sx = s.x + Math.sign(dx) * (s.width / 2 + 2);
-      const tx = t.x - Math.sign(dx) * (t.width / 2 + gap);
-      const midX = (sx + tx) / 2 + lane;
-      return [
-        { x: sx, y: s.y },
-        { x: midX, y: s.y },
-        { x: midX, y: t.y },
-        { x: tx, y: t.y },
-      ];
-    }
-
-    const sy = s.y + Math.sign(dy) * (s.height / 2 + 2);
-    const ty = t.y - Math.sign(dy) * (t.height / 2 + gap);
-    const midY = (sy + ty) / 2 + lane;
-    return [
-      { x: s.x, y: sy },
-      { x: s.x, y: midY },
-      { x: t.x, y: midY },
-      { x: t.x, y: ty },
-    ];
-  }
-
-  private edgePoints(e: LayoutEdge): Point[] {
-    return this.channels.has(e.id) ? this.routedPoints(e) : this.straightPoints(e);
-  }
-
-  private edgePath(e: LayoutEdge): string {
-    const points = this.edgePoints(e);
-    if (points.length === 2) {
-      // Short edges bend only when a reverse edge would otherwise sit on top.
-      const [a, b] = points;
-      if (!this.edgeIndex.has(`${e.spec.to}->${e.spec.from}`)) {
-        return `M${a.x.toFixed(1)},${a.y.toFixed(1)}L${b.x.toFixed(1)},${b.y.toFixed(1)}`;
-      }
-      const length = Math.hypot(b.x - a.x, b.y - a.y) || 1;
-      const bend = 0.16 * length;
-      const cx = (a.x + b.x) / 2 - ((b.y - a.y) / length) * bend;
-      const cy = (a.y + b.y) / 2 + ((b.x - a.x) / length) * bend;
-      return `M${a.x.toFixed(1)},${a.y.toFixed(1)}Q${cx.toFixed(1)},${cy.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
-    }
-    return roundedPolyline(points, ELBOW_RADIUS);
-  }
-
-  private edgeLabelTransform(e: LayoutEdge): string {
-    const point = polylineMidpoint(this.edgePoints(e));
-    return `translate(${point.x.toFixed(1)},${point.y.toFixed(1)})`;
+  /** The layout's route, pulled back at the target so the arrowhead's tip meets the card. */
+  private finalRoute(e: LayoutEdge): Point[] {
+    const gap = e.spec.directed === false ? 1 : ARROW_GAP;
+    return trimEnd(e.points, gap);
   }
 }
 
@@ -484,7 +367,12 @@ function swapText(
       .transition()
       .duration(half)
       .style('fill-opacity', 1)
-      .style('stroke-opacity', 1);
+      .style('stroke-opacity', 1)
+      // Leave no inline style behind, so a replayed step matches a jumped-to one.
+      .on('end', function () {
+        d3.select(this).style('fill-opacity', null).style('stroke-opacity', null);
+        if (!this.getAttribute('style')) this.removeAttribute('style');
+      });
   });
 }
 
@@ -501,8 +389,6 @@ function litSet(layout: Layout, focus: StepFocus): { nodes: Set<string>; groups:
   return { nodes, groups, edges: new Set(focus.edges) };
 }
 
-const GROUP_LABEL_X = 12;
-
 interface GroupPlacement {
   attr(name: string, value: (datum: LayoutGroup) => number | string): GroupPlacement;
 }
@@ -516,28 +402,72 @@ function placePanel(sel: GroupPlacement): void {
 }
 
 function placeGroupLabel(sel: GroupPlacement): void {
-  sel.attr('x', (g) => g.box.x + GROUP_LABEL_X).attr('y', (g) => g.box.y);
-}
-
-/** Sized to the label so the panel border is interrupted, not overdrawn. */
-function legendWidth(label: string | undefined, measure: TextMeasurer): number {
-  if (!label) return 0;
-  const text = label.toUpperCase();
-  const tracking = text.length * GROUP_LABEL_SIZE * GROUP_LABEL_TRACKING;
-  return measure(text, GROUP_LABEL_SIZE) + tracking + GROUP_LABEL_PAD * 2;
-}
-
-function placeLegend(sel: GroupPlacement, measure: TextMeasurer): void {
   sel
-    .attr('x', (g) => g.box.x + GROUP_LABEL_X - GROUP_LABEL_PAD)
-    .attr('y', (g) => g.box.y - 8)
-    .attr('width', (g) => legendWidth(g.spec.label, measure))
-    .attr('height', (g) => (g.spec.label ? 16 : 0));
+    .attr('x', (g) => (g.legend ? g.legend.x + GROUP_LABEL_PAD : g.box.x))
+    .attr('y', (g) => (g.legend ? g.legend.y + g.legend.height / 2 : g.box.y));
 }
 
-interface Point {
-  x: number;
-  y: number;
+/** Plate sized to the label so the panel border is interrupted, not overdrawn; placed by the layout clear of edges. */
+function placeLegend(sel: GroupPlacement): void {
+  sel
+    .attr('x', (g) => g.legend?.x ?? g.box.x)
+    .attr('y', (g) => g.legend?.y ?? g.box.y)
+    .attr('width', (g) => g.legend?.width ?? 0)
+    .attr('height', (g) => g.legend?.height ?? 0);
+}
+
+function labelCentre(e: LayoutEdge): Point | null {
+  return e.label ? { x: e.label.x + e.label.width / 2, y: e.label.y + e.label.height / 2 } : null;
+}
+
+function labelTransform(e: LayoutEdge, t: number, from: Point | null): string {
+  const to = labelCentre(e) ?? polylineMidpoint(e.points);
+  const start = from ?? to;
+  const x = start.x + (to.x - start.x) * t;
+  const y = start.y + (to.y - start.y) * t;
+  return `translate(${x.toFixed(1)},${y.toFixed(1)})`;
+}
+
+/** Shortens a route's last segment so an arrowhead drawn at its end stops at the card. */
+function trimEnd(points: Point[], gap: number): Point[] {
+  if (points.length < 2) return points;
+  const out = points.map((p) => ({ ...p }));
+  const last = out[out.length - 1];
+  const before = out[out.length - 2];
+  const length = Math.hypot(last.x - before.x, last.y - before.y);
+  if (length <= gap * 2) return out;
+  last.x -= ((last.x - before.x) / length) * gap;
+  last.y -= ((last.y - before.y) / length) * gap;
+  return out;
+}
+
+/**
+ * Interpolates one route into another. Routes with the same number of points
+ * move corner by corner, which keeps every segment orthogonal on the way;
+ * otherwise both are resampled evenly by length.
+ */
+function morphRoutes(from: Point[], to: Point[]): (t: number) => Point[] {
+  const a = from.length === to.length ? from : resample(from, MORPH_SAMPLES);
+  const b = from.length === to.length ? to : resample(to, MORPH_SAMPLES);
+  return (t) => a.map((p, i) => ({ x: p.x + (b[i].x - p.x) * t, y: p.y + (b[i].y - p.y) * t }));
+}
+
+function resample(points: Point[], count: number): Point[] {
+  const lengths = [0];
+  for (let i = 1; i < points.length; i++) lengths.push(lengths[i - 1] + Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y));
+  const total = lengths[lengths.length - 1] || 1;
+  const out: Point[] = [];
+  let segment = 1;
+  for (let k = 0; k < count; k++) {
+    const at = (total * k) / (count - 1);
+    while (segment < points.length - 1 && lengths[segment] < at) segment++;
+    const span = lengths[segment] - lengths[segment - 1] || 1;
+    const t = Math.min(1, Math.max(0, (at - lengths[segment - 1]) / span));
+    const a = points[segment - 1];
+    const b = points[segment] ?? a;
+    out.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+  }
+  return out;
 }
 
 /** Polyline with the corners rounded, clamped so short segments stay clean. */
