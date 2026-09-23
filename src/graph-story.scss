@@ -28,6 +28,13 @@ $gs-chrome: 22px;
   --gs-accent: var(--fx-tx2);
   margin: 1.5rem 0;
   outline: 0;
+  // Two backgrounds: the page's, whose grain and decor scroll with the page,
+  // and the graph card's, which has its own grain and stays put. The page
+  // grain overlay (grain-surface, z-index 9999) would otherwise slide across
+  // a pinned card, so the story sits above it; where the story is transparent
+  // the page, grain included, shows through.
+  position: relative;
+  z-index: 10000;
 
   &:focus-visible .graph-story__figure {
     border-color: var(--fx-tx3);
@@ -307,6 +314,8 @@ $gs-chrome: 22px;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
 
+  // The figure is only a pinned frame here: transparent, so the page moves
+  // behind it. The screen inside is the card.
   .graph-story__figure {
     position: sticky;
     top: 0;
@@ -315,8 +324,17 @@ $gs-chrome: 22px;
     margin: 0;
     border: 0;
     border-radius: 0;
+    background: transparent;
     display: flex;
     flex-direction: column;
+
+    &::before {
+      content: none;
+    }
+  }
+
+  .graph-story__screen {
+    box-shadow: 0 0.75rem 2.5rem -1rem rgba(0, 0, 0, 0.6);
   }
 
   .graph-story__stage {

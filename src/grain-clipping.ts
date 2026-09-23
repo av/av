@@ -35,8 +35,8 @@ function throttle(fn: () => void, delay: number): () => void {
 }
 
 /**
- * Wires grain clipping for any page with `.grain-layer` and splitters or
- * graph stories. Safe to call from secondary entries (e.g. harbor-qr).
+ * Wires grain clipping for any page with `.grain-layer` and splitters.
+ * Safe to call from secondary entries (e.g. harbor-qr).
  */
 export function initGrainClipping() {
   clipGrainAroundSplitters();
@@ -58,8 +58,8 @@ function bindGrainClipListeners() {
     grainClipResizeObserver.observe(grain);
   }
 
-  document.querySelectorAll('section.splitter, .graph-story').forEach((el) => {
-    grainClipResizeObserver!.observe(el);
+  document.querySelectorAll('section.splitter').forEach((splitter) => {
+    grainClipResizeObserver!.observe(splitter);
   });
 }
 
@@ -93,13 +93,12 @@ function scheduleGrainClipSettle() {
 export function clipGrainAroundSplitters() {
   const grain = qs<HTMLElement>('.grain-layer');
   const splitters = Array.from(document.querySelectorAll('section.splitter'));
-  const stories = Array.from(document.querySelectorAll<HTMLElement>('.graph-story'));
 
   if (!grain) {
     return;
   }
 
-  if (splitters.length === 0 && stories.length === 0) {
+  if (splitters.length === 0) {
     grain.style.clipPath = 'none';
     return;
   }
@@ -116,18 +115,6 @@ export function clipGrainAroundSplitters() {
     const bandBottom = grainPathCoord(band.bottom);
     path += ` M 0 ${bandTop} H ${w} V ${bandBottom} H 0 Z`;
     el.style.setProperty('--grain-bg-y', `${grainPhaseOffset(bandTop)}px`);
-  }
-
-  // Graph stories carry their own fixed grain (graph-story.scss). A scroll
-  // story pins its figure while the page grain scrolls past, which reads as
-  // noise crawling over the diagram, so the page grain skips the whole story.
-  for (const story of stories) {
-    const rect = story.getBoundingClientRect();
-    const x0 = grainPathCoord(rect.left - grainRect.left);
-    const x1 = grainPathCoord(rect.right - grainRect.left);
-    const y0 = grainPathCoord(rect.top - grainRect.top);
-    const y1 = grainPathCoord(rect.bottom - grainRect.top);
-    path += ` M ${x0} ${y0} H ${x1} V ${y1} H ${x0} Z`;
   }
 
   grain.style.clipPath = `path(evenodd, '${path}')`;

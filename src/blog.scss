@@ -91,8 +91,10 @@ $font-mono:    'Geist Mono', ui-monospace, 'SFMono-Regular', 'Consolas', monospa
 }
 
 .blog-shell {
+  // Positioned without a z-index: it still paints above the decor layers that
+  // precede it in the DOM, but opens no stacking context of its own, so a
+  // graph story inside can rise above the page grain (see graph-story.scss).
   position: relative;
-  z-index: 1;
   width: min(100%, 48rem);
   margin: 0 auto;
   padding: 3rem 1.5rem 4rem;
