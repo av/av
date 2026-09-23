@@ -35,11 +35,24 @@ $gs-chrome: 22px;
 }
 
 .graph-story__figure {
+  position: relative;
   margin: 0;
   border: 1px solid var(--fx-ui);
   border-radius: 0.5rem;
   background: var(--fx-bg2);
   overflow: hidden;
+  isolation: isolate;
+
+  // Solid surface with its own grain, fixed to the figure rather than the page.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.06;
+    @include grain-tile;
+  }
 
   @include media(sm) {
     border-radius: 0;

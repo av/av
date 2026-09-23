@@ -1,3 +1,4 @@
+import { initGrainClipping } from '../grain-clipping';
 import { GraphStory } from '../lib/graph';
 import type { GraphStorySpec, StoryTrigger } from '../lib/graph';
 
@@ -33,6 +34,8 @@ async function boot() {
     // Font loading is a progressive enhancement; fall back to whatever is ready.
   }
   document.querySelectorAll<HTMLElement>('.graph-story[data-graph]').forEach(mount);
+  // After mounting: the stories now have their final size.
+  initGrainClipping();
 }
 
 if (document.readyState === 'loading') {
