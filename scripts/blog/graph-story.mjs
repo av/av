@@ -97,7 +97,8 @@ function applyOp(state, op) {
         if (op.node.group !== undefined && !group(op.node.group)) return `node "${op.node.id}" references unknown group "${op.node.group}"`;
         state.nodes.push({ ...op.node });
       } else if (op.edge) {
-        if (!node(op.edge.from) || !node(op.edge.to)) return `edge "${edgeId(op.edge)}" references an unknown node`;
+        const known = (id) => node(id) || group(id);
+        if (!known(op.edge.from) || !known(op.edge.to)) return `edge "${edgeId(op.edge)}" references an unknown node or group`;
         if (edge(edgeId(op.edge))) return `duplicate edge "${edgeId(op.edge)}"`;
         state.edges.push({ ...op.edge });
       } else if (op.group) {
@@ -123,6 +124,7 @@ function applyOp(state, op) {
         for (const n of state.nodes) if (n.group === removed.id) n.group = removed.parent;
         for (const g of state.groups) if (g.parent === removed.id) g.parent = removed.parent;
         state.groups = state.groups.filter((g) => g.id !== removed.id);
+        state.edges = state.edges.filter((e) => e.from !== removed.id && e.to !== removed.id);
       } else {
         return 'remove needs a node / edge / group id';
       }
@@ -208,8 +210,23 @@ function validateState(state, errors, where) {
     const id = edgeId(edge);
     if (edgeIds.has(id)) errors.push(`${where}: duplicate edge "${id}".`);
     edgeIds.add(id);
-    if (!nodeIds.has(edge.from) || !nodeIds.has(edge.to)) errors.push(`${where}: edge "${id}" references an unknown node.`);
+    const known = (end) => nodeIds.has(end) || groupIds.has(end);
+    if (!known(edge.from) || !known(edge.to)) errors.push(`${where}: edge "${id}" references an unknown node or group.`);
+    else if (encloses(state, edge.from, edge.to) || encloses(state, edge.to, edge.from)) {
+      errors.push(`${where}: edge "${id}" joins a group to something inside it.`);
+    }
   }
+}
+
+/** True when `outer` is a group containing `inner`. Mirrors encloses() in src/lib/graph/story.ts. */
+function encloses(state, outer, inner) {
+  const parentOf = (id) => state.nodes.find((n) => n.id === id)?.group ?? state.groups.find((g) => g.id === id)?.parent;
+  const seen = new Set();
+  for (let current = parentOf(inner); current !== undefined && !seen.has(current); current = parentOf(current)) {
+    if (current === outer) return true;
+    seen.add(current);
+  }
+  return false;
 }
 
 /**

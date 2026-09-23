@@ -382,7 +382,7 @@ function litSet(layout: Layout, focus: StepFocus): { nodes: Set<string>; groups:
   for (const n of layout.nodes) {
     if (n.path.some((g) => focus.groups.has(g))) nodes.add(n.id);
   }
-  const groups = new Set(focus.groups);
+  const groups = new Set([...focus.groups, ...focus.panels]);
   for (const n of layout.nodes) {
     if (nodes.has(n.id)) for (const g of n.path) groups.add(g);
   }

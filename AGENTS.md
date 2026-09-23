@@ -139,6 +139,8 @@ Posts can embed an animated, step-by-step graph diagram (see
    (`src/lib/graph/types.ts`): `steps[]`, each with `title`, `caption`, and either
    a full `state` (`nodes`, `edges`, `groups`) or `ops` applied to the previous
    step (`add` / `remove` / `set` / `move`). Objects keep identity by `id`.
+   An edge may end on a group id instead of a node: the route stops on the
+   group's panel, for things that reach a whole machine (remote desktop, VPN).
 2. Reference it from the markdown with a raw HTML marker:
    `<div class="graph-story" data-graph="<name>" data-trigger="click|scroll|timeline"></div>`
 3. `npm run blog:generate` validates the story (dangling ids fail the build),

@@ -47,10 +47,8 @@ export interface LayoutNode {
 export interface LayoutEdge {
   id: string;
   spec: EdgeSpec;
-  source: LayoutNode;
-  target: LayoutNode;
   color: Accent;
-  /** Orthogonal route from the source card's border to the target card's border. */
+  /** Orthogonal route from the source's border (card or group panel) to the target's. */
   points: Point[];
   /** Label plate, placed by the layout so it never sits on a card or another edge. */
   label: Box | null;
@@ -170,8 +168,9 @@ export default class GraphLayout {
     const cards = new Map<string, Size>();
     for (const spec of state.nodes) {
       const card = measureCard(spec.label ?? spec.id, spec.sublabel ?? '', this.measure);
+      // Text is not scaled, so a smaller card never gets narrower than its label.
       const scale = spec.size ?? 1;
-      cards.set(spec.id, { width: card.width * scale, height: card.height * scale });
+      cards.set(spec.id, { width: card.width * Math.max(1, scale), height: card.height * scale });
     }
     const edgeLabels = new Map<string, Size>();
     for (const spec of state.edges) {
@@ -231,14 +230,11 @@ export default class GraphLayout {
       };
     });
 
-    const nodeById = new Map(nodes.map((n) => [n.id, n]));
     const edges: LayoutEdge[] = state.edges.map((spec) => {
       const id = edgeId(spec);
-      const source = nodeById.get(spec.from);
-      const target = nodeById.get(spec.to);
       const route = placement.edges.get(id);
-      if (!source || !target || !route) throw new Error(`layout lost edge "${id}"`);
-      return { id, spec, source, target, color: spec.color ?? 'tx3', points: route.points, label: route.label };
+      if (!route) throw new Error(`layout lost edge "${id}"`);
+      return { id, spec, color: spec.color ?? 'tx3', points: route.points, label: route.label };
     });
 
     const groups: LayoutGroup[] = state.groups

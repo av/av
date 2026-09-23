@@ -45,6 +45,9 @@ function applyOp(state: GraphState, op: GraphOp, stepIndex: number): void {
   const findNode = (id: string): NodeSpec => state.nodes.find((n) => n.id === id) ?? fail(`unknown node "${id}"`);
   const findGroup = (id: string): GroupSpec => state.groups.find((g) => g.id === id) ?? fail(`unknown group "${id}"`);
   const findEdge = (id: string): EdgeSpec => state.edges.find((e) => edgeId(e) === id) ?? fail(`unknown edge "${id}"`);
+  const findEnd = (id: string): void => {
+    if (!state.nodes.some((n) => n.id === id) && !state.groups.some((g) => g.id === id)) fail(`unknown node or group "${id}"`);
+  };
 
   switch (op.op) {
     case 'add': {
@@ -53,8 +56,8 @@ function applyOp(state: GraphState, op: GraphOp, stepIndex: number): void {
         if (op.node.group !== undefined) findGroup(op.node.group);
         state.nodes.push({ ...op.node });
       } else if ('edge' in op) {
-        findNode(op.edge.from);
-        findNode(op.edge.to);
+        findEnd(op.edge.from);
+        findEnd(op.edge.to);
         const id = edgeId(op.edge);
         if (state.edges.some((e) => edgeId(e) === id)) fail(`duplicate edge "${id}"`);
         state.edges.push({ ...op.edge });
@@ -83,6 +86,7 @@ function applyOp(state: GraphState, op: GraphOp, stepIndex: number): void {
           if (child.parent === group.id) child.parent = group.parent;
         }
         state.groups = state.groups.filter((g) => g.id !== group.id);
+        state.edges = state.edges.filter((e) => e.from !== group.id && e.to !== group.id);
       }
       return;
     }
@@ -154,17 +158,29 @@ function validateState(state: GraphState, stepIndex: number): void {
     const id = edgeId(edge);
     if (edgeIds.has(id)) throw new StoryError(stepIndex, `duplicate edge "${id}"`);
     edgeIds.add(id);
-    if (!nodeIds.has(edge.from) || !nodeIds.has(edge.to)) {
-      throw new StoryError(stepIndex, `edge "${id}" references an unknown node`);
+    const known = (end: string) => nodeIds.has(end) || groupIds.has(end);
+    if (!known(edge.from) || !known(edge.to)) {
+      throw new StoryError(stepIndex, `edge "${id}" references an unknown node or group`);
+    }
+    if (encloses(state, edge.from, edge.to) || encloses(state, edge.to, edge.from)) {
+      throw new StoryError(stepIndex, `edge "${id}" joins a group to something inside it`);
     }
   }
+}
+
+/** True when `outer` is a group that contains `inner`, directly or through nested groups. */
+function encloses(state: GraphState, outer: string, inner: string): boolean {
+  const parentOf = (id: string) => state.nodes.find((n) => n.id === id)?.group ?? state.groups.find((g) => g.id === id)?.parent;
+  for (let current = parentOf(inner); current !== undefined; current = parentOf(current)) {
+    if (current === outer) return true;
+  }
+  return false;
 }
 
 /** Collects the ids an op touches (removals excluded: they are gone by the time the step renders). */
 function touchedBy(op: GraphOp, state: GraphState, focus: StepFocus): void {
   const edgeEnds = (edge: EdgeSpec) => {
-    focus.nodes.add(edge.from);
-    focus.nodes.add(edge.to);
+    for (const end of [edge.from, edge.to]) (state.groups.some((g) => g.id === end) ? focus.panels : focus.nodes).add(end);
     focus.edges.add(edgeId(edge));
   };
   switch (op.op) {
@@ -192,7 +208,7 @@ function touchedBy(op: GraphOp, state: GraphState, focus: StepFocus): void {
 }
 
 function resolveFocus(step: { focus?: string[] | 'all'; state?: GraphState; ops?: GraphOp[] }, state: GraphState): StepFocus {
-  const focus: StepFocus = { all: false, nodes: new Set(), groups: new Set(), edges: new Set() };
+  const focus: StepFocus = { all: false, nodes: new Set(), groups: new Set(), panels: new Set(), edges: new Set() };
   if (step.focus === 'all' || (step.state && !step.focus)) {
     // Still record what changed so narrow screens have something to frame.
     focus.all = true;
@@ -214,6 +230,7 @@ function resolveFocus(step: { focus?: string[] | 'all'; state?: GraphState; ops?
   const edgeIds = new Set(state.edges.map((e) => edgeId(e)));
   for (const id of focus.nodes) if (!nodeIds.has(id)) focus.nodes.delete(id);
   for (const id of focus.groups) if (!groupIds.has(id)) focus.groups.delete(id);
+  for (const id of focus.panels) if (!groupIds.has(id)) focus.panels.delete(id);
   for (const id of focus.edges) if (!edgeIds.has(id)) focus.edges.delete(id);
   if (focus.nodes.size === 0 && focus.groups.size === 0) focus.all = true;
   return focus;

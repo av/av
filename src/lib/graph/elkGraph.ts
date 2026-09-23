@@ -80,6 +80,8 @@ function siblingLinks(state: GraphState, edgeId: ElkInput['edgeId']): SiblingLin
     const b = chain(edge.to);
     let depth = 0;
     while (depth + 1 < Math.min(a.length, b.length) && a[depth + 1] === b[depth + 1]) depth++;
+    // Either end may be a group; one containing the other has no route to draw.
+    if (depth + 1 >= Math.min(a.length, b.length)) throw new Error(`edge "${edgeId(edge)}" joins a group to something inside it`);
     return { edge, id: edgeId(edge), container: a[depth], from: a[depth + 1]!, to: b[depth + 1]! };
   });
 }

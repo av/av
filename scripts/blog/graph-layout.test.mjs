@@ -26,7 +26,7 @@ async function layoutStep(state, affinity) {
     state.nodes.map((n) => {
       const card = measureCard(n.label ?? n.id, n.sublabel ?? '', estimateTextWidth);
       const scale = n.size ?? 1;
-      return [n.id, { width: card.width * scale, height: card.height * scale }];
+      return [n.id, { width: card.width * Math.max(1, scale), height: card.height * scale }];
     }),
   );
   const edgeLabels = new Map(state.edges.filter((e) => e.label).map((e) => [edgeId(e), { width: estimateTextWidth(e.label, 11) + 10, height: 16 }]));
@@ -154,4 +154,30 @@ test('backward edges between groups are laid out forwards and drawn the right wa
   const groups = [...placement.groups.values()];
   assert.ok(Math.min(...ys) >= Math.min(...groups.map((g) => g.y)) - 1);
   assert.ok(Math.max(...ys) <= Math.max(...groups.map((g) => g.y + g.height)) + 1);
+});
+
+test('an edge to a group ends on its panel without crossing its cards', async () => {
+  const state = {
+    groups: [{ id: 'phone' }, { id: 'laptop' }],
+    nodes: [
+      { id: 'client', group: 'phone' },
+      { id: 'editor', group: 'laptop' },
+      { id: 'repo', group: 'laptop' },
+    ],
+    edges: [
+      { from: 'client', to: 'laptop' },
+      { from: 'editor', to: 'repo' },
+    ],
+  };
+  const { cards, placement } = await layoutStep(state, storyAffinity([state], edgeId));
+  const route = placement.edges.get('client->laptop').points;
+  const panel = placement.groups.get('laptop');
+  const end = route.at(-1);
+  const onBorder =
+    (Math.abs(end.y - panel.y) < 1 || Math.abs(end.y - panel.y - panel.height) < 1) && end.x >= panel.x && end.x <= panel.x + panel.width;
+  assert.ok(onBorder, 'route ends on the laptop panel border');
+  for (const id of ['editor', 'repo']) {
+    const rect = rectOf(placement.nodes.get(id), cards.get(id));
+    for (let k = 1; k < route.length; k++) assert.ok(!segmentHitsRect(route[k - 1], route[k], rect), `route crosses ${id}`);
+  }
 });

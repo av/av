@@ -34,7 +34,7 @@ export interface NodeSpec {
   kind?: string;
   shape?: NodeShape;
   color?: Accent;
-  /** Radius multiplier, 1 = default. */
+  /** Card size multiplier, 1 = default. Below 1 only the height shrinks, so the label always fits. */
   size?: number;
   state?: NodeState;
   /** Innermost group id. */
@@ -51,7 +51,12 @@ export interface NodeSpec {
 export interface EdgeSpec {
   /** Defaults to `${from}->${to}`. */
   id?: string;
+  /**
+   * Node or group id. An edge to a group ends on its panel: something that
+   * reaches a whole machine rather than one thing on it.
+   */
   from: string;
+  /** Node or group id; see `from`. */
   to: string;
   label?: string;
   color?: Accent;
@@ -146,6 +151,11 @@ export interface StepFocus {
   all: boolean;
   nodes: Set<string>;
   groups: Set<string>;
+  /**
+   * Groups framed and lit as a panel only, because an edge of this step ends
+   * on them: the machine is what it reaches, not everything running on it.
+   */
+  panels: Set<string>;
   /** Edges the step itself touched; only these are lit. */
   edges: Set<string>;
 }

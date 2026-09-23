@@ -84,6 +84,29 @@ test('cyclic group parents are rejected', () => {
   assert.match(validateGraphStory(story)[0], /cyclic parent chain/);
 });
 
+test('edges may end on a group, and removing the group drops them', () => {
+  const story = {
+    steps: [
+      {
+        state: {
+          nodes: [{ id: 'phone-app' }, { id: 'inside', group: 'machine' }],
+          edges: [{ from: 'phone-app', to: 'machine' }],
+          groups: [{ id: 'machine' }],
+        },
+      },
+      { ops: [{ op: 'remove', group: 'machine' }, { op: 'add', edge: { from: 'phone-app', to: 'inside' } }] },
+    ],
+  };
+  assert.deepEqual(validateGraphStory(story), []);
+});
+
+test('an edge from a group to its own member is rejected', () => {
+  const story = {
+    steps: [{ state: { nodes: [{ id: 'inside', group: 'outer' }], edges: [{ from: 'inside', to: 'outer' }], groups: [{ id: 'outer' }] } }],
+  };
+  assert.match(validateGraphStory(story)[0], /joins a group to something inside it/);
+});
+
 test('markers are found and hydrated with fallback + json', async () => {
   const html = '<p>Intro</p>\n<div class="graph-story" data-graph="demo" data-trigger="click"></div>\n<p>Outro</p>';
   assert.deepEqual(findGraphMarkers(html), [

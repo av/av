@@ -270,7 +270,7 @@ export default class GraphStory {
     // On a wide stage, whole panels around the action: half a panel in frame
     // reads as a rendering mistake. On a narrow one there is no room for that,
     // so the frame holds the changed nodes and nothing else.
-    const groups = new Set(step.focus.groups);
+    const groups = new Set([...step.focus.groups, ...step.focus.panels]);
     if (!portrait) {
       for (const node of layout.nodes) {
         if (step.focus.nodes.has(node.id)) for (const id of node.path) groups.add(id);

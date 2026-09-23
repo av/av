@@ -331,7 +331,7 @@
     },
     {
       "title": "Harbor",
-      "caption": "The local stack grows into Harbor: one command for backends, UIs and services. It becomes a project of its own.",
+      "caption": "The local stack grows into Harbor: one command for backends, UIs and services. It becomes a project of its own. OpenRouter comes in right after, for one-off tests and small API jobs.",
       "body": "Managing the local zoo by hand stopped scaling, so the tooling became a product: Harbor spins up the whole stack, pre-configured. Later it collected a few thousand stars.",
       "ops": [
         {
@@ -378,6 +378,26 @@
           "op": "set",
           "node": "ollama",
           "sublabel": "backend"
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "openrouter",
+            "label": "OpenRouter",
+            "sublabel": "API inference",
+            "kind": "service",
+            "color": "tx2"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "ivan",
+            "to": "openrouter",
+            "style": "dashed",
+            "label": "one-off tests",
+            "color": "tx3"
+          }
         }
       ]
     },
@@ -600,8 +620,8 @@
     },
     {
       "title": "RustDesk",
-      "caption": "RustDesk to control the laptop from anywhere. The laptop becomes one machine among others, reached over the network.",
-      "body": "The moment the machine was reachable remotely, the question changed from which tool to which machine. Long runs could keep going while I was away from the desk.",
+      "caption": "RustDesk on the phone, pointed at the laptop. Not one app but the whole desktop: the editor, the terminal, whatever was running.",
+      "body": "The moment the machine was reachable from the phone, the question changed from which tool to which machine. Long runs could keep going while I was away from the desk. It was the first of several ways into the setup from the phone.",
       "ops": [
         {
           "op": "set",
@@ -624,20 +644,28 @@
         },
         {
           "op": "add",
+          "group": {
+            "id": "phone",
+            "label": "Phone",
+            "color": "tx3"
+          }
+        },
+        {
+          "op": "add",
           "node": {
             "id": "rustdesk",
             "label": "RustDesk",
-            "sublabel": "remote control",
-            "kind": "service",
+            "sublabel": "remote desktop",
+            "kind": "tool",
             "color": "tx2",
-            "group": "laptop"
+            "group": "phone"
           }
         },
         {
           "op": "add",
           "edge": {
             "from": "ivan",
-            "to": "rustdesk",
+            "to": "phone",
             "label": "from anywhere",
             "color": "tx2"
           }
@@ -646,8 +674,9 @@
           "op": "add",
           "edge": {
             "from": "rustdesk",
-            "to": "vscode",
+            "to": "laptop",
             "style": "dashed",
+            "label": "whole desktop",
             "color": "tx3"
           }
         }
@@ -803,8 +832,127 @@
       ]
     },
     {
+      "title": "A devbox for inference",
+      "caption": "A Strix Halo devbox joins the home network for inference and homelab services. Harbor and its stack move off the laptop.",
+      "body": "The laptop went back to being a laptop. Models, UIs and the rest of the homelab run on a box that is always on and has the memory for bigger models.",
+      "ops": [
+        {
+          "op": "add",
+          "group": {
+            "id": "devbox",
+            "label": "Devbox · Strix Halo",
+            "color": "tx2"
+          }
+        },
+        {
+          "op": "move",
+          "group": "local",
+          "parent": "devbox"
+        },
+        {
+          "op": "set",
+          "group": "local",
+          "label": "Inference"
+        }
+      ]
+    },
+    {
+      "title": "Tailscale",
+      "caption": "Tailscale on the home network. The phone reaches the laptop and the devbox from anywhere, and their web UIs open in the phone's browser.",
+      "body": "No ports opened, no VPN to babysit: every machine joins one private network, and the phone is just another node on it.",
+      "ops": [
+        {
+          "op": "add",
+          "node": {
+            "id": "tailscale",
+            "label": "Tailscale",
+            "sublabel": "tailnet",
+            "kind": "service",
+            "color": "tx2",
+            "group": "phone"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "phone-browser",
+            "label": "Browser",
+            "sublabel": "web UIs",
+            "kind": "tool",
+            "color": "tx2",
+            "group": "phone"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "tailscale",
+            "to": "laptop",
+            "style": "dashed",
+            "color": "tx3"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "tailscale",
+            "to": "devbox",
+            "style": "dashed",
+            "label": "tailnet",
+            "color": "tx3"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "phone-browser",
+            "to": "webui",
+            "color": "tx3"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Haven and Zellij",
+      "caption": "A terminal on the phone: Termius first, then Haven, a far better SSH client. After trying most multiplexers, Zellij stuck, because its controls are on screen for when I forget them.",
+      "body": "SSH from the phone into a session that outlives the connection. Whatever was running on the devbox is still there after the train goes through a tunnel.",
+      "ops": [
+        {
+          "op": "add",
+          "node": {
+            "id": "haven",
+            "label": "Haven",
+            "sublabel": "SSH client",
+            "kind": "tool",
+            "color": "tx2",
+            "group": "phone"
+          }
+        },
+        {
+          "op": "add",
+          "node": {
+            "id": "zellij",
+            "label": "Zellij",
+            "sublabel": "sessions",
+            "kind": "tool",
+            "color": "tx2",
+            "group": "devbox"
+          }
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "haven",
+            "to": "zellij",
+            "label": "ssh",
+            "color": "tx3"
+          }
+        }
+      ]
+    },
+    {
       "title": "lifeos",
-      "caption": "December 2025. lifeos starts as the host for skills, agent personas, notes and infrastructure. One repo the agents can read.",
+      "caption": "December 2025. lifeos starts as the host for skills, agent personas, notes and infrastructure. One repo the agents can read, on the devbox.",
       "body": "Everything an agent needed to know about me and my projects was scattered. lifeos put it in one place: notes, a task list, agent definitions, and later the machines themselves.",
       "ops": [
         {
@@ -813,8 +961,7 @@
             "id": "lifeos",
             "label": "lifeos",
             "color": "tx3",
-            "x": 48,
-            "y": 87
+            "parent": "devbox"
           }
         },
         {
@@ -1219,7 +1366,7 @@
     },
     {
       "title": "mi and the skills repo",
-      "caption": "March 2026. mi, a minimal self-extending harness, and a skills repo that any harness can load. Skills become the unit of reuse.",
+      "caption": "March 2026. mi, a minimal self-extending harness running mostly on local models, and a skills repo that any harness can load. Skills become the unit of reuse.",
       "body": "Instead of teaching each tool separately, the know-how moved into skills: discipline, bugbash, integration testing, ideate. mi was the smallest harness that could load them.",
       "ops": [
         {
@@ -1264,6 +1411,16 @@
         {
           "op": "remove",
           "node": "copilot"
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "mi",
+            "to": "harbor",
+            "style": "dashed",
+            "label": "local models",
+            "color": "tx3"
+          }
         }
       ]
     },
@@ -1825,6 +1982,15 @@
           "op": "set",
           "node": "backlog",
           "state": "default"
+        },
+        {
+          "op": "add",
+          "edge": {
+            "from": "phone-browser",
+            "to": "kandev-fed",
+            "label": "board",
+            "color": "tx3"
+          }
         }
       ]
     },
@@ -2191,7 +2357,7 @@
     },
     {
       "title": "Today",
-      "caption": "A person, a controller, three workers, a repo of skills and a log viewer. The editor is still there, mostly as a diff viewer. The clipboard loop is a memory.",
+      "caption": "A person with a phone, a controller, three workers, a devbox, a repo of skills and a log viewer. The editor is still there, mostly as a diff viewer. The clipboard loop is a memory.",
       "body": "What changed over four years is not the model so much as where the loop lives: from my hands, to the editor, to a terminal, to a board, to a fleet.",
       "ops": [
         {
