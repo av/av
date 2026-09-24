@@ -1,7 +1,7 @@
 ---
-title: "How my agentic setup grew"
+title: "Four years of coding with AI"
 date: "2026-09-20"
-description: "From one terminal on a laptop to a controller, three machines, a sandbox and agents that supervise agents. Told as one diagram that changes over time."
+description: "In 2022 every line of code I shipped went through my own hands. By 2026 most of it is written by agents on machines I rarely touch. One diagram, one change at a time."
 slug: "agentic-setup"
 tags:
   - agents
