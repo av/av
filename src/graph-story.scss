@@ -176,6 +176,76 @@ $gs-status-touch: 44px;
   -webkit-mask-composite: source-in;
 }
 
+// The diagram can be dragged (see bindPan in GraphStory.ts). Vertical
+// swipes stay with the browser: they scroll the page, which moves the story.
+.graph-story__svg {
+  touch-action: pan-y;
+  cursor: grab;
+
+  &.is-dragging {
+    cursor: grabbing;
+  }
+}
+
+// Points at lit cards the frame could not hold; a tap pans to them.
+.graph-story__marker {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--fx-green) 60%, transparent);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--fx-bg) 85%, transparent);
+  color: var(--fx-green);
+  font-family: $gs-pixel;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+
+  &.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: var(--fx-ui);
+    outline: 0;
+  }
+}
+
+.graph-story__marker--left,
+.graph-story__marker--right {
+  top: calc(#{$gs-chrome} + (100% - #{$gs-chrome} - var(--gs-status)) / 2 - 1rem);
+}
+
+.graph-story__marker--left {
+  left: 0.4rem;
+}
+
+.graph-story__marker--right {
+  right: 0.4rem;
+}
+
+.graph-story__marker--up,
+.graph-story__marker--down {
+  left: calc(50% - 1rem);
+}
+
+.graph-story__marker--up {
+  top: calc(#{$gs-chrome} + 0.4rem);
+}
+
+.graph-story__marker--down {
+  bottom: calc(var(--gs-status) + 0.4rem);
+}
+
 .graph-story__caption {
   min-height: 5.4rem;
   padding: 0.75rem 1rem 0.5rem;

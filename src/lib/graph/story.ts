@@ -185,12 +185,18 @@ function touchedBy(op: GraphOp, state: GraphState, focus: StepFocus): void {
   };
   switch (op.op) {
     case 'add':
-      if ('node' in op) focus.nodes.add(op.node.id);
+      if ('node' in op) {
+        focus.nodes.add(op.node.id);
+        focus.core.add(op.node.id);
+      }
       else if ('edge' in op) edgeEnds(op.edge);
       else focus.groups.add(op.group.id);
       return;
     case 'set':
-      if ('node' in op) focus.nodes.add(op.node);
+      if ('node' in op) {
+        focus.nodes.add(op.node);
+        focus.core.add(op.node);
+      }
       else if ('edge' in op) {
         const edge = state.edges.find((e) => edgeId(e) === op.edge);
         if (edge) edgeEnds(edge);
@@ -199,6 +205,7 @@ function touchedBy(op: GraphOp, state: GraphState, focus: StepFocus): void {
     case 'move':
       if ('node' in op) {
         focus.nodes.add(op.node);
+        focus.core.add(op.node);
         if (op.group) focus.groups.add(op.group);
       } else focus.groups.add(op.group);
       return;
@@ -208,7 +215,7 @@ function touchedBy(op: GraphOp, state: GraphState, focus: StepFocus): void {
 }
 
 function resolveFocus(step: { focus?: string[] | 'all'; state?: GraphState; ops?: GraphOp[] }, state: GraphState): StepFocus {
-  const focus: StepFocus = { all: false, nodes: new Set(), groups: new Set(), panels: new Set(), edges: new Set() };
+  const focus: StepFocus = { all: false, nodes: new Set(), groups: new Set(), panels: new Set(), core: new Set(), edges: new Set() };
   if (step.focus === 'all' || (step.state && !step.focus)) {
     // Still record what changed so narrow screens have something to frame.
     focus.all = true;
@@ -220,7 +227,13 @@ function resolveFocus(step: { focus?: string[] | 'all'; state?: GraphState; ops?
   }
   if (Array.isArray(step.focus)) {
     const groupIds = new Set(state.groups.map((g) => g.id));
-    for (const id of step.focus) (groupIds.has(id) ? focus.groups : focus.nodes).add(id);
+    for (const id of step.focus) {
+      if (groupIds.has(id)) focus.groups.add(id);
+      else {
+        focus.nodes.add(id);
+        focus.core.add(id);
+      }
+    }
     return focus;
   }
   for (const op of step.ops ?? []) touchedBy(op, state, focus);
@@ -229,6 +242,7 @@ function resolveFocus(step: { focus?: string[] | 'all'; state?: GraphState; ops?
   const groupIds = new Set(state.groups.map((g) => g.id));
   const edgeIds = new Set(state.edges.map((e) => edgeId(e)));
   for (const id of focus.nodes) if (!nodeIds.has(id)) focus.nodes.delete(id);
+  for (const id of focus.core) if (!nodeIds.has(id)) focus.core.delete(id);
   for (const id of focus.groups) if (!groupIds.has(id)) focus.groups.delete(id);
   for (const id of focus.panels) if (!groupIds.has(id)) focus.panels.delete(id);
   for (const id of focus.edges) if (!edgeIds.has(id)) focus.edges.delete(id);

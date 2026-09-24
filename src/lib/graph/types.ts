@@ -156,6 +156,11 @@ export interface StepFocus {
    * on them: the machine is what it reaches, not everything running on it.
    */
   panels: Set<string>;
+  /**
+   * Nodes the step itself added, changed or moved, as opposed to cards lit
+   * only because a new edge ends on them. A cramped stage frames these first.
+   */
+  core: Set<string>;
   /** Edges the step itself touched; only these are lit. */
   edges: Set<string>;
 }
