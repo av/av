@@ -176,6 +176,11 @@ $gs-status: 28px;
   }
 }
 
+.graph-story__caption-kicker,
+.graph-story__caption-note {
+  display: none;
+}
+
 .graph-story__title {
   font-family: 'Geist Pixel', ui-monospace, monospace;
   font-size: 0.95rem;
@@ -375,7 +380,6 @@ $gs-status: 28px;
 
     @include media(lt-md) {
       padding: 0.5rem 0.25rem 0;
-      flex: 0 0 66vh;
     }
   }
 
@@ -390,6 +394,67 @@ $gs-status: 28px;
 
   .graph-story__caption {
     display: none;
+  }
+
+  // On a phone the explanation panels cannot share the screen with the
+  // graph: scrolling past it, each card slid up over the diagram. They stay
+  // as invisible scroll stops, and the pinned figure shows the active step
+  // in a caption dock under the graph instead.
+  @include media(lt-md) {
+    .graph-story__stage {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .graph-story__caption {
+      display: block;
+      flex: 0 1 auto;
+      min-height: 0;
+      max-height: 42%;
+      margin: 0.6rem 0.25rem 0.75rem;
+      padding: 0.9rem 1rem;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      border: 1px solid var(--fx-border);
+      border-radius: 0.15rem;
+      background: var(--fx-bg);
+      scrollbar-width: thin;
+      scrollbar-color: var(--fx-ui) transparent;
+    }
+
+    .graph-story__caption-kicker {
+      display: block;
+      font-family: $gs-pixel;
+      font-size: 0.7rem;
+      color: var(--fx-green);
+      margin-bottom: 0.3rem;
+
+      &::before {
+        content: '> step ';
+      }
+    }
+
+    .graph-story__title {
+      font-size: 1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .graph-story__text {
+      font-size: 0.9rem;
+      color: var(--fx-tx);
+    }
+
+    .graph-story__caption-note {
+      display: block;
+      margin-top: 0.5rem;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: var(--fx-tx2);
+    }
+
+    .graph-story__card {
+      visibility: hidden;
+    }
   }
 
   .graph-story__panels {
@@ -435,15 +500,6 @@ $gs-status: 28px;
     opacity: 0.45;
     transition: opacity 0.3s ease, border-color 0.3s ease;
 
-    @include media(lt-md) {
-      position: sticky;
-      bottom: 1rem;
-      width: 100%;
-      padding: 1rem 1.1rem;
-      max-height: 30vh;
-      overflow-y: auto;
-      opacity: 0;
-    }
   }
 
   .graph-story__panel.is-active .graph-story__card {

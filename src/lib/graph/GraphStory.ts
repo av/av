@@ -73,6 +73,8 @@ export default class GraphStory {
   private panelTops: number[] = [];
   private title!: HTMLElement;
   private caption!: HTMLElement;
+  private kicker!: HTMLElement;
+  private note!: HTMLElement;
   private counter!: HTMLElement;
   private dots: HTMLButtonElement[] = [];
   private prevButton!: HTMLButtonElement;
@@ -368,7 +370,11 @@ export default class GraphStory {
     const figcaption = el('figcaption', 'graph-story__caption');
     this.title = el('div', 'graph-story__title');
     this.caption = el('div', 'graph-story__text');
-    figcaption.append(this.title, this.caption);
+    // Kicker and note are shown where the caption stands in for the scroll
+    // panels (scroll mode on a phone); elsewhere the stylesheet hides them.
+    this.kicker = el('div', 'graph-story__caption-kicker');
+    this.note = el('div', 'graph-story__caption-note');
+    figcaption.append(this.kicker, this.title, this.caption, this.note);
 
     const nav = el('div', 'graph-story__nav');
     this.prevButton = button('graph-story__button graph-story__button--prev', 'Previous step', '<');
@@ -526,6 +532,8 @@ export default class GraphStory {
     const step = this.steps[this.index];
     this.title.textContent = step.title;
     this.caption.innerHTML = step.caption;
+    this.kicker.textContent = `${this.index + 1} / ${this.steps.length}`;
+    this.note.innerHTML = step.body;
     const width = String(this.steps.length).length;
     this.counter.textContent = `${String(this.index + 1).padStart(width, '0')}/${this.steps.length}`;
     this.chromeTitle.textContent = step.title;
