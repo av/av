@@ -442,7 +442,9 @@ $gs-status-touch: 44px;
       display: block;
       flex: 0 1 auto;
       min-height: 0;
-      max-height: 42%;
+      // At most a quarter of the screen; longer text scrolls inside the dock.
+      max-height: 25vh;
+      max-height: 25dvh;
       margin: 0.6rem 0.25rem 0.75rem;
       padding: 0.9rem 1rem;
       overflow-y: auto;

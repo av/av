@@ -75,6 +75,7 @@ export default class GraphStory {
   private caption!: HTMLElement;
   private kicker!: HTMLElement;
   private note!: HTMLElement;
+  private figcaption!: HTMLElement;
   private counter!: HTMLElement;
   private dots: HTMLButtonElement[] = [];
   private dotStrip!: HTMLElement;
@@ -369,6 +370,7 @@ export default class GraphStory {
     this.renderer = new GraphRenderer(svg, STAGE_WIDTH, Math.round(STAGE_WIDTH / this.viewAspect));
 
     const figcaption = el('figcaption', 'graph-story__caption');
+    this.figcaption = figcaption;
     this.title = el('div', 'graph-story__title');
     this.caption = el('div', 'graph-story__text');
     // Kicker and note are shown where the caption stands in for the scroll
@@ -536,6 +538,8 @@ export default class GraphStory {
     this.caption.innerHTML = step.caption;
     this.kicker.textContent = `${this.index + 1} / ${this.steps.length}`;
     this.note.innerHTML = step.body;
+    // A new step's text starts at its beginning, wherever the last one was scrolled to.
+    this.figcaption.scrollTop = 0;
     const width = String(this.steps.length).length;
     this.counter.textContent = `${String(this.index + 1).padStart(width, '0')}/${this.steps.length}`;
     this.chromeTitle.textContent = step.title;
