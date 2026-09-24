@@ -24,10 +24,20 @@ $gs-tones: (
 $gs-pixel: 'Geist Pixel', 'Geist Mono', ui-monospace, monospace;
 $gs-chrome: 22px;
 // The stepper is the screen's bottom bar, the counterpart of the title bar.
-$gs-status: 28px;
+$gs-status: 34px;
+// Phones get thumb-sized keys and blocks.
+$gs-status-touch: 44px;
 
 .graph-story {
   --gs-accent: var(--fx-tx2);
+  --gs-status: #{$gs-status};
+  --gs-dot: 12px;
+
+  @include media(lt-md) {
+    --gs-status: #{$gs-status-touch};
+    --gs-dot: 16px;
+  }
+
   margin: 1.5rem 0;
   outline: 0;
   // Two backgrounds: the page's, whose grain and decor scroll with the page,
@@ -74,7 +84,7 @@ $gs-status: 28px;
   position: relative;
   width: 100%;
   height: 100%;
-  padding-bottom: $gs-status;
+  padding-bottom: var(--gs-status);
   border: 1px solid var(--fx-border);
   border-radius: 0.15rem;
   background: var(--fx-bg);
@@ -204,13 +214,13 @@ $gs-status: 28px;
   right: 0;
   bottom: 0;
   z-index: 1;
-  height: $gs-status;
+  height: var(--gs-status);
   display: flex;
   align-items: stretch;
   border-top: 1px solid var(--fx-ui);
   background: var(--fx-bg2);
   font-family: $gs-pixel;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.06em;
   color: var(--fx-tx3);
 }
@@ -220,14 +230,14 @@ $gs-status: 28px;
   flex: none;
   display: grid;
   place-items: center;
-  width: $gs-status + 6px;
+  width: calc(var(--gs-status) + 10px);
   padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
   color: var(--fx-tx2);
   font: inherit;
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1;
   cursor: pointer;
 
@@ -277,39 +287,61 @@ $gs-status: 28px;
   }
 }
 
-// One block per step: the story reads as a progress bar you can click into.
+// One block per step, at a fixed size: the strip scrolls sideways instead
+// of shrinking the blocks until they are too small to hit. Its edges fade
+// so it reads as continuing.
 .graph-story__dots {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
-  align-items: center;
-  gap: 2px;
+  align-items: stretch;
+  gap: 3px;
   padding: 0 0.6rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 0.6rem, #000 calc(100% - 0.6rem), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 0.6rem, #000 calc(100% - 0.6rem), transparent 100%);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
+// The button is the full bar height, so the target is bigger than the block.
 .graph-story__dot {
-  flex: 1 1 0;
-  min-width: 2px;
-  max-width: 1.25rem;
-  height: 10px;
+  flex: none;
+  width: var(--gs-dot);
   padding: 0;
   border: 0;
   border-radius: 0;
-  background: var(--fx-ui);
+  background: transparent;
   cursor: pointer;
 
-  &.is-done {
+  &::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: var(--gs-dot);
+    margin: auto 0;
+    background: var(--fx-ui);
+  }
+
+  &.is-done::before {
     background: var(--fx-tx3);
   }
 
-  &:hover,
-  &:focus-visible {
+  &:hover::before,
+  &:focus-visible::before {
     background: var(--fx-tx2);
+  }
+
+  &:focus-visible {
     outline: 0;
   }
 
-  &.is-active,
-  &.is-active:hover {
+  &.is-active::before,
+  &.is-active:hover::before {
     background: var(--fx-green);
     box-shadow: 0 0 6px color-mix(in srgb, var(--fx-green) 55%, transparent);
   }
@@ -389,7 +421,7 @@ $gs-status: 28px;
     top: $gs-chrome;
     left: 0;
     width: 100%;
-    height: calc(100% - #{$gs-chrome} - #{$gs-status});
+    height: calc(100% - #{$gs-chrome} - var(--gs-status));
   }
 
   .graph-story__caption {

@@ -77,6 +77,7 @@ export default class GraphStory {
   private note!: HTMLElement;
   private counter!: HTMLElement;
   private dots: HTMLButtonElement[] = [];
+  private dotStrip!: HTMLElement;
   private prevButton!: HTMLButtonElement;
   private nextButton!: HTMLButtonElement;
   private playButton: HTMLButtonElement | null = null;
@@ -380,6 +381,7 @@ export default class GraphStory {
     this.prevButton = button('graph-story__button graph-story__button--prev', 'Previous step', '<');
     this.nextButton = button('graph-story__button graph-story__button--next', 'Next step', '>');
     const dots = el('div', 'graph-story__dots');
+    this.dotStrip = dots;
     this.dots = this.steps.map((step, i) => {
       const dot = button('graph-story__dot', `Step ${i + 1}${step.title ? `: ${step.title}` : ''}`, '');
       dots.append(dot);
@@ -545,6 +547,20 @@ export default class GraphStory {
       dot.setAttribute('aria-current', i === this.index ? 'step' : 'false');
     });
     this.panels.forEach((panel, i) => panel.classList.toggle('is-active', i === this.index));
+    this.revealActiveDot();
+  }
+
+  /**
+   * The step strip scrolls sideways rather than shrinking its blocks to fit,
+   * so keep the current step in the middle of it. Only the strip scrolls:
+   * scrollIntoView would also move the page, which drives scroll mode.
+   */
+  private revealActiveDot(): void {
+    const strip = this.dotStrip;
+    const dot = this.dots[this.index];
+    if (!dot || strip.scrollWidth <= strip.clientWidth) return;
+    const left = dot.offsetLeft - (strip.clientWidth - dot.offsetWidth) / 2;
+    strip.scrollTo({ left, behavior: this.reduceMotion ? 'auto' : 'smooth' });
   }
 }
 
