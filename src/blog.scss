@@ -109,6 +109,12 @@ $font-mono:    'Geist Mono', ui-monospace, 'SFMono-Regular', 'Consolas', monospa
   }
 }
 
+// No trailing space under a scroll story that closes the post, so the page
+// ends exactly where its last step sits centred.
+.blog-shell:has(> .blog-content > .graph-story.is-trigger-scroll:last-child) {
+  padding-bottom: 0;
+}
+
 // ---------------------------------------------------------------------------
 // Index header
 // ---------------------------------------------------------------------------

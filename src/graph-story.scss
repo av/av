@@ -334,6 +334,12 @@ $gs-status: 28px;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
 
+  // A story that ends the post ends the page: scrolling stops with the last
+  // step's panel in the middle of the screen (see .blog-shell in blog.scss).
+  &:last-child {
+    margin-bottom: 0;
+  }
+
   // The figure is only a pinned frame here: transparent, so the page moves
   // behind it. The screen inside is the card.
   .graph-story__figure {
