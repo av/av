@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+<base href="/stones/">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>&#8203;</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#07080b;touch-action:none}
+  canvas{display:block;width:100vw;height:100vh;cursor:default}
+  canvas.hover{cursor:grab} canvas.drag{cursor:grabbing}
+  #vig{position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(120% 95% at 42% 40%,rgba(0,0,0,0) 55%,rgba(40,28,18,.22) 100%)}
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+</head>
+<body>
+<div id="vig"></div>
+<script src="notif.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from './vendor/addons/environments/RoomEnvironment.js';
+
+const Q = new URLSearchParams(location.search);
+const MANUAL = Q.has('manual');
+
+/* ---------------- renderer / scene ---------------- */
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.3;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.VSMShadowMap;
+document.body.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x07080b);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.05;
+
+const camera = new THREE.PerspectiveCamera(34, innerWidth / innerHeight, 0.1, 100);
+const camTarget = new THREE.Vector3(0, 0, 0.7);
+
+const sun = new THREE.DirectionalLight(0xffffff, 0);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -11, right: 11, top: 11, bottom: -11, near: 0.5, far: 60 });
+sun.shadow.radius = 5; sun.shadow.blurSamples = 16; sun.shadow.bias = -0.0004;
+scene.add(sun, sun.target);
+const hemi = new THREE.HemisphereLight(0xdfe8ff, 0xfff4e6, 0.0);
+scene.add(hemi);
+
+/* ---------------- paper ---------------- */
+function paperTex() {
+  const s = 1024, c = document.createElement('canvas'); c.width = c.height = s;
+  const g = c.getContext('2d');
+  g.fillStyle = '#f4f1ea'; g.fillRect(0, 0, s, s);
+  const img = g.getImageData(0, 0, s, s), d = img.data;
+  for (let i = 0; i < d.length; i += 4) { const n = (Math.random() - .5) * 10; d[i] += n; d[i+1] += n; d[i+2] += n * .9; }
+  g.putImageData(img, 0, 0);
+  for (let i = 0; i < 9000; i++) {
+    const x = Math.random() * s, y = Math.random() * s, a = Math.random() * Math.PI, l = 4 + Math.random() * 22;
+    g.strokeStyle = Math.random() < .5 ? `rgba(255,255,255,${.12+Math.random()*.2})` : `rgba(150,135,110,${.04+Math.random()*.07})`;
+    g.lineWidth = .4 + Math.random() * .8;
+    g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a+.6)*l*.5, y + Math.sin(a+.6)*l*.5, x + Math.cos(a)*l, y + Math.sin(a)*l); g.stroke();
+  }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(5, 5);
+  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+const ptex = paperTex();
+const bump = ptex.clone(); bump.colorSpace = THREE.NoColorSpace; bump.needsUpdate = true;
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(60, 60),
+  new THREE.MeshStandardMaterial({ map: ptex, bumpMap: bump, bumpScale: 0.6, roughness: 0.92, color: 0xffffff }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+
+/* ---------------- JS noise for geometry ---------------- */
+function hash(x, y, z) { let h = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453; return h - Math.floor(h); }
+function vnoise(x, y, z) {
+  const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
+  let fx = x - ix, fy = y - iy, fz = z - iz;
+  fx = fx*fx*(3-2*fx); fy = fy*fy*(3-2*fy); fz = fz*fz*(3-2*fz);
+  const L = (a, b, t) => a + (b - a) * t;
+  return L(L(L(hash(ix,iy,iz),hash(ix+1,iy,iz),fx), L(hash(ix,iy+1,iz),hash(ix+1,iy+1,iz),fx), fy),
+           L(L(hash(ix,iy,iz+1),hash(ix+1,iy,iz+1),fx), L(hash(ix,iy+1,iz+1),hash(ix+1,iy+1,iz+1),fx), fy), fz);
+}
+const fbm = (x, y, z) => vnoise(x,y,z)*.55 + vnoise(x*2.1,y*2.1,z*2.1)*.3 + vnoise(x*4.3,y*4.3,z*4.3)*.15;
+
+function stoneGeometry(o) {
+  let geo;
+  if (o.ring) {
+    geo = new THREE.TorusGeometry(0.62, 0.30, 48, 120); geo.rotateX(Math.PI / 2);
+  } else geo = new THREE.IcosahedronGeometry(1, 40);
+  const p = geo.attributes.position, v = new THREE.Vector3();
+  const s = o.seed * 13.7;
+  for (let i = 0; i < p.count; i++) {
+    v.fromBufferAttribute(p, i);
+    if (!o.ring) {
+      // capsule-ish elongation + lumps
+      const n = fbm(v.x * 1.1 + s, v.y * 1.1, v.z * 1.1 - s) - .5;
+      const fine = vnoise(v.x * 5 + s, v.y * 5, v.z * 5) - .5;
+      v.multiplyScalar(1 + n * o.lump + fine * .008);
+      // tapers (pear / wedge shapes)
+      v.x *= 1 + o.taper * v.z;
+      v.multiply(new THREE.Vector3(o.size[0], o.size[1], o.size[2]));
+      // flatten underside softly (sits on paper)
+      if (v.y < 0) v.y *= 0.62;
+    } else {
+      const n = fbm(v.x * 1.4 + s, v.y * 1.4, v.z * 1.4) - .5;
+      v.x *= 1 + n * .35; v.z *= 1 + n * .25; v.y *= 0.85 + n * .4;
+      v.multiply(new THREE.Vector3(o.size[0], o.size[1], o.size[2]));
+    }
+    p.setXYZ(i, v.x, v.y, v.z);
+  }
+  geo.computeBoundingBox();
+  geo.translate(0, -geo.boundingBox.min.y, 0);
+  geo.computeVertexNormals(); geo.computeBoundingBox();
+  return geo;
+}
+
+/* ---------------- stone material (frost, pits, bubbles, sparkle) ---------------- */
+const GLSL_NOISE = /* glsl */`
+varying vec3 vObj;
+uniform float uFrost, uPitFreq, uPitAmt, uBubble, uSparkle, uSeed, uGlow, uPulse, uReveal, uTime, uFlash;
+uniform vec3 uTint, uPulseO;
+float h13(vec3 p){p=fract(p*.1031);p+=dot(p,p.zyx+31.32);return fract((p.x+p.y)*p.z);}
+vec3 h33(vec3 p){p=fract(p*vec3(.1031,.1030,.0973));p+=dot(p,p.yxz+33.33);return fract((p.xxy+p.yxx)*p.zyx);}
+float vn(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+ return mix(mix(mix(h13(i),h13(i+vec3(1,0,0)),f.x),mix(h13(i+vec3(0,1,0)),h13(i+vec3(1,1,0)),f.x),f.y),
+            mix(mix(h13(i+vec3(0,0,1)),h13(i+vec3(1,0,1)),f.x),mix(h13(i+vec3(0,1,1)),h13(i+vec3(1,1,1)),f.x),f.y),f.z);}
+float fb(vec3 p){return vn(p)*.5+vn(p*2.03)*.3+vn(p*4.1)*.2;}
+vec4 wor(vec3 p, out vec3 id){vec3 i=floor(p),f=fract(p);float d=9.;vec3 b=vec3(0);id=i;
+ for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)for(int z=-1;z<=1;z++){vec3 o=vec3(x,y,z);vec3 r=o+h33(i+o)-f;float dd=dot(r,r);if(dd<d){d=dd;b=r;id=i+o;}}
+ return vec4(sqrt(d),b);}
+`;
+function stoneMaterial(o) {
+  const col = new THREE.Color(o.color);
+  const m = new THREE.MeshPhysicalMaterial({
+    color: col.clone(), roughness: o.rough ?? 0.55, metalness: 0,
+    transmission: 0.02, thickness: o.thick ?? 0.9, ior: 1.52,
+    attenuationColor: new THREE.Color(o.att ?? o.color), attenuationDistance: (o.attD ?? 0.7) * 2.2,
+    specularIntensity: 0.6, clearcoat: 0.0, envMapIntensity: 1.0,
+  });
+  m.userData.base = { color: col, transmission: o.trans ?? 0.92 };
+  const U = m.userData.u = {
+    uFrost: { value: o.frost ?? 1 }, uPitFreq: { value: o.pitFreq ?? 9 }, uPitAmt: { value: o.pits ?? 1 },
+    uBubble: { value: o.bubbles ?? 0.5 }, uSparkle: { value: o.sparkle ?? 1 }, uSeed: { value: o.seed },
+    uGlow: { value: 0 }, uPulse: { value: 1 }, uReveal: { value: 0 }, uTime: { value: 0 }, uFlash: { value: 0 },
+    uTint: { value: new THREE.Color(o.glow ?? o.color) }, uPulseO: { value: new THREE.Vector3() },
+  };
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, U);
+    sh.vertexShader = 'varying vec3 vObj;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvObj = position;');
+    sh.fragmentShader = GLSL_NOISE + sh.fragmentShader
+      .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+        vec3 P = vObj*1.0 + uSeed*3.17;
+        float nA = fb(P*3.0);
+        vec3 pid; vec4 W = wor(P*uPitFreq, pid);
+        float pr = h13(pid*1.7);
+        // C-shaped percussion pits: partial ring around random cells
+        float ringR = .18 + .1*pr;
+        float ring = smoothstep(.06,.0,abs(W.x-ringR)) * step(.55, pr) * uPitAmt;
+        float ang = atan(W.y, W.z) + pr*6.28;
+        ring *= smoothstep(-.2,.4, cos(ang));
+        float dimple = smoothstep(.22,.0,W.x) * step(.35,pr) * uPitAmt;
+        roughnessFactor = clamp(roughnessFactor + (nA-.5)*.22*uFrost + ring*.25 + dimple*.1, .18, 1.);
+        float pitsMask = ring + dimple*.5;
+      `)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        vec3 g1 = vec3(vn(P*14.),vn(P*14.+5.1),vn(P*14.+9.7))-.5;
+        vec3 g2 = vec3(vn(P*45.),vn(P*45.+3.3),vn(P*45.+7.2))-.5;
+        vec3 g0 = vec3(vn(P*3.),vn(P*3.+2.3),vn(P*3.+6.1))-.5;
+        normal = normalize(normal + uFrost*(g0*.08 + g1*.16 + g2*.20) + normalize(W.yzw+1e-4)*(ring*.6 + dimple*.2));
+      `)
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        vec3 bid; vec4 B = wor(vObj*7.0 + uSeed*9.1 + 20., bid);
+        float bub = smoothstep(.09,.05,B.x) * step(.93, h13(bid)) * uBubble;
+        diffuseColor.rgb = mix(diffuseColor.rgb*0.16, diffuseColor.rgb, uReveal);
+        diffuseColor.rgb *= 1.0 - 0.08*(fb(vObj*2.0+uSeed)-.5);
+      `)
+      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+        vec3 Vd = normalize(vViewPosition);
+        float fres = pow(1.0 - abs(dot(normal, Vd)), 2.5);
+        float core = pow(abs(dot(normal, Vd)), 3.0);
+        // sparkle grains (frosted glass glints), twinkling with view
+        vec3 sid; vec4 S = wor(vObj*38.0 + uSeed*4., sid);
+        float sp = smoothstep(.07,.0,S.x) * step(.80, h13(sid));
+        sp *= .5 + .5*sin(h13(sid+3.)*40. + uTime*2.5 + dot(vViewPosition, vec3(9.,7.,5.)));
+        float pd = length(vObj - uPulseO);
+        float wave = exp(-pow((pd - uPulse*1.6)*7.0, 2.)) * (1.0 - uPulse);
+        vec3 tint = uTint;
+        totalEmissiveRadiance += tint * (uGlow*(.22*core + .35*fres) + wave*1.2 + uFlash*.9*core);
+        totalEmissiveRadiance += vec3(1.,.97,.9) * sp * uSparkle * .7 * uReveal;
+        totalEmissiveRadiance += vec3(1.) * bub * .25 * uReveal;
+        totalEmissiveRadiance += tint * pitsMask * .04 * uReveal;
+      `);
+  };
+  m.customProgramCacheKey = () => 'seaglass';
+  return m;
+}
+
+/* ---------------- stone catalogue (from the photo) ---------------- */
+const STONES = [
+  { color:'#a8e3c6', att:'#4fc79a', size:[1.0,.62,.70], pos:[-4.6,-3.0], yaw:.25, lump:.35, taper:.08, seed:1, frost:1.1, pits:.8 },               // seafoam
+  { color:'#3aa65a', att:'#0f7a2c', size:[.78,.55,.62], pos:[-1.6,-3.4], yaw:-.5, lump:.3, taper:.15, seed:2, attD:.45, pits:1.2, bubbles:.9 },   // emerald
+  { color:'#e3e8e6', att:'#d9e6e3', size:[1.55,.45,.52], pos:[-2.6,-0.9], yaw:.32, lump:.18, taper:.02, seed:3, attD:2.5, frost:1.3, sparkle:1.5 }, // clear long
+  { color:'#c4db78', att:'#9bc23a', size:[.82,.48,.58], pos:[0.9,-1.8], yaw:.15, lump:.35, taper:.35, seed:4, pits:.6 },                          // lime
+  { color:'#2a58e6', att:'#0b2fc4', size:[1.0,.75,.9], pos:[3.6,-3.4], yaw:.3, ring:true, seed:5, attD:.35, rough:.42, pits:.5, glow:'#4a7bff' },   // cobalt ring
+  { color:'#3ccdf0', att:'#00a8dc', size:[.55,.52,.92], pos:[3.3,-1.4], yaw:-.35, lump:.4, taper:.2, seed:6, attD:.5, rough:.4, bubbles:1.0 },     // aqua
+  { color:'#8edcb9', att:'#34b886', size:[.88,.62,.88], pos:[2.2,0.3], yaw:.6, lump:.3, taper:.1, seed:7, frost:1.2, pits:1.1 },                  // seafoam round
+  { color:'#3fc3e6', att:'#06a2d6', size:[1.05,.55,.68], pos:[-3.4,1.8], yaw:-.1, lump:.3, taper:.12, seed:8, attD:.5, rough:.42 },              // turquoise
+  { color:'#d2d6d8', att:'#a8b0b4', size:[.9,.58,.8], pos:[-0.3,1.6], yaw:.4, lump:.32, taper:.25, seed:9, attD:1.2, frost:1.3, sparkle:1.6 },     // grey
+  { color:'#f8c25a', att:'#eea024', size:[.82,.62,1.08], pos:[3.6,2.6], yaw:-.25, lump:.25, taper:.08, seed:10, attD:.45, sun:true, bubbles:.8 },  // amber = sun control
+  { color:'#8c3810', att:'#6a1e02', size:[1.0,.55,.82], pos:[-3.0,4.6], yaw:.1, lump:.3, taper:.06, seed:11, attD:.25, rough:.45, pits:1.5, trans:.75 }, // brown
+  { color:'#b2cff0', att:'#7fa8e0', size:[1.0,.6,.8], pos:[0.0,4.4], yaw:-.2, lump:.38, taper:.18, seed:12, attD:1.0, pits:1.0 },                  // pale blue
+  { color:'#e8cfe6', att:'#c9a0c8', size:[1.05,.5,.72], pos:[0.4,-4.2], yaw:-.1, lump:.25, taper:.1, seed:13, attD:1.5, frost:1.2 },               // lilac
+];
+
+/* ---------------- colored transmitted-light decals ---------------- */
+const decalVS = `varying vec2 vW; void main(){ vec4 w = modelMatrix*vec4(position,1.); vW = w.xz; gl_Position = projectionMatrix*viewMatrix*w; }`;
+const decalCommon = `
+varying vec2 vW; uniform vec2 uC, uDir; uniform float uL, uRa, uRb, uSun, uTime, uSeed, uSharp, uGain; uniform vec3 uCol;
+float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5);}
+float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+1.),f.x),f.y);}
+void frame(out float u, out float v){ vec2 d = vW-uC; vec2 pp = vec2(-uDir.y,uDir.x); u = dot(d,uDir); v = dot(d,pp); }
+`;
+const tintFS = decalCommon + `void main(){ float u,v; frame(u,v);
+  float uc = clamp(u, 0., uL);
+  float sd = length(vec2(v/uRa, (u-uc)/uRb));
+  float soft = mix(.55,.25,uSharp) + .35*clamp(u/(uL+.001),0.,1.);
+  float m = 1.-smoothstep(1.-soft, 1.+soft*.6, sd);
+  float fall = 1. - smoothstep(-.2*uL, uL*1.05, u);
+  vec3 c = mix(vec3(.5), uCol, 1.25);
+  vec3 t = mix(vec3(1.), c*1.05, m*fall*.85*uSun*min(uGain,1.3));
+  gl_FragColor = vec4(t,1.); }`;
+const glowFS = decalCommon + `void main(){ float u,v; frame(u,v);
+  float cu = uRb*.55 + uL*.30;
+  vec2 q = vec2(v/(uRa*.70), (u-cu)/(uRb*.5 + uL*.34));
+  float e = exp(-dot(q,q)*1.6);
+  vec2 cp = vec2(u,v)*5.0 + uSeed*7.;
+  float ca = n2(cp + vec2(uTime*.35, -uTime*.22)) + n2(cp*1.9 - vec2(uTime*.27, uTime*.31))*.6;
+  float caus = pow(1.-abs(ca/1.6*2.-1.), 3.);
+  float hot = exp(-dot(q*1.7,q*1.7)*1.8);
+  vec3 col = uCol*(e*.30 + caus*e*.22) + uCol*hot*.22*(1.+.6*uSharp);
+  gl_FragColor = vec4(col*uSun*uGain, 1.); }`;
+
+const stones = [];
+const decalGeo = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+STONES.forEach((o, i) => {
+  const geo = stoneGeometry(o);
+  const mat = stoneMaterial(o);
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.castShadow = true; mesh.receiveShadow = false;
+  const pivot = new THREE.Group(); pivot.add(mesh); scene.add(pivot);
+  const bb = geo.boundingBox;
+  const a = (bb.max.x - bb.min.x) / 2, b = (bb.max.z - bb.min.z) / 2;
+  mesh.position.set(-(bb.max.x + bb.min.x) / 2, 0, -(bb.max.z + bb.min.z) / 2);
+  const mkU = () => ({ uC:{value:new THREE.Vector2()}, uDir:{value:new THREE.Vector2(1,0)}, uL:{value:1}, uRa:{value:a}, uRb:{value:b},
+    uSun:{value:0}, uTime:{value:0}, uSeed:{value:o.seed}, uSharp:{value:0}, uGain:{value:1},
+    uCol:{value:new THREE.Color(o.att).lerp(new THREE.Color(o.color), .4)} });
+  const tint = new THREE.Mesh(decalGeo, new THREE.ShaderMaterial({ vertexShader: decalVS, fragmentShader: tintFS, uniforms: mkU(),
+    transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendSrc: THREE.ZeroFactor, blendDst: THREE.SrcColorFactor,
+    polygonOffset: true, polygonOffsetFactor: -2 }));
+  const glow = new THREE.Mesh(decalGeo, new THREE.ShaderMaterial({ vertexShader: decalVS, fragmentShader: glowFS, uniforms: mkU(),
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -3 }));
+  tint.renderOrder = 1; glow.renderOrder = 2; tint.position.y = glow.position.y = 0.003;
+  tint.material.uniforms.uCol.value.multiplyScalar(1.0);
+  scene.add(tint, glow);
+  const st = {
+    o, i, mesh, pivot, mat, tint, glow, a, b, h: bb.max.y - bb.min.y, r: Math.max(a, b) * 0.86 + Math.min(a, b) * 0.14,
+    x: o.pos[0], z: o.pos[1], vx: 0, vz: 0, yaw: o.yaw, home: new THREE.Vector2(o.pos[0], o.pos[1]),
+    lift: spring(0, 170, 20), glowS: spring(0, 90, 16), squash: spring(0, 520, 13), reveal: 0, revStart: 0, flash: 0, pulse: 1,
+    tiltX: 0, tiltZ: 0,
+  };
+  mesh.userData.st = st; stones.push(st);
+});
+function spring(x, k, c) { return { x, v: 0, t: x, k, c, step(dt) { const a = (this.t - this.x) * this.k - this.v * this.c; this.v += a * dt; this.x += this.v * dt; } }; }
+
+/* ---------------- choreography ---------------- */
+const clamp01 = x => Math.min(1, Math.max(0, x));
+const sstep = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const easeIO = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+const easeOutQuint = t => 1 - Math.pow(1 - t, 5);
+const lerp = (a, b, t) => a + (b - a) * t;
+const SETTLE_AZ = -2.25, SETTLE_EL = 0.40;
+// light cascade: stones nearest the rising sun ignite first
+{ const d = new THREE.Vector2(Math.cos(SETTLE_AZ), Math.sin(SETTLE_AZ));
+  const ord = [...stones].sort((p, q) => (-(p.x*d.x + p.z*d.y)) - (-(q.x*d.x + q.z*d.y)));
+  ord.forEach((s, k) => s.revStart = 1.25 + k * 0.21); }
+
+const C = { dawn: new THREE.Color('#ff6a2a'), day: new THREE.Color('#fff3e4'), bg0: new THREE.Color('#0d1018'), bg1: new THREE.Color('#e9e5dd') };
+const tmp = new THREE.Color();
+const ptr = { x: 0, y: 0, sx: 0, sy: 0 };
+let sunOffAz = 0, sunOffEl = 0;
+
+function intro(t) {
+  const L = sstep(0.15, 3.2, t);                    // light energy
+  const el = lerp(0.035, SETTLE_EL, easeIO(clamp01((t - 0.2) / 4.6)));
+  const az = lerp(-3.05, SETTLE_AZ, easeOutQuint(clamp01((t - 0.1) / 5.0)));
+  const warm = sstep(0.4, 4.2, t);
+  const cam = easeIO(clamp01((t - 0.0) / 5.4));
+  return { L, el, az, warm, cam };
+}
+
+function applyLight(I, dt) {
+  const az = I.az + sunOffAz + ptr.sx * 0.06, el = Math.max(0.05, I.el + sunOffEl + ptr.sy * 0.025);
+  const D = new THREE.Vector3(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az));
+  sun.position.copy(D).multiplyScalar(25); sun.target.position.set(0, 0, 0);
+  sun.intensity = 3.6 * I.L;
+  sun.color.copy(C.dawn).lerp(C.day, I.warm);
+  hemi.intensity = 0.03 + 0.16 * I.L;
+  scene.environmentIntensity = 0.07 + 0.30 * I.L;
+  renderer.toneMappingExposure = lerp(0.28, 0.92, I.L);
+  scene.background.copy(C.bg0).lerp(C.bg1, I.L);
+  document.getElementById('vig').style.opacity = String(lerp(1.6, 1, I.L));
+  return { D, el, az };
+}
+
+function applyCamera(I) {
+  const a = I.cam;
+  const r = lerp(2.6, 9.2, a), y = lerp(19.5, 13.2, a), side = Math.sin(a * Math.PI) * 1.6;
+  camera.position.set(side + ptr.sx * 0.25, y, r + ptr.sy * 0.15);
+  camera.lookAt(camTarget);
+  camera.rotation.z += lerp(0.35, 0, easeOutQuint(a)) * 0.6;
+}
+
+/* ---------------- interaction ---------------- */
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit = new THREE.Vector3();
+let hover = null, drag = null, downAt = 0, downPos = null, audio = null, introT = 0, interactive = false;
+const meshes = stones.map(s => s.mesh);
+function pick(e) {
+  ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  return ray.intersectObjects(meshes, false)[0];
+}
+const cv = renderer.domElement;
+cv.addEventListener('pointermove', e => {
+  ptr.x = e.clientX / innerWidth * 2 - 1; ptr.y = e.clientY / innerHeight * 2 - 1;
+  if (!interactive) return;
+  if (drag) {
+    ndc.set(ptr.x, -ptr.y); ray.setFromCamera(ndc, camera);
+    if (ray.ray.intersectPlane(plane, hit)) { drag.moved += Math.hypot(hit.x + drag.ox - drag.tx, hit.z + drag.oz - drag.tz); drag.tx = hit.x + drag.ox; drag.tz = hit.z + drag.oz; }
+    return;
+  }
+  const h = pick(e); hover = h ? h.object.userData.st : null;
+  cv.className = hover ? 'hover' : '';
+});
+cv.addEventListener('pointerdown', e => {
+  if (!interactive) return;
+  const h = pick(e); if (!h) return;
+  cv.setPointerCapture(e.pointerId);
+  const st = h.object.userData.st; hover = st;
+  ray.ray.intersectPlane(plane, hit);
+  drag = { st, ox: st.x - hit.x, oz: st.z - hit.z, tx: st.x, tz: st.z };
+  st.squash.t = 0.14; st.flash = 1; st.pulse = 0;
+  st.mat.userData.u.uPulseO.value.copy(h.object.worldToLocal(h.point.clone()));
+  cv.className = 'drag'; tick(st); Notif.poke('press'); drag.moved = 0;
+});
+const up = () => { if (drag) { if (drag.moved > 1.5) Notif.poke('drag'); drag.st.squash.t = 0; drag = null; cv.className = hover ? 'hover' : ''; } };
+cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+
+function tick(st) {   // soft glassy click: filtered noise transient + two inharmonic partials
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    const t = audio.currentTime, out = audio.createGain(); out.gain.value = 0.12; out.connect(audio.destination);
+    const len = audio.sampleRate * 0.03, buf = audio.createBuffer(1, len, audio.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 4);
+    const n = audio.createBufferSource(); n.buffer = buf;
+    const bp = audio.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2600 + st.i * 140; bp.Q.value = 2.5;
+    n.connect(bp).connect(out); n.start(t);
+    [1, 2.76].forEach((m, k) => {
+      const os = audio.createOscillator(), g = audio.createGain();
+      os.frequency.value = (1250 + st.i * 70) * m; os.type = 'sine';
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(k ? 0.05 : 0.11, t + 0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + (k ? 0.08 : 0.16));
+      os.connect(g).connect(out); os.start(t); os.stop(t + 0.2);
+    });
+  } catch (_) {}
+}
+
+/* ---------------- simulation ---------------- */
+function physics(dt) {
+  for (const s of stones) {
+    if (drag && drag.st === s) {
+      const ax = (drag.tx - s.x) * 140 - s.vx * 19, az = (drag.tz - s.z) * 140 - s.vz * 19;
+      s.vx += ax * dt; s.vz += az * dt;
+    } else { const f = Math.exp(-3.2 * dt); s.vx *= f; s.vz *= f; }
+    s.x += s.vx * dt; s.z += s.vz * dt;
+  }
+  for (let it = 0; it < 3; it++) for (let i = 0; i < stones.length; i++) for (let j = i + 1; j < stones.length; j++) {
+    const p = stones[i], q = stones[j]; const dx = q.x - p.x, dz = q.z - p.z, d = Math.hypot(dx, dz) || 1e-4;
+    const ov = p.r + q.r - d; if (ov <= 0) continue;
+    const nx = dx / d, nz = dz / d;
+    const wp = drag && drag.st === p ? 0.05 : 0.5, wq = drag && drag.st === q ? 0.05 : 0.5, ws = wp + wq;
+    p.x -= nx * ov * wp / ws; p.z -= nz * ov * wp / ws; q.x += nx * ov * wq / ws; q.z += nz * ov * wq / ws;
+    const rv = (q.vx - p.vx) * nx + (q.vz - p.vz) * nz;
+    if (rv < 0) { const j2 = -1.3 * rv / 2; p.vx -= j2 * nx * (wp/ws*2); p.vz -= j2 * nz * (wp/ws*2); q.vx += j2 * nx * (wq/ws*2); q.vz += j2 * nz * (wq/ws*2);
+      q.yaw += rv * 0.02; p.yaw -= rv * 0.02; }
+  }
+  for (const s of stones) {
+    const B = 6.6; if (Math.abs(s.x) > B) { s.x = Math.sign(s.x) * B; s.vx *= -0.4; }
+    if (Math.abs(s.z) > 5.6) { s.z = Math.sign(s.z) * 5.6; s.vz *= -0.4; }
+  }
+}
+
+let simT = 0, hoverT = 0;
+function frame(dt) {
+  simT += dt; introT = simT;
+  interactive = introT > 3.2;
+  ptr.sx += (ptr.x - ptr.sx) * (1 - Math.exp(-3 * dt)); ptr.sy += (ptr.y - ptr.sy) * (1 - Math.exp(-3 * dt));
+  const I = intro(introT);
+  // amber stone is the sun: its displacement from home steers the light
+  const sunSt = stones.find(s => s.o.sun);
+  const tAz = (sunSt.x - sunSt.home.x) * 0.16, tEl = -(sunSt.z - sunSt.home.y) * 0.05;
+  sunOffAz += (tAz - sunOffAz) * (1 - Math.exp(-4 * dt)); sunOffEl += (tEl - sunOffEl) * (1 - Math.exp(-4 * dt));
+  const Ld = applyLight(I, dt);
+  applyCamera(I);
+  physics(dt);
+  Notif.update(dt);
+  if (hover && !drag) { hoverT += dt; if (hoverT > 1.4 && hoverT - dt <= 1.4) Notif.poke('hover'); } else hoverT = 0;
+  const sdir = new THREE.Vector2(-Ld.D.x, -Ld.D.z).normalize();
+  for (const s of stones) {
+    const p = clamp01((introT - s.revStart) / 1.25);
+    const rev = 1 - Math.pow(1 - p, 3);
+    const isH = hover === s || (drag && drag.st === s);
+    s.lift.t = (drag && drag.st === s) ? 0.32 : (hover === s ? 0.26 : 0);
+    s.glowS.t = isH ? 1 : 0;
+    s.lift.step(dt); s.glowS.step(dt); s.squash.step(dt);
+    s.flash *= Math.exp(-5 * dt); s.pulse = Math.min(1, s.pulse + dt * 1.1);
+    // settle wobble as the stone ignites
+    const wob = p > 0 && p < 1 ? Math.exp(-5 * p) * Math.sin(p * 18) * 0.05 : 0;
+    const bloom = Math.sin(Math.PI * p) * Math.pow(1 - p, 0.6);
+    const sq = s.squash.x;
+    s.tiltX += (s.vz * 0.035 - s.tiltX) * (1 - Math.exp(-10 * dt));
+    s.tiltZ += (-s.vx * 0.035 - s.tiltZ) * (1 - Math.exp(-10 * dt));
+    s.pivot.position.set(s.x, Math.max(0, s.lift.x) + wob, s.z);
+    s.pivot.rotation.set(s.tiltX, s.yaw, s.tiltZ);
+    s.pivot.scale.set(1 + sq * 0.45, 1 - sq, 1 + sq * 0.45);
+    const u = s.mat.userData.u, base = s.mat.userData.base;
+    u.uReveal.value = rev; u.uTime.value = simT; u.uGlow.value = s.glowS.x + bloom * 0.9; u.uFlash.value = s.flash; u.uPulse.value = s.pulse;
+    s.mat.transmission = 0.02 + (base.transmission - 0.02) * rev;
+    // colored transmitted light on the paper
+    const yaw = s.yaw, cy = Math.cos(yaw), sy = Math.sin(yaw);
+    const ra = Math.hypot(s.a * (cy * -sdir.y + -sy * sdir.x), s.b * (sy * -sdir.y + cy * sdir.x));
+    const rb = Math.hypot(s.a * (cy * sdir.x + -sy * sdir.y), s.b * (sy * sdir.x + cy * sdir.y));
+    const ht = s.h * 0.82 + Math.max(0, s.lift.x);
+    const L = Math.min(9, ht / Math.tan(Ld.el));
+    const sharp = clamp01(s.glowS.x);
+    for (const dm of [s.tint, s.glow]) {
+      const U = dm.material.uniforms;
+      U.uC.value.set(s.x, s.z); U.uDir.value.copy(sdir); U.uL.value = L; U.uRa.value = ra * 0.97; U.uRb.value = rb;
+      U.uSun.value = I.L * rev * (1 - sstep(0.25, 0.05, Ld.el) * 0.5); U.uTime.value = simT; U.uSharp.value = sharp;
+      U.uGain.value = dm === s.glow ? (1 + sharp * 0.6 + s.flash * 1.2 + bloom * 0.8) : 1;
+      const ext = L + Math.max(ra, rb) * 2.5;
+      dm.position.set(s.x + sdir.x * L * 0.5, 0.003, s.z + sdir.y * L * 0.5);
+      dm.scale.set(ext * 1.3 + 2, 1, ext * 1.3 + 2);
+    }
+  }
+}
+function render() { renderer.render(scene, camera); }
+
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+
+window.__app = { frame, render, stones, camera, get t() { return simT; },
+  screenOf(i) { const v = stones[i].pivot.position.clone(); v.y = stones[i].h * .5; v.project(camera); return [(v.x + 1) / 2 * innerWidth, (1 - v.y) / 2 * innerHeight]; } };
+if (!MANUAL) {
+  let last = performance.now();
+  renderer.setAnimationLoop(() => { const n = performance.now(); frame(Math.min(0.05, (n - last) / 1000)); last = n; render(); });
+} else window.__ready = true;
+</script>
+</body>
+</html>
