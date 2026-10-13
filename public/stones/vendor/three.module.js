@@ -16333,6 +16333,11 @@ class WebGLRenderer {
 		 */
 		this.transmissionResolutionScale = 1.0;
 
+		// [stones patch, not upstream] Same idea as shadowMap.autoUpdate / needsUpdate: with autoUpdate off,
+		// the copy of the opaque scene that transmissive materials refract is only re-rendered on request.
+		this.transmissionAutoUpdate = true;
+		this.transmissionNeedsUpdate = false;
+
 		// internal properties
 
 		const _this = this;
@@ -18078,7 +18083,16 @@ class WebGLRenderer {
 			const transmissionRenderTarget = currentRenderState.state.transmissionRenderTarget[ camera.id ];
 
 			const activeViewport = camera.viewport || _currentViewport;
-			transmissionRenderTarget.setSize( activeViewport.z * _this.transmissionResolutionScale, activeViewport.w * _this.transmissionResolutionScale );
+			const transmissionWidth = activeViewport.z * _this.transmissionResolutionScale, transmissionHeight = activeViewport.w * _this.transmissionResolutionScale;
+
+			// [stones patch, not upstream] keep the previous copy when the app says nothing behind the glass changed
+			if ( _this.transmissionAutoUpdate === false && _this.transmissionNeedsUpdate === false && transmissionRenderTarget.texture.userData.rendered === true &&
+				transmissionRenderTarget.width === transmissionWidth && transmissionRenderTarget.height === transmissionHeight ) return;
+
+			_this.transmissionNeedsUpdate = false;
+			transmissionRenderTarget.texture.userData.rendered = true;
+
+			transmissionRenderTarget.setSize( transmissionWidth, transmissionHeight );
 
 			//
 

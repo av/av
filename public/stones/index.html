@@ -24,6 +24,56 @@ import { RoomEnvironment } from './vendor/addons/environments/RoomEnvironment.js
 const Q = new URLSearchParams(location.search);
 const MANUAL = Q.has('manual');
 
+// setup runs in short slices, so loading never holds the page for long
+// (a message task rather than a timer: timers are slowed to a crawl while the tab is in the background)
+const slice = new MessageChannel();
+let sliceT = performance.now(), sliceNext = null;
+slice.port1.onmessage = () => { sliceT = performance.now(); sliceNext(); };
+const breathe = () => performance.now() - sliceT < 8 ? null : new Promise(r => { sliceNext = r; slice.port2.postMessage(0); });
+
+/* ---------------- stone catalogue (from the photo) ---------------- */
+const STONES = [
+  { color:'#a8e3c6', att:'#4fc79a', size:[1.0,.62,.70], pos:[-4.6,-3.0], yaw:.25, lump:.35, taper:.08, seed:1, frost:1.1, pits:.8 },               // seafoam
+  { color:'#3aa65a', att:'#0f7a2c', size:[.78,.55,.62], pos:[-1.6,-3.4], yaw:-.5, lump:.3, taper:.15, seed:2, attD:.45, pits:1.2, bubbles:.9 },   // emerald
+  { color:'#e3e8e6', att:'#d9e6e3', size:[1.55,.45,.52], pos:[-2.6,-0.9], yaw:.32, lump:.18, taper:.02, seed:3, attD:2.5, frost:1.3, sparkle:1.5 }, // clear long
+  { color:'#c4db78', att:'#9bc23a', size:[.82,.48,.58], pos:[0.9,-1.8], yaw:.15, lump:.35, taper:.35, seed:4, pits:.6 },                          // lime
+  { color:'#2a58e6', att:'#0b2fc4', size:[1.0,.75,.9], pos:[3.6,-3.4], yaw:.3, ring:true, seed:5, attD:.35, rough:.42, pits:.5, glow:'#4a7bff' },   // cobalt ring
+  { color:'#3ccdf0', att:'#00a8dc', size:[.55,.52,.92], pos:[3.3,-1.4], yaw:-.35, lump:.4, taper:.2, seed:6, attD:.5, rough:.4, bubbles:1.0 },     // aqua
+  { color:'#8edcb9', att:'#34b886', size:[.88,.62,.88], pos:[2.2,0.3], yaw:.6, lump:.3, taper:.1, seed:7, frost:1.2, pits:1.1 },                  // seafoam round
+  { color:'#3fc3e6', att:'#06a2d6', size:[1.05,.55,.68], pos:[-3.4,1.8], yaw:-.1, lump:.3, taper:.12, seed:8, attD:.5, rough:.42 },              // turquoise
+  { color:'#d2d6d8', att:'#a8b0b4', size:[.9,.58,.8], pos:[-0.3,1.6], yaw:.4, lump:.32, taper:.25, seed:9, attD:1.2, frost:1.3, sparkle:1.6 },     // grey
+  { color:'#f8c25a', att:'#eea024', size:[.82,.62,1.08], pos:[3.6,2.6], yaw:-.25, lump:.25, taper:.08, seed:10, attD:.45, sun:true, bubbles:.8 },  // amber = sun control
+  { color:'#8c3810', att:'#6a1e02', size:[1.0,.55,.82], pos:[-3.0,4.6], yaw:.1, lump:.3, taper:.06, seed:11, attD:.25, rough:.45, pits:1.5, trans:.75 }, // brown
+  { color:'#b2cff0', att:'#7fa8e0', size:[1.0,.6,.8], pos:[0.0,4.4], yaw:-.2, lump:.38, taper:.18, seed:12, attD:1.0, pits:1.0 },                  // pale blue
+  { color:'#e8cfe6', att:'#c9a0c8', size:[1.05,.5,.72], pos:[0.4,-4.2], yaw:-.1, lump:.25, taper:.1, seed:13, attD:1.5, frost:1.2 },               // lilac
+];
+
+// stone meshes are built in workers while the rest of the scene is set up
+const geoWorkers = Array.from({ length: Math.min(4, navigator.hardwareConcurrency || 2) }, () => new Worker('geo.worker.js'));
+const geoJob = (o, id, position) => new Promise((resolve, reject) => {
+  const w = geoWorkers[id % geoWorkers.length];
+  w.addEventListener('message', e => { if (e.data.id === id) resolve(e.data); });
+  w.addEventListener('error', reject);
+  w.postMessage({ id, o, position }, position ? [position.buffer] : []);
+});
+const geoJobs = STONES.map((o, id) => o.ring ? null : geoJob(o, id));
+async function stoneGeometry(o, id) {
+  if (o.ring) {   // three's torus, lumps added by the worker
+    const geo = new THREE.TorusGeometry(0.62, 0.30, 48, 120); geo.rotateX(Math.PI / 2);
+    geo.setAttribute('position', new THREE.BufferAttribute((await geoJob(o, id, geo.attributes.position.array)).position, 3));
+    geo.computeBoundingBox();
+    geo.translate(0, -geo.boundingBox.min.y, 0);
+    geo.computeVertexNormals(); geo.computeBoundingBox();
+    return geo;
+  }
+  const g = await geoJobs[id], geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(g.position, 3));
+  geo.setAttribute('normal', new THREE.BufferAttribute(g.normal, 3));
+  geo.boundingBox = new THREE.Box3(new THREE.Vector3(...g.min), new THREE.Vector3(...g.max));
+  geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(...g.center), g.radius);
+  return geo;
+}
+
 /* ---------------- renderer / scene ---------------- */
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -32,16 +82,42 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.3;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.VSMShadowMap;
+// the shadow map, and the copy of the paper that the glass refracts, are redrawn only on frames where
+// something they depend on changed (see the end of frame()); otherwise last frame's are reused
+renderer.shadowMap.autoUpdate = false;
+renderer.transmissionAutoUpdate = false;   // added to vendor/three.module.js, marked [stones patch]
 document.body.prepend(renderer.domElement);
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x07080b);
-const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-scene.environmentIntensity = 0.05;
+await breathe();
 
 const camera = new THREE.PerspectiveCamera(34, innerWidth / innerHeight, 0.1, 100);
 const camTarget = new THREE.Vector3(0, 0, 0.7);
+
+// shaders are compiled in the background before their first use, so that use does not stall the page;
+// passes drawn off screen (into a render target) use their own variants of a material's shader
+const offscreen = new THREE.WebGLRenderTarget(1, 1);
+async function precompile(object, lit, target = null) {
+  renderer.setRenderTarget(target);
+  const ready = renderer.compileAsync(object, camera, lit);
+  renderer.setRenderTarget(null);
+  await ready;
+}
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x07080b);
+const pmrem = new THREE.PMREMGenerator(renderer), room = new RoomEnvironment();
+await precompile(room, room, offscreen);
+// ...and the two filter shaders of the environment bake itself. These are PMREMGenerator internals: should a
+// later three rename them, this is skipped and they compile on first use, as they always did
+if (pmrem._setSize && pmrem._allocateTargets && pmrem._lodMeshes) {
+  pmrem._setSize(256); pmrem._allocateTargets().dispose();
+  const quad = pmrem._lodMeshes[0];
+  for (const filter of [pmrem._ggxMaterial, pmrem._blurMaterial]) { quad.material = filter; await precompile(quad, quad, offscreen); }
+}
+await breathe();
+scene.environment = pmrem.fromScene(room, 0.04).texture;
+scene.environmentIntensity = 0.05;
+await breathe();
 
 const sun = new THREE.DirectionalLight(0xffffff, 0);
 sun.castShadow = true;
@@ -53,71 +129,29 @@ const hemi = new THREE.HemisphereLight(0xdfe8ff, 0xfff4e6, 0.0);
 scene.add(hemi);
 
 /* ---------------- paper ---------------- */
-function paperTex() {
+async function paperTex() {
   const s = 1024, c = document.createElement('canvas'); c.width = c.height = s;
   const g = c.getContext('2d');
   g.fillStyle = '#f4f1ea'; g.fillRect(0, 0, s, s);
   const img = g.getImageData(0, 0, s, s), d = img.data;
-  for (let i = 0; i < d.length; i += 4) { const n = (Math.random() - .5) * 10; d[i] += n; d[i+1] += n; d[i+2] += n * .9; }
+  for (let i = 0; i < d.length; await breathe())
+    for (const end = i + s * 256; i < end; i += 4) { const n = (Math.random() - .5) * 10; d[i] += n; d[i+1] += n; d[i+2] += n * .9; }
   g.putImageData(img, 0, 0);
   for (let i = 0; i < 9000; i++) {
     const x = Math.random() * s, y = Math.random() * s, a = Math.random() * Math.PI, l = 4 + Math.random() * 22;
     g.strokeStyle = Math.random() < .5 ? `rgba(255,255,255,${.12+Math.random()*.2})` : `rgba(150,135,110,${.04+Math.random()*.07})`;
     g.lineWidth = .4 + Math.random() * .8;
     g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a+.6)*l*.5, y + Math.sin(a+.6)*l*.5, x + Math.cos(a)*l, y + Math.sin(a)*l); g.stroke();
+    if (i % 250 === 249) await breathe();
   }
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(5, 5);
   t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
 }
-const ptex = paperTex();
+const ptex = await paperTex();
 const bump = ptex.clone(); bump.colorSpace = THREE.NoColorSpace; bump.needsUpdate = true;
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(60, 60),
   new THREE.MeshStandardMaterial({ map: ptex, bumpMap: bump, bumpScale: 0.6, roughness: 0.92, color: 0xffffff }));
 ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
-
-/* ---------------- JS noise for geometry ---------------- */
-function hash(x, y, z) { let h = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453; return h - Math.floor(h); }
-function vnoise(x, y, z) {
-  const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
-  let fx = x - ix, fy = y - iy, fz = z - iz;
-  fx = fx*fx*(3-2*fx); fy = fy*fy*(3-2*fy); fz = fz*fz*(3-2*fz);
-  const L = (a, b, t) => a + (b - a) * t;
-  return L(L(L(hash(ix,iy,iz),hash(ix+1,iy,iz),fx), L(hash(ix,iy+1,iz),hash(ix+1,iy+1,iz),fx), fy),
-           L(L(hash(ix,iy,iz+1),hash(ix+1,iy,iz+1),fx), L(hash(ix,iy+1,iz+1),hash(ix+1,iy+1,iz+1),fx), fy), fz);
-}
-const fbm = (x, y, z) => vnoise(x,y,z)*.55 + vnoise(x*2.1,y*2.1,z*2.1)*.3 + vnoise(x*4.3,y*4.3,z*4.3)*.15;
-
-function stoneGeometry(o) {
-  let geo;
-  if (o.ring) {
-    geo = new THREE.TorusGeometry(0.62, 0.30, 48, 120); geo.rotateX(Math.PI / 2);
-  } else geo = new THREE.IcosahedronGeometry(1, 40);
-  const p = geo.attributes.position, v = new THREE.Vector3();
-  const s = o.seed * 13.7;
-  for (let i = 0; i < p.count; i++) {
-    v.fromBufferAttribute(p, i);
-    if (!o.ring) {
-      // capsule-ish elongation + lumps
-      const n = fbm(v.x * 1.1 + s, v.y * 1.1, v.z * 1.1 - s) - .5;
-      const fine = vnoise(v.x * 5 + s, v.y * 5, v.z * 5) - .5;
-      v.multiplyScalar(1 + n * o.lump + fine * .008);
-      // tapers (pear / wedge shapes)
-      v.x *= 1 + o.taper * v.z;
-      v.multiply(new THREE.Vector3(o.size[0], o.size[1], o.size[2]));
-      // flatten underside softly (sits on paper)
-      if (v.y < 0) v.y *= 0.62;
-    } else {
-      const n = fbm(v.x * 1.4 + s, v.y * 1.4, v.z * 1.4) - .5;
-      v.x *= 1 + n * .35; v.z *= 1 + n * .25; v.y *= 0.85 + n * .4;
-      v.multiply(new THREE.Vector3(o.size[0], o.size[1], o.size[2]));
-    }
-    p.setXYZ(i, v.x, v.y, v.z);
-  }
-  geo.computeBoundingBox();
-  geo.translate(0, -geo.boundingBox.min.y, 0);
-  geo.computeVertexNormals(); geo.computeBoundingBox();
-  return geo;
-}
 
 /* ---------------- stone material (frost, pits, bubbles, sparkle) ---------------- */
 const GLSL_NOISE = /* glsl */`
@@ -130,8 +164,10 @@ float vn(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
  return mix(mix(mix(h13(i),h13(i+vec3(1,0,0)),f.x),mix(h13(i+vec3(0,1,0)),h13(i+vec3(1,1,0)),f.x),f.y),
             mix(mix(h13(i+vec3(0,0,1)),h13(i+vec3(1,0,1)),f.x),mix(h13(i+vec3(0,1,1)),h13(i+vec3(1,1,1)),f.x),f.y),f.z);}
 float fb(vec3 p){return vn(p)*.5+vn(p*2.03)*.3+vn(p*4.1)*.2;}
-vec4 wor(vec3 p, out vec3 id){vec3 i=floor(p),f=fract(p);float d=9.;vec3 b=vec3(0);id=i;
- for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)for(int z=-1;z<=1;z++){vec3 o=vec3(x,y,z);vec3 r=o+h33(i+o)-f;float dd=dot(r,r);if(dd<d){d=dd;b=r;id=i+o;}}
+// nearest feature point; only the 2x2x2 cells on the fragment's side are searched, which is exact for
+// distances < .5 - and every use below fades to nothing well before that (pits .34, bubbles .09, sparkle .07)
+vec4 wor(vec3 p, out vec3 id){vec3 i=floor(p),f=fract(p),s=step(.5,f)*2.-1.;float d=9.;vec3 b=vec3(0);id=i;
+ for(int x=0;x<=1;x++)for(int y=0;y<=1;y++)for(int z=0;z<=1;z++){vec3 o=vec3(x,y,z)*s;vec3 r=o+h33(i+o)-f;float dd=dot(r,r);if(dd<d){d=dd;b=r;id=i+o;}}
  return vec4(sqrt(d),b);}
 `;
 function stoneMaterial(o) {
@@ -181,14 +217,17 @@ function stoneMaterial(o) {
       `)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
         vec3 Vd = normalize(vViewPosition);
-        float fres = pow(1.0 - abs(dot(normal, Vd)), 2.5);
+        // pow() of a negative base is undefined in GLSL: some GPUs answer NaN, which paints the stone black.
+        // So the fresnel base is clamped (rounding can push it a hair below 0) and the pulse is squared by hand.
+        float fres = pow(max(1.0 - abs(dot(normal, Vd)), 0.), 2.5);
         float core = pow(abs(dot(normal, Vd)), 3.0);
         // sparkle grains (frosted glass glints), twinkling with view
         vec3 sid; vec4 S = wor(vObj*38.0 + uSeed*4., sid);
         float sp = smoothstep(.07,.0,S.x) * step(.80, h13(sid));
         sp *= .5 + .5*sin(h13(sid+3.)*40. + uTime*2.5 + dot(vViewPosition, vec3(9.,7.,5.)));
         float pd = length(vObj - uPulseO);
-        float wave = exp(-pow((pd - uPulse*1.6)*7.0, 2.)) * (1.0 - uPulse);
+        float wd = (pd - uPulse*1.6)*7.0;
+        float wave = exp(-wd*wd) * (1.0 - uPulse);
         vec3 tint = uTint;
         totalEmissiveRadiance += tint * (uGlow*(.22*core + .35*fres) + wave*1.2 + uFlash*.9*core);
         totalEmissiveRadiance += vec3(1.,.97,.9) * sp * uSparkle * .7 * uReveal;
@@ -199,23 +238,6 @@ function stoneMaterial(o) {
   m.customProgramCacheKey = () => 'seaglass';
   return m;
 }
-
-/* ---------------- stone catalogue (from the photo) ---------------- */
-const STONES = [
-  { color:'#a8e3c6', att:'#4fc79a', size:[1.0,.62,.70], pos:[-4.6,-3.0], yaw:.25, lump:.35, taper:.08, seed:1, frost:1.1, pits:.8 },               // seafoam
-  { color:'#3aa65a', att:'#0f7a2c', size:[.78,.55,.62], pos:[-1.6,-3.4], yaw:-.5, lump:.3, taper:.15, seed:2, attD:.45, pits:1.2, bubbles:.9 },   // emerald
-  { color:'#e3e8e6', att:'#d9e6e3', size:[1.55,.45,.52], pos:[-2.6,-0.9], yaw:.32, lump:.18, taper:.02, seed:3, attD:2.5, frost:1.3, sparkle:1.5 }, // clear long
-  { color:'#c4db78', att:'#9bc23a', size:[.82,.48,.58], pos:[0.9,-1.8], yaw:.15, lump:.35, taper:.35, seed:4, pits:.6 },                          // lime
-  { color:'#2a58e6', att:'#0b2fc4', size:[1.0,.75,.9], pos:[3.6,-3.4], yaw:.3, ring:true, seed:5, attD:.35, rough:.42, pits:.5, glow:'#4a7bff' },   // cobalt ring
-  { color:'#3ccdf0', att:'#00a8dc', size:[.55,.52,.92], pos:[3.3,-1.4], yaw:-.35, lump:.4, taper:.2, seed:6, attD:.5, rough:.4, bubbles:1.0 },     // aqua
-  { color:'#8edcb9', att:'#34b886', size:[.88,.62,.88], pos:[2.2,0.3], yaw:.6, lump:.3, taper:.1, seed:7, frost:1.2, pits:1.1 },                  // seafoam round
-  { color:'#3fc3e6', att:'#06a2d6', size:[1.05,.55,.68], pos:[-3.4,1.8], yaw:-.1, lump:.3, taper:.12, seed:8, attD:.5, rough:.42 },              // turquoise
-  { color:'#d2d6d8', att:'#a8b0b4', size:[.9,.58,.8], pos:[-0.3,1.6], yaw:.4, lump:.32, taper:.25, seed:9, attD:1.2, frost:1.3, sparkle:1.6 },     // grey
-  { color:'#f8c25a', att:'#eea024', size:[.82,.62,1.08], pos:[3.6,2.6], yaw:-.25, lump:.25, taper:.08, seed:10, attD:.45, sun:true, bubbles:.8 },  // amber = sun control
-  { color:'#8c3810', att:'#6a1e02', size:[1.0,.55,.82], pos:[-3.0,4.6], yaw:.1, lump:.3, taper:.06, seed:11, attD:.25, rough:.45, pits:1.5, trans:.75 }, // brown
-  { color:'#b2cff0', att:'#7fa8e0', size:[1.0,.6,.8], pos:[0.0,4.4], yaw:-.2, lump:.38, taper:.18, seed:12, attD:1.0, pits:1.0 },                  // pale blue
-  { color:'#e8cfe6', att:'#c9a0c8', size:[1.05,.5,.72], pos:[0.4,-4.2], yaw:-.1, lump:.25, taper:.1, seed:13, attD:1.5, frost:1.2 },               // lilac
-];
 
 /* ---------------- colored transmitted-light decals ---------------- */
 const decalVS = `varying vec2 vW; void main(){ vec4 w = modelMatrix*vec4(position,1.); vW = w.xz; gl_Position = projectionMatrix*viewMatrix*w; }`;
@@ -247,8 +269,8 @@ const glowFS = decalCommon + `void main(){ float u,v; frame(u,v);
 
 const stones = [];
 const decalGeo = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
-STONES.forEach((o, i) => {
-  const geo = stoneGeometry(o);
+for (const [i, o] of STONES.entries()) {
+  const geo = await stoneGeometry(o, i);
   const mat = stoneMaterial(o);
   const mesh = new THREE.Mesh(geo, mat);
   mesh.castShadow = true; mesh.receiveShadow = false;
@@ -274,7 +296,8 @@ STONES.forEach((o, i) => {
     tiltX: 0, tiltZ: 0,
   };
   mesh.userData.st = st; stones.push(st);
-});
+}
+geoWorkers.forEach(w => w.terminate());
 function spring(x, k, c) { return { x, v: 0, t: x, k, c, step(dt) { const a = (this.t - this.x) * this.k - this.v * this.c; this.v += a * dt; this.x += this.v * dt; } }; }
 
 /* ---------------- choreography ---------------- */
@@ -405,6 +428,18 @@ function physics(dt) {
 }
 
 let simT = 0, hoverT = 0;
+// Redraw decisions for the two cached passes, made on what the GPU would be handed, as the 32-bit floats it gets:
+// - shadow map: the matrix that looks it up + each caster's model-view matrix from the sun
+//   (shadowProbe computes them the way the real shadow does, without touching it);
+// - paper behind the glass: camera, light and canvas values, plus "the shadows were redrawn".
+// Springs and easings creep towards rest for a long time in steps too small to survive that rounding. The 1e-12
+// slack is for matrix entries that are zero in theory and rounding dust (~1e-18) in practice.
+const shadowProbe = sun.shadow.clone(), mv = new THREE.Matrix4();
+shadowProbe.camera.updateProjectionMatrix(); ground.updateMatrixWorld();
+const shadowNow = new Float32Array(32 + STONES.length * 16), shadowWas = new Float32Array(shadowNow.length).fill(NaN);
+const behindNow = new Float32Array(62), behindWas = new Float32Array(behindNow.length).fill(NaN);
+const changed = (now, was) => { for (let i = 0; i < now.length; i++) if (!(Math.abs(now[i] - was[i]) <= 1e-12)) { was.set(now); return true; } return false; };
+renderer.domElement.addEventListener('webglcontextrestored', () => { shadowWas.fill(NaN); behindWas.fill(NaN); });
 function frame(dt) {
   simT += dt; introT = simT;
   interactive = introT > 3.2;
@@ -416,6 +451,7 @@ function frame(dt) {
   sunOffAz += (tAz - sunOffAz) * (1 - Math.exp(-4 * dt)); sunOffEl += (tEl - sunOffEl) * (1 - Math.exp(-4 * dt));
   const Ld = applyLight(I, dt);
   applyCamera(I);
+  sun.updateMatrixWorld(); shadowProbe.updateMatrices(sun); camera.updateMatrixWorld();
   physics(dt);
   Notif.update(dt);
   if (hover && !drag) { hoverT += dt; if (hoverT > 1.4 && hoverT - dt <= 1.4) Notif.poke('hover'); } else hoverT = 0;
@@ -437,6 +473,8 @@ function frame(dt) {
     s.pivot.position.set(s.x, Math.max(0, s.lift.x) + wob, s.z);
     s.pivot.rotation.set(s.tiltX, s.yaw, s.tiltZ);
     s.pivot.scale.set(1 + sq * 0.45, 1 - sq, 1 + sq * 0.45);
+    s.pivot.updateMatrixWorld();
+    shadowNow.set(mv.multiplyMatrices(shadowProbe.camera.matrixWorldInverse, s.mesh.matrixWorld).elements, 32 + s.i * 16);
     const u = s.mat.userData.u, base = s.mat.userData.base;
     u.uReveal.value = rev; u.uTime.value = simT; u.uGlow.value = s.glowS.x + bloom * 0.9; u.uFlash.value = s.flash; u.uPulse.value = s.pulse;
     s.mat.transmission = 0.02 + (base.transmission - 0.02) * rev;
@@ -457,6 +495,13 @@ function frame(dt) {
       dm.scale.set(ext * 1.3 + 2, 1, ext * 1.3 + 2);
     }
   }
+  shadowNow.set(shadowProbe.matrix.elements, 0);
+  shadowNow.set(mv.multiplyMatrices(shadowProbe.camera.matrixWorldInverse, ground.matrixWorld).elements, 16);
+  behindNow.set(camera.matrixWorld.elements, 0); behindNow.set(camera.matrixWorldInverse.elements, 16); behindNow.set(camera.projectionMatrix.elements, 32);
+  sun.position.toArray(behindNow, 48); sun.color.toArray(behindNow, 51); scene.background.toArray(behindNow, 54);
+  behindNow.set([sun.intensity, hemi.intensity, scene.environmentIntensity, cv.width, cv.height], 57);
+  if (changed(shadowNow, shadowWas)) { renderer.shadowMap.needsUpdate = true; behindWas.fill(NaN); }
+  if (changed(behindNow, behindWas)) renderer.transmissionNeedsUpdate = true;
 }
 function render() { renderer.render(scene, camera); }
 
@@ -464,6 +509,19 @@ addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; cam
 
 window.__app = { frame, render, stones, camera, get t() { return simT; },
   screenOf(i) { const v = stones[i].pivot.position.clone(); v.y = stones[i].h * .5; v.project(camera); return [(v.x + 1) / 2 * innerWidth, (1 - v.y) / 2 * innerHeight]; } };
+// once every shader is ready the opening frame is drawn, so uploads and first-use costs land before the
+// clock starts instead of inside the animation - first the paper alone (shadow passes), then with the stones
+// (their meshes go to the GPU), each in its own slice
+{ const I = intro(0); applyLight(I, 0); applyCamera(I); }
+await precompile(scene, scene);
+await precompile(ground, scene, offscreen);   // the paper as the glass refracts it
+offscreen.dispose();
+for (const show of [false, true]) {
+  await breathe();
+  for (const s of stones) s.pivot.visible = s.tint.visible = s.glow.visible = show;
+  renderer.shadowMap.needsUpdate = true; render();
+}
+await breathe();
 if (!MANUAL) {
   let last = performance.now();
   renderer.setAnimationLoop(() => { const n = performance.now(); frame(Math.min(0.05, (n - last) / 1000)); last = n; render(); });
