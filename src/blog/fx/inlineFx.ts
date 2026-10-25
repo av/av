@@ -48,9 +48,12 @@ const prepare: Record<string, Effect> = {
     el.dataset.text = text;
     el.innerHTML =
       '<span class="fx-term__sig" aria-hidden="true">&gt;</span>' +
+      '<span class="fx-term__body" aria-hidden="true">' +
       `<span class="fx-term__txt">${text}</span>` +
-      '<i class="fx-term__cur" aria-hidden="true"></i>' +
-      '<kbd class="fx-term__send" aria-hidden="true">↵</kbd>';
+      '<i class="fx-term__cur"></i>' +
+      '<span class="fx-term__ghost"></span>' +
+      '</span>' +
+      '<span class="fx-term__send" aria-hidden="true"><span>send</span><kbd>↵</kbd></span>';
   },
 };
 
@@ -59,10 +62,14 @@ const play: Record<string, Effect> = {
   type: (el) => {
     const text = el.dataset.text ?? '';
     const txt = el.querySelector<HTMLElement>('.fx-term__txt');
-    if (!txt) return;
+    const ghost = el.querySelector<HTMLElement>('.fx-term__ghost');
+    if (!txt || !ghost) return;
+    txt.textContent = '';
+    ghost.textContent = text;
     void (async () => {
       for (let i = 0; i <= text.length; i++) {
         txt.textContent = text.slice(0, i);
+        ghost.textContent = text.slice(i);
         await sleep(38 + Math.random() * 24);
       }
       el.classList.add('is-done');

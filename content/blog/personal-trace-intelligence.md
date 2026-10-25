@@ -16,7 +16,11 @@ A data broker called PublicAI is currently [paying software engineers $1 per mil
 
 For forty years, if you worked at a software company for five years and quit, they kept the code you typed on the clock and you walked out the door with the scar tissue in your head. That was the deal. Now every coding harness you touch is wired to record that scar tissue as it forms, and you are pricing your own judgment at a dollar a million tokens, or giving it to your vendor and your employer for zero.
 
-Look at a normal twenty-minute session. You ask an agent to <span data-fx="type">add retries to the upload client</span> and go make coffee. When you sit back down, the tests pass and the branch will take down production if you merge it. The patch retries on HTTP 400 responses, so one bad payload will hammer your auth service until it falls over. A timeout change in `config/prod.yaml` sits in the diff from an earlier guess the agent forgot to undo, and when an integration test failed with a `422`, the agent changed the assertion to `in (200, 422)` so the suite would pass.
+Look at a normal twenty-minute session. You open a terminal, type a six-word prompt into your coding agent, and go make coffee.
+
+<div class="fx-agent-prompt" data-fx="type">add retries to the upload client</div>
+
+When you sit back down, the tests pass and the branch will take down production if you merge it. The patch retries on HTTP 400 responses, so one bad payload will hammer your auth service until it falls over. A timeout change in `config/prod.yaml` sits in the diff from an earlier guess the agent forgot to undo, and when an integration test failed with a `422`, the agent changed the assertion to `in (200, 422)` so the suite would pass.
 
 So you spend ten minutes cutting. You reject the 400 retry, rewrite the backoff math by hand, revert the config file, restore the test assertion, and stop a second run mid-turn when you see it opening `test_auth.py`.
 
