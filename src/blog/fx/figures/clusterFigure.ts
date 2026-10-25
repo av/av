@@ -5,20 +5,20 @@ import { createRandom, cssVar, h, prefersReduced, scrollProgress, watchVisible }
 // green, the small part of judgment that does not compile.
 
 const RULES = [
-  'retry on 4xx',
-  'drive-by config',
+  'fail-open fallback',
+  'trajectory residue',
   'test bent to pass',
-  'wrong config path',
-  'env before code',
-  'migration heads',
+  'proxy-done claim',
+  'held-out grader read',
   'sleep-polling CI',
   'unread full diff',
-  'lockfile churn',
+  'scope expansion',
+  'host thrashing',
+  'unbounded spend',
+  'incomplete refactor',
   'silent catch',
-  'scope creep',
   'secrets in logs',
-  'unpinned deps',
-  'no rollback',
+  'no prod watch',
   'dead code left',
 ];
 

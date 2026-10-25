@@ -7,11 +7,11 @@ import { h, prefersReduced, scrollProgress, watchVisible } from './util';
 type Rung = { human: string; check?: string };
 
 const RUNGS: Rung[] = [
-  { human: 'lockfiles left alone', check: 'no-lockfile-churn' },
-  { human: 'retry only on server errors', check: 'retry-5xx-only' },
-  { human: 'friction is environmental first', check: 'env-before-code' },
-  { human: 'migration heads stay linear', check: 'alembic-heads-linear' },
-  { human: 'full diff read before done', check: 'diff-vs-base-reviewed' },
+  { human: 'one blocking CI watch, no polling loops', check: 'ci-watch-once' },
+  { human: 'existing tests and graders stay untouched', check: 'no-test-tampering' },
+  { human: 'trajectory residue reverted from full diff', check: 'diff-vs-base-clean' },
+  { human: 'verified on live surface, not a proxy', check: 'no-proxy-done' },
+  { human: 'metered spend and shared host load gated', check: 'spend-and-load-gate' },
   { human: 'when a clean patch is wrong for the business' },
   { human: 'which operational risk is worth taking' },
   { human: 'which project deserves doing at all' },

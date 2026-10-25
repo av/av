@@ -7,20 +7,18 @@ import { h, prefersReduced, sleep, watchVisible } from './util';
 type Line = { id?: string; sign: ' ' | '+' | '-'; code: string; file?: string };
 
 const PATCH: Line[] = [
-  { sign: ' ', code: 'upload_client.py', file: 'upload_client.py' },
-  { sign: ' ', code: 'def upload(payload):' },
-  { sign: '+', code: '    for attempt in range(5):' },
-  { sign: '+', code: '        r = session.post(URL, json=payload)' },
-  { id: 'retry', sign: '+', code: '        if r.status_code >= 400:' },
-  { id: 'sleep', sign: '+', code: '            time.sleep(2 ** attempt)' },
-  { sign: '+', code: '            continue' },
-  { sign: '+', code: '        return r' },
-  { sign: ' ', code: 'config/prod.yaml', file: 'config/prod.yaml' },
-  { id: 'cfg-old', sign: '-', code: '  timeout: 30' },
-  { id: 'cfg-new', sign: '+', code: '  timeout: 300' },
-  { sign: ' ', code: 'tests/test_upload.py', file: 'tests/test_upload.py' },
-  { id: 'test-old', sign: '-', code: '    assert r.status_code == 422' },
-  { id: 'test-new', sign: '+', code: '    assert r.status_code in (200, 422)' },
+  { sign: ' ', code: 'egress_router.py', file: 'egress_router.py' },
+  { sign: ' ', code: 'def send_via_proxy(req, org_id):' },
+  { sign: '+', code: '    try:' },
+  { id: 'sleep', sign: '+', code: '        return proxy.send(req, DEFAULT_URL)' },
+  { sign: '+', code: '    except ProxyError:' },
+  { id: 'retry', sign: '+', code: '        return direct.send(req)' },
+  { sign: ' ', code: 'config/limits.yaml', file: 'config/limits.yaml' },
+  { id: 'cfg-old', sign: '-', code: '  worker_timeout: 30' },
+  { id: 'cfg-new', sign: '+', code: '  worker_timeout: 600' },
+  { sign: ' ', code: 'tests/test_egress.py', file: 'tests/test_egress.py' },
+  { id: 'test-old', sign: '-', code: '    assert r.status_code == 403' },
+  { id: 'test-new', sign: '+', code: '    assert r.status_code in (200, 403)' },
 ];
 
 type Step = { at: string; icon: string; kind: 'reject' | 'edit' | 'revert' | 'stop'; text: string; run: (f: Fig) => void };
@@ -35,29 +33,29 @@ const STEPS: Step[] = [
     at: '+00:40',
     icon: '✕',
     kind: 'reject',
-    text: 'reject retry on 4xx',
+    text: 'reject fail-open fallback',
     run: (f) => {
       const el = f.line('retry');
       el.classList.add('is-rejected');
-      el.querySelector('.fxc-code')!.innerHTML = '        if r.status_code &gt;= <del>400</del><ins>500</ins>:';
+      el.querySelector('.fxc-code')!.innerHTML = '        <del>return direct.send(req)</del><ins>raise ProxyUnavailable()</ins>';
     },
   },
   {
     at: '+03:15',
     icon: '✎',
     kind: 'edit',
-    text: 'rewrite backoff by hand',
+    text: 'wire org policy route',
     run: (f) => {
       const el = f.line('sleep');
       el.classList.add('is-edited');
-      el.querySelector('.fxc-code')!.innerHTML = '            time.sleep(<del>2 ** attempt</del><ins>backoff(attempt)</ins>)';
+      el.querySelector('.fxc-code')!.innerHTML = '        return proxy.send(req, <del>DEFAULT_URL</del><ins>policy.url(org_id)</ins>)';
     },
   },
   {
     at: '+05:50',
     icon: '↺',
     kind: 'revert',
-    text: 'revert drive-by config',
+    text: 'revert trajectory residue',
     run: (f) => {
       f.line('cfg-old').classList.add('is-restored');
       f.line('cfg-new').classList.add('is-collapsed');
@@ -74,7 +72,7 @@ const STEPS: Step[] = [
     at: '+09:05',
     icon: '↺',
     kind: 'revert',
-    text: 'restore the assertion',
+    text: 'restore 403 assertion',
     run: (f) => {
       f.line('test-old').classList.add('is-restored');
       f.line('test-new').classList.add('is-collapsed');
@@ -105,9 +103,9 @@ export function initCutFigure(fig: HTMLElement): void {
 
   const runs = h('div', 'fxc-runs');
   const run1 = h('div', 'fxc-run is-done');
-  run1.innerHTML = '<span>run 1 · upload retries</span><b>tests ✓</b><i><u></u></i>';
+  run1.innerHTML = '<span>run 1 · egress proxy</span><b>tests ✓</b><i><u></u></i>';
   const run2 = h('div', 'fxc-run');
-  run2.innerHTML = '<span>run 2 · editing tests/test_auth.py</span><b></b><i><u></u></i>';
+  run2.innerHTML = '<span>run 2 · editing tests/test_policy.py</span><b></b><i><u></u></i>';
   runs.append(run1, run2);
 
   const side = h('div', 'fxc-side');
@@ -129,7 +127,7 @@ export function initCutFigure(fig: HTMLElement): void {
   fig.prepend(stage);
 
   const f: Fig = { line: (id) => lines.get(id)!, run2 };
-  const promptWords = 'add retries to the upload client';
+  const promptWords = 'route sandbox traffic through egress proxy';
   let token = 0;
 
   const reset = () => {
