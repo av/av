@@ -1,0 +1,1630 @@
+// ---------------------------------------------------------------------------
+// Inline text effects (src/blog/fx/inlineFx.ts). A phrase marked
+// <span data-fx="name"> plays when it gets `is-on` and then rests in a state
+// that still reads as plain text. Red and green are the diff colours.
+// ---------------------------------------------------------------------------
+@import "./vars.scss";
+
+$fx-pixel: 'Geist Pixel', 'Geist Mono', ui-monospace, monospace;
+$fx-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', 'Consolas', monospace;
+$fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
+
+@function tint($c, $p) {
+  @return color-mix(in srgb, #{$c} #{$p}, transparent);
+}
+
+.blog-content [data-fx] {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.fx-ch,
+.fx-word {
+  display: inline-block;
+  white-space: pre;
+}
+
+.fx-chword {
+  white-space: nowrap;
+}
+
+// Diff markers ---------------------------------------------------------------
+[data-fx='del'],
+[data-fx='add'] {
+  &::before {
+    display: inline-block;
+    width: 0;
+    margin-right: 0;
+    overflow: hidden;
+    font-family: $fx-pixel;
+    font-size: 0.8em;
+    vertical-align: 0.05em;
+    opacity: 0;
+    transition: width 0.4s $fx-ease, margin 0.4s $fx-ease, opacity 0.4s;
+  }
+
+  &.is-on::before {
+    width: 0.7em;
+    margin-right: 0.12em;
+    opacity: 1;
+  }
+}
+
+[data-fx='del'] {
+  background:
+    linear-gradient(var(--fx-red), var(--fx-red)) no-repeat 0 58% / 0% 0.09em,
+    linear-gradient(tint(var(--fx-red), 9%), tint(var(--fx-red), 9%)) no-repeat 0 0 / 0% 100%;
+  transition: background-size 1s $fx-ease, color 1s;
+
+  &::before {
+    content: '−';
+    color: var(--fx-red);
+  }
+
+  &.is-on {
+    background-size: 100% 0.09em, 100% 100%;
+    color: var(--fx-tx2);
+  }
+}
+
+[data-fx='add'] {
+  background: linear-gradient(tint(var(--fx-green), 20%), tint(var(--fx-green), 20%)) no-repeat 0 0 / 0% 100%;
+  transition: background-size 1.1s $fx-ease 0.15s;
+
+  &::before {
+    content: '+';
+    color: var(--fx-green);
+  }
+
+  &.is-on {
+    background-size: 100% 100%;
+  }
+}
+
+// Terminal prompt being typed -----------------------------------------------
+[data-fx='type'] {
+  padding: 0.05em 0.35em;
+  border-radius: 0.2em;
+  background: var(--fx-bg2);
+  font-family: $fx-mono;
+  font-size: 0.86em;
+
+  &::before {
+    content: '$ ';
+    color: var(--fx-tx3);
+  }
+
+  &.is-typing::after,
+  &.is-on:not(.is-done)::after {
+    content: '';
+    display: inline-block;
+    width: 0.5em;
+    height: 1em;
+    margin-left: 0.08em;
+    vertical-align: -0.15em;
+    background: var(--fx-tx);
+    animation: fx-blink 0.9s steps(1) infinite;
+  }
+}
+
+@keyframes fx-blink {
+  50% { opacity: 0; }
+}
+
+// Alarm: a wavy red underline that keeps a slow pulse ------------------------
+[data-fx='alarm'] {
+  text-decoration: underline wavy transparent;
+  text-decoration-thickness: 0.07em;
+  text-underline-offset: 0.22em;
+  transition: text-decoration-color 0.6s, color 0.6s;
+
+  &.is-on {
+    color: color-mix(in srgb, var(--fx-red) 55%, var(--fx-tx));
+    text-decoration-color: var(--fx-red);
+    animation: fx-alarm 2.4s ease-in-out infinite 0.6s;
+  }
+}
+
+@keyframes fx-alarm {
+  50% { text-decoration-color: tint(var(--fx-red), 25%); }
+}
+
+// Agent rewrote it / you edited it ------------------------------------------
+[data-fx='edit'],
+[data-fx='rewrite'] {
+  font-variant-ligatures: none;
+  background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0% 0.08em;
+  transition: background-size 0.7s $fx-ease 0.8s;
+
+  &.is-on {
+    background-size: 100% 0.08em;
+  }
+}
+
+[data-fx='edit'].is-on { color: var(--fx-green); }
+[data-fx='rewrite'] {
+  text-decoration: underline dotted transparent;
+  text-underline-offset: 0.2em;
+  background: none;
+  transition: text-decoration-color 0.6s 0.9s;
+
+  &.is-on {
+    text-decoration-color: var(--fx-red);
+  }
+}
+
+// Reject: struck in red with a mark ------------------------------------------
+[data-fx='reject'] {
+  background: linear-gradient(var(--fx-red), var(--fx-red)) no-repeat 0 58% / 0% 0.09em;
+  transition: background-size 0.5s $fx-ease, color 0.5s;
+
+  &.is-on {
+    color: var(--fx-red);
+    background-size: 100% 0.09em;
+  }
+}
+
+.fx-x {
+  display: inline-block;
+  margin-left: 0.1em;
+  font-size: 0.6em;
+  vertical-align: 0.7em;
+  color: var(--fx-red);
+  transform: scale(0);
+  transition: transform 0.35s cubic-bezier(0.3, 1.8, 0.5, 1) 0.4s;
+
+  .is-on > & { transform: scale(1); }
+}
+
+// Revert: the letters undo themselves ---------------------------------------
+[data-fx='revert'] {
+  font-variant-ligatures: none;
+
+  &.is-on::after {
+    content: '↺';
+    display: inline-block;
+    margin-left: 0.12em;
+    font-size: 0.75em;
+    color: var(--fx-tx2);
+    animation: fx-unspin 1.4s $fx-ease both;
+  }
+}
+
+@keyframes fx-unspin {
+  from { transform: rotate(360deg); opacity: 0; }
+  to { transform: rotate(0); opacity: 1; }
+}
+
+// Stop mid-run: typing halts on a red block -----------------------------------
+[data-fx='stop'] {
+  &.is-typing::after,
+  &.is-halted::after {
+    content: '';
+    display: inline-block;
+    width: 0.48em;
+    height: 0.48em;
+    margin-left: 0.12em;
+    vertical-align: 0.05em;
+    background: var(--fx-tx);
+  }
+
+  &.is-halted::after {
+    order: 2;
+    background: var(--fx-red);
+    animation: fx-halt 0.4s cubic-bezier(0.3, 1.8, 0.5, 1);
+  }
+}
+
+.fx-stop-rest {
+  color: var(--fx-tx3);
+}
+
+@keyframes fx-halt {
+  from { transform: scale(2.2); }
+}
+
+// Amnesia: letters fade out, come back as a ghost ------------------------------
+[data-fx='forget'] .fx-ch {
+  transition: opacity 0.5s, filter 0.5s;
+}
+
+[data-fx='forget'].is-on .fx-ch {
+  animation: fx-forget 2.6s ease-in-out both;
+  animation-delay: calc(var(--i) * 45ms);
+}
+
+@keyframes fx-forget {
+  0% { opacity: 1; filter: blur(0); }
+  40% { opacity: 0.05; filter: blur(4px); }
+  70% { opacity: 0.05; filter: blur(4px); }
+  100% { opacity: 0.5; filter: blur(0.3px); }
+}
+
+// Retry loop: a spinner and a marching underline -----------------------------
+[data-fx='loop'] {
+  background: repeating-linear-gradient(90deg, var(--fx-tx2) 0 0.25em, transparent 0.25em 0.5em) no-repeat 0 100% / 0% 0.07em;
+  transition: background-size 0.8s $fx-ease;
+
+  &.is-on {
+    background-size: 100% 0.07em;
+    animation: fx-march 1.2s linear infinite;
+  }
+
+  &.is-on::after {
+    content: '↻';
+    display: inline-block;
+    margin-left: 0.15em;
+    font-size: 0.8em;
+    color: var(--fx-tx2);
+    animation: fx-spin 2.2s linear infinite;
+  }
+}
+
+@keyframes fx-march {
+  to { background-position: 0.5em 100%; }
+}
+
+@keyframes fx-spin {
+  to { transform: rotate(360deg); }
+}
+
+// The vendor keeps the tape: recording light ----------------------------------
+[data-fx='rec'] {
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 0.42em;
+    height: 0.42em;
+    margin-right: 0.3em;
+    border-radius: 50%;
+    vertical-align: 0.1em;
+    background: var(--fx-red);
+    opacity: 0;
+    transform: scale(0);
+    transition: transform 0.4s cubic-bezier(0.3, 1.8, 0.5, 1), opacity 0.3s;
+  }
+
+  &.is-on::before {
+    opacity: 1;
+    transform: scale(1);
+    animation: fx-rec 1.6s steps(1) infinite 0.5s;
+  }
+}
+
+@keyframes fx-rec {
+  50% { opacity: 0.15; }
+}
+
+// Numbers --------------------------------------------------------------------
+[data-fx='count'] {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+[data-fx='pos'],
+[data-fx='neg'] {
+  display: inline-block;
+  padding: 0 0.3em;
+  border-radius: 0.25em;
+  font-family: $fx-mono;
+  font-size: 0.88em;
+  line-height: 1.45;
+
+  &.is-on { animation: fx-pop 0.5s cubic-bezier(0.3, 1.8, 0.5, 1) both; }
+}
+
+[data-fx='pos'] { color: var(--fx-green); background: tint(var(--fx-green), 15%); }
+[data-fx='neg'] { color: var(--fx-red); background: tint(var(--fx-red), 13%); }
+
+@keyframes fx-pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+[data-fx='bar'] {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.fx-bar {
+  position: relative;
+  display: inline-block;
+  width: 2.6em;
+  height: 0.42em;
+  margin-left: 0.3em;
+  vertical-align: 0.12em;
+  border-radius: 0.1em;
+  background: var(--fx-ui);
+  overflow: hidden;
+
+  i {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+  }
+
+  .fx-bar__old { width: var(--from); background: var(--fx-tx3); }
+  .fx-bar__new { width: var(--from); background: var(--fx-tx2); transition: width 1.4s $fx-ease 0.3s; }
+
+  &.is-down .fx-bar__old { background: var(--fx-red); }
+  &.is-up .fx-bar__new { background: var(--fx-green); }
+  &.is-up .fx-bar__old { z-index: 1; background: var(--fx-tx2); }
+
+  .is-on > & .fx-bar__new { width: var(--to); }
+}
+
+// Escape key gets pressed ------------------------------------------------------
+[data-fx='key'] {
+  display: inline-block;
+  padding: 0 0.35em;
+  border: 1px solid var(--fx-border);
+  border-bottom-width: 3px;
+  border-radius: 0.28em;
+  background: var(--fx-bg);
+  font-family: $fx-mono;
+  font-size: 0.82em;
+  line-height: 1.5;
+
+  &.is-on { animation: fx-press 1.3s ease-out both; }
+}
+
+@keyframes fx-press {
+  0%, 30%, 60%, 100% { transform: none; border-bottom-width: 3px; }
+  15%, 45% { transform: translateY(2px); border-bottom-width: 1px; background: tint(var(--fx-red), 18%); }
+  75% { background: tint(var(--fx-red), 10%); }
+}
+
+// A free gradient step leaves the page ---------------------------------------
+[data-fx='gift'] {
+  transition: color 1s 1.6s;
+
+  &.is-on {
+    color: var(--fx-tx2);
+    animation: fx-gift 2.4s ease-out both;
+  }
+}
+
+@keyframes fx-gift {
+  0% { text-shadow: 0 0 0 tint(var(--fx-green), 60%); }
+  33% { text-shadow: 1.4em -0.3em 0 transparent; }
+  34% { text-shadow: 0 0 0 tint(var(--fx-green), 60%); }
+  66% { text-shadow: 1.4em -0.3em 0 transparent; }
+  67% { text-shadow: 0 0 0 tint(var(--fx-green), 60%); }
+  100% { text-shadow: 1.4em -0.3em 0 transparent; }
+}
+
+// Pointer that travels the phrase and clicks -------------------------------------
+[data-fx='cursor'].is-on {
+  text-decoration: underline dotted var(--fx-tx3);
+}
+
+.fx-pointer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10001;
+  pointer-events: none;
+  transition: opacity 0.4s;
+
+  svg {
+    display: block;
+    fill: var(--fx-tx);
+    stroke: var(--fx-bg);
+    stroke-width: 1;
+  }
+
+  &.is-gone { opacity: 0; }
+}
+
+.fx-click {
+  position: absolute;
+  top: -9px;
+  left: -9px;
+  z-index: 10001;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1.5px solid var(--fx-red);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: fx-ring 0.7s ease-out forwards;
+}
+
+@keyframes fx-ring {
+  from { scale: 0.2; opacity: 1; }
+  to { scale: 1.6; opacity: 0; }
+}
+
+// tool_decision flips between accept and reject -----------------------------------
+.fx-chip {
+  display: inline-block;
+  margin-left: 0.3em;
+  padding: 0 0.35em;
+  border-radius: 0.2em;
+  font-family: $fx-pixel;
+  font-size: 0.7em;
+  line-height: 1.6;
+  vertical-align: 0.1em;
+  transition: transform 0.18s ease-in, opacity 0.18s;
+
+  &.is-accept { color: var(--fx-green); background: tint(var(--fx-green), 15%); }
+  &.is-reject { color: var(--fx-red); background: tint(var(--fx-red), 13%); }
+  &.is-flip { transform: rotateX(90deg); opacity: 0.3; }
+}
+
+// Lock the collector -----------------------------------------------------------
+.fx-lock {
+  display: inline-block;
+  margin-right: 0.25em;
+  vertical-align: -0.05em;
+
+  svg {
+    display: block;
+    width: 0.7em;
+    height: 0.82em;
+    overflow: visible;
+    fill: none;
+    stroke: var(--fx-tx);
+    stroke-width: 1.4;
+  }
+
+  rect { fill: var(--fx-tx); }
+
+  .fx-lock__shackle {
+    transform: translateY(-2.5px);
+    transition: transform 0.35s cubic-bezier(0.5, -0.5, 0.4, 1.6) 0.3s;
+  }
+
+  .is-on > & .fx-lock__shackle { transform: none; }
+}
+
+[data-fx='lock'] {
+  transition: background-size 0.8s $fx-ease 0.5s;
+  background: linear-gradient(var(--fx-tx), var(--fx-tx)) no-repeat 0 100% / 0% 0.08em;
+
+  &.is-on { background-size: 100% 0.08em; }
+}
+
+// A copy of you -------------------------------------------------------------
+[data-fx='clone'] {
+  transition: text-shadow 1.4s $fx-ease;
+
+  &.is-on {
+    text-shadow: 0.09em 0.07em 0 tint(var(--fx-tx3), 55%);
+  }
+}
+
+// Replaceable: the phrase keeps getting swapped for a copy -------------------
+[data-fx='swap'] {
+  display: inline-block;
+  height: 1.7em;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+.fx-swap__inner {
+  display: flex;
+  flex-direction: column;
+
+  .is-on > & { animation: fx-swap 5s $fx-ease infinite 0.4s; }
+}
+
+.fx-swap__next {
+  color: var(--fx-tx2);
+  font-style: italic;
+}
+
+@keyframes fx-swap {
+  0%, 35% { transform: none; }
+  45%, 85% { transform: translateY(-50%); }
+  95%, 100% { transform: none; }
+}
+
+// Zero weights / ninety percent meters -------------------------------------------
+.fx-meter {
+  position: relative;
+  display: inline-block;
+  width: 2.4em;
+  height: 0.42em;
+  margin-left: 0.3em;
+  vertical-align: 0.12em;
+  border-radius: 0.1em;
+  background: repeating-linear-gradient(135deg, var(--fx-ui) 0 2px, transparent 2px 4px);
+  box-shadow: inset 0 0 0 1px var(--fx-ui);
+  overflow: hidden;
+
+  i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--fx-green);
+    transition: width 1.8s $fx-ease 0.3s, background 1.8s 0.3s;
+  }
+
+  &.is-drain i { width: 100%; }
+  &.is-fill i { width: 0; }
+  .is-on > &.is-drain i { width: 0; background: var(--fx-red); }
+  .is-on > &.is-fill i { width: var(--to); }
+}
+
+[data-fx='drain'] {
+  transition: color 1.6s 0.5s;
+
+  &.is-on { color: var(--fx-tx2); }
+}
+
+// The gap widens -----------------------------------------------------------------
+[data-fx='gap'] {
+  background: repeating-linear-gradient(90deg, var(--fx-red) 0 0.2em, transparent 0.2em 0.36em) no-repeat 50% 58% / 0% 0.06em;
+  transition: letter-spacing 1.2s $fx-ease, background-size 1.2s $fx-ease, padding 1.2s $fx-ease;
+
+  &.is-on {
+    letter-spacing: 0.55em;
+    background-size: 100% 0.06em;
+  }
+}
+
+// Personal harness: corner brackets -------------------------------------------
+[data-fx='harness'] {
+  position: relative;
+  padding: 0 0.15em;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: 0.45em;
+    height: 0.45em;
+    border: 0 solid var(--fx-green);
+    opacity: 0;
+    transition: all 0.6s $fx-ease;
+  }
+
+  &::before { top: -0.05em; left: -0.4em; border-top-width: 2px; border-left-width: 2px; }
+  &::after { bottom: -0.05em; right: -0.4em; border-bottom-width: 2px; border-right-width: 2px; }
+
+  &.is-on::before { left: -0.05em; opacity: 1; }
+  &.is-on::after { right: -0.05em; opacity: 1; }
+}
+
+// Blocked before merge ------------------------------------------------------------
+[data-fx='block'] {
+  background: linear-gradient(var(--fx-red), var(--fx-red)) no-repeat 0 100% / 0% 0.1em;
+  transition: background-size 0.6s $fx-ease 0.3s;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 0.5em;
+    height: 0.5em;
+    margin-right: 0.3em;
+    vertical-align: 0.05em;
+    background: var(--fx-red);
+    transform: scale(0);
+  }
+
+  &.is-on { background-size: 100% 0.1em; }
+  &.is-on::before { animation: fx-slam 0.45s cubic-bezier(0.3, 1.8, 0.5, 1) both; }
+}
+
+@keyframes fx-slam {
+  from { transform: scale(2.4) rotate(45deg); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+// Bruised ego ---------------------------------------------------------------------
+[data-fx='bruise'] {
+  background: radial-gradient(closest-side, tint(var(--fx-red), 22%), transparent) no-repeat 50% 50% / 0% 0%;
+  transition: background-size 1.2s $fx-ease;
+
+  &.is-on {
+    background-size: 120% 240%;
+    animation: fx-throb 0.25s ease-in-out 3 alternate;
+  }
+}
+
+@keyframes fx-throb {
+  to { background-size: 135% 280%; }
+}
+
+// Fifteen heuristics firing ---------------------------------------------------------
+.fx-dots {
+  display: inline-grid;
+  grid-template-columns: repeat(5, 0.26em);
+  grid-auto-rows: 0.26em;
+  gap: 0.07em;
+  margin-left: 0.3em;
+  vertical-align: 0.02em;
+
+  i {
+    background: var(--fx-ui);
+    transition: background 0.3s, transform 0.3s;
+  }
+
+  .is-on > & i {
+    background: var(--fx-tx3);
+    animation: fx-light 0.3s both;
+    animation-delay: calc(var(--i) * 70ms);
+  }
+
+  .is-on > & i.is-fire {
+    background: var(--fx-green);
+    transform: scale(1.25);
+  }
+}
+
+@keyframes fx-light {
+  from { background: var(--fx-ui); }
+  50% { background: var(--fx-green); }
+}
+
+// tracequest replays ------------------------------------------------------------
+[data-fx='replay'] {
+  position: relative;
+  white-space: nowrap;
+}
+
+.fx-play {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-right: 0.25em;
+  border-style: solid;
+  border-width: 0.3em 0 0.3em 0.48em;
+  border-color: transparent transparent transparent var(--fx-green);
+  vertical-align: 0.02em;
+}
+
+.fx-scrub {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.1em;
+  height: 0.08em;
+  background: var(--fx-ui);
+
+  i {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: var(--fx-green);
+  }
+
+  .is-on > & i { animation: fx-scrub 3.2s linear infinite; }
+}
+
+@keyframes fx-scrub {
+  to { width: 100%; }
+}
+
+// Compiled out of your head: prose turns into pixel code ---------------------------
+[data-fx='compile'] .fx-ch.is-compiled {
+  font-family: $fx-pixel;
+  color: var(--fx-green);
+  animation: fx-pop 0.25s both;
+}
+
+// The rare part shimmers ------------------------------------------------------
+[data-fx='rare'].is-on {
+  background: linear-gradient(100deg, var(--fx-tx) 40%, var(--fx-green) 50%, var(--fx-tx) 60%) 0 0 / 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: fx-shimmer 5s ease-in-out infinite;
+}
+
+@keyframes fx-shimmer {
+  0% { background-position: 100% 0; }
+  40%, 100% { background-position: 0 0; }
+}
+
+// Mirror: the words flip -------------------------------------------------------
+[data-fx='mirror'].is-on .fx-word {
+  animation: fx-mirror 1.1s $fx-ease both;
+  animation-delay: calc(var(--i) * 90ms);
+}
+
+@keyframes fx-mirror {
+  0% { transform: scaleX(1); }
+  45% { transform: scaleX(-1); color: var(--fx-tx2); }
+  100% { transform: scaleX(1); }
+}
+
+// Cognitive drift: letters wander off their baseline ----------------------------
+[data-fx='drift'].is-on .fx-ch {
+  animation: fx-drift 5s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -370ms);
+}
+
+@keyframes fx-drift {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  25% { transform: translate(0.03em, -0.05em) rotate(-2deg); }
+  50% { transform: translate(-0.02em, 0.06em) rotate(1.5deg); }
+  75% { transform: translate(0.02em, 0.02em) rotate(-1deg); }
+}
+
+[data-fx='drop'] {
+  display: inline-block;
+  transition: transform 0.9s cubic-bezier(0.4, 1.7, 0.6, 1), color 0.9s;
+
+  &.is-on {
+    transform: translateY(0.3em) rotate(4deg);
+    color: var(--fx-tx2);
+  }
+}
+
+[data-fx='blur'].is-on {
+  animation: fx-vague 3.5s ease-in-out infinite;
+}
+
+@keyframes fx-vague {
+  0%, 100% { filter: blur(0.4px); opacity: 0.85; }
+  50% { filter: blur(1.8px); opacity: 0.6; }
+}
+
+// Revert rate spikes --------------------------------------------------------------
+.fx-spark {
+  display: inline-block;
+  width: 3.4em;
+  height: 0.95em;
+  margin-left: 0.3em;
+  vertical-align: -0.1em;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  path {
+    fill: none;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 120;
+    stroke-dashoffset: 120;
+  }
+
+  .fx-spark__base { stroke: var(--fx-tx3); }
+  .fx-spark__hot { stroke: var(--fx-red); }
+  circle { fill: var(--fx-red); opacity: 0; }
+
+  .is-on > & .fx-spark__base { transition: stroke-dashoffset 1.2s linear; stroke-dashoffset: 0; }
+  .is-on > & .fx-spark__hot { transition: stroke-dashoffset 0.6s ease-out 1.2s; stroke-dashoffset: 0; }
+  .is-on > & circle { transition: opacity 0.2s 1.6s; opacity: 1; }
+}
+
+// Entropy ladder: the letters climb ---------------------------------------------------
+[data-fx='ladder'] .fx-ch {
+  transition: transform 0.5s $fx-ease, color 0.5s;
+  transition-delay: calc(var(--i) * 60ms);
+}
+
+[data-fx='ladder'].is-on .fx-ch {
+  transform: translateY(calc(var(--i) * -0.035em));
+}
+
+[data-fx='ladder'].is-on .fx-chword:last-child .fx-ch:last-child {
+  color: var(--fx-green);
+}
+
+// Boundary: marching dashed box ---------------------------------------------------------
+[data-fx='boundary'] {
+  --c: transparent;
+  padding: 0 0.12em;
+  background:
+    linear-gradient(90deg, var(--c) 50%, transparent 50%) repeat-x 0 0 / 0.5em 1px,
+    linear-gradient(90deg, var(--c) 50%, transparent 50%) repeat-x 0 100% / 0.5em 1px,
+    linear-gradient(0deg, var(--c) 50%, transparent 50%) repeat-y 0 0 / 1px 0.5em,
+    linear-gradient(0deg, var(--c) 50%, transparent 50%) repeat-y 100% 0 / 1px 0.5em;
+
+  &.is-on {
+    --c: var(--fx-green);
+    animation: fx-ants 1.6s linear infinite;
+  }
+}
+
+@keyframes fx-ants {
+  to { background-position: 0.5em 0, -0.5em 100%, 0 -0.5em, 100% 0.5em; }
+}
+
+// Gradient of taste: red to green --------------------------------------------------
+[data-fx='gradient'].is-on {
+  background: linear-gradient(90deg, var(--fx-red), var(--fx-tx) 50%, var(--fx-green)) 0 0 / 100% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: fx-grad-in 1.4s $fx-ease both;
+}
+
+@keyframes fx-grad-in {
+  from { background-size: 400% 100%; background-position: 100% 0; }
+}
+
+// Ten-minute cut: scissors run along a dashed line ------------------------------------
+[data-fx='cut'] {
+  position: relative;
+  background: repeating-linear-gradient(90deg, var(--fx-tx2) 0 0.22em, transparent 0.22em 0.4em) no-repeat 0 100% / 0% 0.07em;
+  transition: background-size 1.3s linear;
+
+  &::after {
+    content: '\2702\FE0E';
+    position: absolute;
+    left: -0.4em;
+    bottom: -0.55em;
+    font-size: 0.75em;
+    color: var(--fx-tx2);
+    opacity: 0;
+  }
+
+  &.is-on { background-size: 100% 0.07em; }
+  &.is-on::after { animation: fx-scissors 1.3s linear both; }
+}
+
+@keyframes fx-scissors {
+  0% { left: -0.4em; opacity: 1; }
+  90% { opacity: 1; }
+  100% { left: calc(100% - 0.4em); opacity: 0; }
+}
+
+// No: a red stamp ---------------------------------------------------------------
+[data-fx='stamp'] {
+  display: inline-block;
+  padding: 0 0.22em;
+  border: 2px solid var(--fx-red);
+  border-radius: 0.15em;
+  font-family: $fx-pixel;
+  color: var(--fx-red);
+  line-height: 1.2;
+  transform: rotate(-6deg);
+
+  &.is-on { animation: fx-stamp 0.5s cubic-bezier(0.5, 0, 0.6, 1.4) both; }
+}
+
+@keyframes fx-stamp {
+  0% { transform: scale(3.4) rotate(-14deg); opacity: 0; }
+  70% { transform: scale(0.92) rotate(-5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-6deg); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-fx],
+  [data-fx] *,
+  [data-fx]::before,
+  [data-fx]::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Scripted figures (src/blog/fx/figures). Without JS only the caption shows.
+// ---------------------------------------------------------------------------
+.blog-content .fx-figure {
+  margin: 2.25rem 0;
+
+  figcaption {
+    margin-top: 0.6rem;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--fx-tx2);
+  }
+}
+
+.fx-figure__kicker {
+  margin-right: 0.4em;
+  font-family: $fx-pixel;
+  color: var(--fx-tx);
+}
+
+.fx-figure__stage {
+  position: relative;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.5rem;
+  background: var(--fx-bg2);
+  overflow: hidden;
+  isolation: isolate;
+  font-size: 0.7rem;
+  line-height: 1.45;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.06;
+    @include grain-tile;
+  }
+
+  @include media(sm) {
+    border-radius: 0;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    border-left: 0;
+    border-right: 0;
+  }
+}
+
+.fx-figure__replay {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.55rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--fx-border);
+  border-radius: 0.2rem;
+  background: var(--fx-bg);
+  font-family: $fx-pixel;
+  font-size: 0.6rem;
+  color: var(--fx-tx2);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.4s, color 0.2s;
+
+  .is-done > & { opacity: 1; }
+  &:hover, &:focus-visible { color: var(--fx-tx); outline: 0; border-color: var(--fx-tx3); }
+}
+
+// Fig. 1 — the ten-minute cut -------------------------------------------------
+.fxc-prompt {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--fx-ui);
+  background: var(--fx-bg);
+  font-family: $fx-mono;
+  font-size: 0.66rem;
+}
+
+.fxc-prompt__label,
+.fxc-prompt__count,
+.fxc-side__title {
+  font-family: $fx-pixel;
+  font-size: 0.58rem;
+  color: var(--fx-tx3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fxc-prompt__text {
+  flex: 1;
+  min-width: 0;
+
+  &::before { content: '$ '; color: var(--fx-tx3); }
+  &::after {
+    content: '';
+    display: inline-block;
+    width: 0.5em;
+    height: 1em;
+    margin-left: 0.1em;
+    vertical-align: -0.15em;
+    background: var(--fx-tx);
+    animation: fx-blink 0.9s steps(1) infinite;
+  }
+
+  .is-landed & { &::after { display: none; } }
+}
+
+.fxc-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+
+  @media (max-width: 680px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fxc-left {
+  padding: 0.6rem 0 0.7rem;
+  min-width: 0;
+}
+
+.fxc-diff {
+  font-family: $fx-mono;
+  font-size: 0.6rem;
+  line-height: 1.6;
+
+  @include media(sm) { font-size: 0.56rem; }
+}
+
+.fxc-file,
+.fxc-line {
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.35s, transform 0.35s, background 0.5s, max-height 0.5s $fx-ease, color 0.5s;
+  transition-delay: calc(var(--i) * 70ms);
+
+  .is-landed & {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.fxc-file {
+  margin-top: 0.45rem;
+  padding: 0 0.8rem;
+  font-family: $fx-pixel;
+  font-size: 0.56rem;
+  color: var(--fx-tx2);
+
+  &:first-child { margin-top: 0; }
+}
+
+.fxc-line {
+  position: relative;
+  display: flex;
+  max-height: 1.7em;
+  padding: 0 0.8rem 0 0.5rem;
+  white-space: pre;
+  overflow: hidden;
+
+  &.is-add { background: tint(var(--fx-green), 11%); }
+  &.is-del { background: tint(var(--fx-red), 10%); }
+  &.is-add .fxc-sign { color: var(--fx-green); }
+  &.is-del .fxc-sign { color: var(--fx-red); }
+
+  del {
+    color: var(--fx-red);
+    text-decoration: line-through;
+    background: tint(var(--fx-red), 16%);
+  }
+
+  ins {
+    margin-left: 0.3em;
+    color: var(--fx-green);
+    text-decoration: none;
+    background: tint(var(--fx-green), 22%);
+    animation: fx-pop 0.4s both;
+  }
+
+  &.is-rejected,
+  &.is-edited {
+    background: tint(var(--fx-tx3), 18%);
+    transition-delay: 0s;
+  }
+
+  &.is-restored {
+    background: transparent;
+    transition-delay: 0s;
+
+    .fxc-sign { color: transparent; }
+
+    &::after {
+      content: '↺ restored';
+      position: absolute;
+      right: 0.8rem;
+      font-family: $fx-pixel;
+      font-size: 0.85em;
+      color: var(--fx-tx2);
+      animation: fx-pop 0.4s both;
+    }
+  }
+
+  &.is-collapsed {
+    max-height: 0;
+    opacity: 0;
+    transition-delay: 0s;
+  }
+}
+
+.fxc-sign {
+  flex: none;
+  width: 1.3em;
+}
+
+.fxc-code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fxc-runs {
+  display: grid;
+  gap: 0.3rem;
+  margin-top: 0.7rem;
+  padding: 0 0.8rem;
+}
+
+.fxc-run {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 0.5rem;
+  font-family: $fx-mono;
+  font-size: 0.56rem;
+  color: var(--fx-tx2);
+
+  b {
+    font-family: $fx-pixel;
+    font-weight: 500;
+    color: var(--fx-green);
+  }
+
+  i {
+    grid-column: 1 / -1;
+    height: 3px;
+    margin-top: 0.15rem;
+    background: var(--fx-ui);
+    overflow: hidden;
+  }
+
+  u {
+    display: block;
+    width: 35%;
+    height: 100%;
+    background: var(--fx-tx2);
+    animation: fxc-run 2.4s ease-in-out infinite alternate;
+  }
+
+  &.is-done u { width: 100%; background: var(--fx-green); animation: none; }
+
+  &.is-stopped {
+    u { animation-play-state: paused; background: var(--fx-red); }
+    b { color: var(--fx-red); }
+    b::after { content: '■ stopped'; }
+  }
+}
+
+@keyframes fxc-run {
+  from { width: 20%; }
+  to { width: 78%; }
+}
+
+.fxc-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.6rem 0.8rem 2.2rem;
+  border-left: 1px solid var(--fx-ui);
+
+  @media (max-width: 680px) {
+    border-left: 0;
+    border-top: 1px solid var(--fx-ui);
+  }
+}
+
+.fxc-log {
+  display: grid;
+  gap: 0.25rem;
+  min-height: 7.8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    grid-template-columns: 1.1rem 1fr auto;
+    align-items: baseline;
+    font-size: 0.64rem;
+    animation: fxc-log-in 0.45s $fx-ease both;
+  }
+
+  .is-reject .fxc-log__icon,
+  .is-stop .fxc-log__icon { color: var(--fx-red); }
+  .is-edit .fxc-log__icon { color: var(--fx-green); }
+  .is-revert .fxc-log__icon { color: var(--fx-tx); }
+}
+
+@keyframes fxc-log-in {
+  from { opacity: 0; transform: translateX(-8px); }
+}
+
+.fxc-log__at {
+  font-family: $fx-mono;
+  font-size: 0.55rem;
+  color: var(--fx-tx3);
+}
+
+.fxc-meter {
+  display: grid;
+  gap: 0.3rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--fx-ui);
+}
+
+.fxc-meter__row {
+  display: grid;
+  grid-template-columns: 4.6rem 1fr;
+  align-items: center;
+  column-gap: 0.4rem;
+  font-size: 0.58rem;
+
+  > span { font-family: $fx-pixel; color: var(--fx-tx2); }
+
+  i {
+    height: 0.4rem;
+    background: var(--fx-ui);
+    border-radius: 0.1rem;
+    overflow: hidden;
+  }
+
+  u {
+    display: block;
+    height: 100%;
+    transition: width 0.8s $fx-ease;
+  }
+
+  .is-noise u { width: 0; background: var(--fx-tx3); }
+  .is-signal u { width: calc(var(--n, 0) * 20%); background: var(--fx-green); }
+
+  b {
+    grid-column: 2;
+    font-weight: 500;
+    color: var(--fx-tx3);
+  }
+}
+
+.is-landed .fxc-meter__row .is-noise u { width: 12%; }
+
+// Fig. 2 — who keeps the gradient ---------------------------------------------
+.fxf {
+  min-height: 340px;
+}
+
+.fxf-svg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+.fxf-pipe {
+  fill: none;
+  stroke: var(--fx-tx3);
+  stroke-width: 1.5;
+  transition: stroke 0.6s, opacity 0.6s;
+
+  &.is-harness {
+    stroke-dasharray: 3 6;
+    opacity: 0.6;
+  }
+
+  .is-local &.is-harness {
+    stroke: var(--fx-green);
+    stroke-dasharray: none;
+    opacity: 1;
+  }
+}
+
+.fxf-node {
+  position: absolute;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.35rem;
+  background: var(--fx-bg);
+  transition: opacity 0.6s, border-color 0.6s, transform 0.3s;
+}
+
+.fxf-node__title {
+  display: flex;
+  align-items: center;
+  gap: 0.35em;
+  font-family: $fx-pixel;
+  font-size: 0.72rem;
+  color: var(--fx-tx);
+}
+
+.fxf-node__sub {
+  font-size: 0.6rem;
+  color: var(--fx-tx2);
+}
+
+.fxf-node__count {
+  margin-top: 0.15rem;
+  font-family: $fx-mono;
+  font-size: 0.58rem;
+  color: var(--fx-tx2);
+
+  b {
+    font-weight: 600;
+    color: var(--fx-tx);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.fxf-you {
+  border-color: var(--fx-tx2);
+  text-align: center;
+
+  .fxf-node__title { justify-content: center; font-size: 0.9rem; }
+}
+
+.fxf-lock {
+  width: 0.6rem;
+  height: 0.7rem;
+
+  path { fill: none; stroke: var(--fx-tx); stroke-width: 1.4; }
+  rect { fill: var(--fx-tx); }
+}
+
+.fxf-sink.is-harness {
+  opacity: 0.55;
+  border-style: dashed;
+
+  .fxf-node__count::after {
+    content: ' · zero weights';
+    color: var(--fx-red);
+  }
+
+  .is-local & {
+    opacity: 1;
+    border-style: solid;
+    border-color: color-mix(in srgb, var(--fx-green) 60%, var(--fx-bg));
+
+    .fxf-node__count::after { content: ''; }
+  }
+
+  &.is-ping { animation: fxf-ping 0.6s ease-out; }
+}
+
+@keyframes fxf-ping {
+  30% { transform: scale(1.04); border-color: var(--fx-green); box-shadow: 0 0 0 4px tint(var(--fx-green), 18%); }
+}
+
+.fxf-burst {
+  position: absolute;
+  left: 50%;
+  top: -0.2rem;
+  width: 0;
+  height: 0;
+}
+
+.fxf-tag {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  padding: 0 0.25rem;
+  border-radius: 0.15rem;
+  font-family: $fx-pixel;
+  font-size: 0.55rem;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  animation: fxf-tag 1.4s ease-out forwards;
+
+  &.is-accept { color: var(--fx-tx2); background: var(--fx-ui); }
+  &.is-edit { color: var(--fx-green); background: tint(var(--fx-green), 15%); }
+  &.is-reject,
+  &.is-revert,
+  &.is-stop { color: var(--fx-red); background: tint(var(--fx-red), 12%); }
+}
+
+@keyframes fxf-tag {
+  from { opacity: 0; transform: translate(-50%, 0.4rem); }
+  20% { opacity: 1; }
+  to { opacity: 0; transform: translate(-50%, -1.6rem); }
+}
+
+.fxf-toggle {
+  position: absolute;
+  left: 50%;
+  bottom: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--fx-border);
+  border-radius: 2rem;
+  background: var(--fx-bg);
+  font-size: 0.62rem;
+  color: var(--fx-tx2);
+  white-space: nowrap;
+  cursor: pointer;
+  transform: translateX(-50%);
+
+  &:focus-visible { outline: 2px solid var(--fx-tx3); outline-offset: 2px; }
+
+  b {
+    font-family: $fx-pixel;
+    font-weight: 500;
+    color: var(--fx-red);
+  }
+
+  .is-local & b { color: var(--fx-green); }
+}
+
+.fxf-toggle__track {
+  position: relative;
+  width: 1.7rem;
+  height: 0.9rem;
+  border-radius: 1rem;
+  background: var(--fx-ui);
+  transition: background 0.3s;
+
+  i {
+    position: absolute;
+    top: 0.12rem;
+    left: 0.12rem;
+    width: 0.66rem;
+    height: 0.66rem;
+    border-radius: 50%;
+    background: var(--fx-bg);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    transition: transform 0.3s $fx-ease;
+  }
+
+  .is-local & { background: var(--fx-green); }
+  .is-local & i { transform: translateX(0.8rem); }
+}
+
+// Fig. 3 — fifteen heuristics -----------------------------------------------------
+.fxk-canvas {
+  display: block;
+}
+
+.fxk-hud {
+  position: absolute;
+  top: 0.7rem;
+  left: 0.85rem;
+  right: 0.85rem;
+  pointer-events: none;
+}
+
+.fxk-hud__main {
+  font-family: $fx-pixel;
+  font-size: 0.85rem;
+  color: var(--fx-tx);
+}
+
+.fxk-hud__sub {
+  font-size: 0.62rem;
+  color: var(--fx-tx2);
+}
+
+.fxk-green { color: var(--fx-green); }
+
+.fxk-note {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.5rem;
+  font-family: $fx-pixel;
+  font-size: 0.52rem;
+  color: var(--fx-tx3);
+}
+
+// Fig. 4 — the entropy ladder ---------------------------------------------------
+.fxl {
+  padding: 0.75rem 0.85rem 0.9rem;
+}
+
+.fxl-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+  font-family: $fx-pixel;
+  font-size: 0.62rem;
+  color: var(--fx-tx3);
+}
+
+.fxl-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--fx-tx2);
+}
+
+.fxl-legend__line {
+  width: 1.2rem;
+  border-top: 1.5px dashed var(--fx-red);
+}
+
+.fxl-week {
+  color: var(--fx-tx);
+  font-variant-numeric: tabular-nums;
+}
+
+.fxl-ladder {
+  --step: 1.5rem;
+  position: relative;
+  margin: 0;
+  padding: 0 0 0 1.1rem;
+  list-style: none;
+
+  @media (max-width: 680px) { --step: 0.55rem; }
+}
+
+.fxl-rung {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: calc(100% - 7 * var(--step));
+  margin: 0.28rem 0 0 calc(var(--i) * var(--step));
+  padding: 0.38rem 0.55rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.3rem;
+  background: var(--fx-bg);
+  font-size: 0.66rem;
+  transition: border-color 0.5s, background 0.5s;
+
+  &.is-open {
+    background:
+      repeating-linear-gradient(135deg, tint(var(--fx-tx3), 14%) 0 2px, transparent 2px 6px),
+      var(--fx-bg);
+  }
+
+  &.is-check {
+    border-color: color-mix(in srgb, var(--fx-green) 45%, var(--fx-bg));
+    background: color-mix(in srgb, var(--fx-green) 7%, var(--fx-bg));
+  }
+}
+
+.fxl-rung__label {
+  display: grid;
+  min-width: 0;
+
+  > * {
+    grid-area: 1 / 1;
+    transition: opacity 0.45s, transform 0.45s $fx-ease;
+  }
+}
+
+.fxl-rung__human { color: var(--fx-tx); }
+
+.fxl-rung__check {
+  font-family: $fx-pixel;
+  font-size: 0.95em;
+  color: var(--fx-green);
+  background: none;
+  padding: 0;
+  opacity: 0;
+  transform: translateY(0.4em);
+}
+
+.is-check .fxl-rung__human { opacity: 0; transform: translateY(-0.4em); }
+.is-check .fxl-rung__check { opacity: 1; transform: none; }
+
+.fxl-rung__badge {
+  flex: none;
+  padding: 0 0.35rem;
+  border: 1px solid var(--fx-border);
+  border-radius: 0.2rem;
+  font-family: $fx-pixel;
+  font-size: 0.56rem;
+  color: var(--fx-tx2);
+  white-space: nowrap;
+
+  .is-check & {
+    border-color: transparent;
+    background: tint(var(--fx-green), 16%);
+    color: var(--fx-green);
+  }
+
+  .is-open & {
+    border-style: dashed;
+    color: var(--fx-tx3);
+  }
+}
+
+.fxl-boundary {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  margin-top: 0.14rem;
+  border-top: 1.5px dashed var(--fx-red);
+  transition: transform 0.6s $fx-ease;
+  pointer-events: none;
+}
+
+.fxl-you {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 0.55rem;
+  color: var(--fx-tx);
+  line-height: 1;
+  margin-top: -0.28rem;
+  transition: transform 0.6s $fx-ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-figure *,
+  .fx-figure *::before,
+  .fx-figure *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

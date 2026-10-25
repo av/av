@@ -111,7 +111,7 @@ public/                   Static files copied verbatim into dist/ at build time
    # Generative canvas background — animated field behind content
    decor:
      seed: "my-post-slug"      # required; drives deterministic layout
-     canvas: local-inference   # required; renderer kind (local-inference | asking | boids)
+     canvas: local-inference   # required; renderer kind (local-inference | asking | boids | diff)
      color: cyan               # optional; Flexoki accent (red|orange|yellow|green|cyan|blue|purple|magenta)
      type: canvas              # optional when canvas is set; inferred automatically
    ```
@@ -129,6 +129,22 @@ public/                   Static files copied verbatim into dist/ at build time
 6. Posts are sorted newest-first by date, then alphabetically by slug.
 7. `SITE_URL` env var (default `https://av.codes`) sets base URL in canonical tags,
    sitemap, and RSS feed.
+
+### Inline effects and scripted figures
+
+Posts can mark phrases and embed figures that `src/blog/post-fx.ts` brings to
+life; the generator adds that script when the HTML contains `data-fx` or
+`data-figure`.
+
+1. Wrap a phrase in raw HTML: `<span data-fx="del">Your prompts are worthless</span>`.
+   It gets `is-on` when scrolled into view and plays once (a few loop quietly),
+   then rests as readable text. Effect names and their behaviour live in
+   `src/blog/fx/inlineFx.ts` and `src/blog-fx.scss`.
+2. Embed a figure on one line, caption included as the no-JS fallback:
+   `<figure class="fx-figure" data-figure="cut"><figcaption>…</figcaption></figure>`.
+   Figures are registered in `src/blog/post-fx.ts`; their code is in
+   `src/blog/fx/figures/`.
+3. Both honour `prefers-reduced-motion` by jumping to the final state.
 
 ### Animated graph stories
 
