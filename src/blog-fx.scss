@@ -1166,6 +1166,1875 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
   transition: transform 0.6s $fx-ease;
 }
 
+// Shared figure header & control primitives for the 16 extended figures -------
+.fxa-head,
+.fxb-head,
+.fxd-head,
+.fxr-head,
+.fxx-head,
+.fxh-head,
+.fxlc-head,
+.fxsb-head,
+.fxtp-head,
+.fxan-head,
+.fxpr-head,
+.fxfr-head,
+.fxfd-head,
+.fxsf-head,
+.fxcl-head,
+.fxps-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem 0.9rem;
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid var(--fx-ui);
+  background: var(--fx-bg);
+}
+
+.fxa-head__title,
+.fxb-head__title,
+.fxd-head__title,
+.fxr-head__title,
+.fxx-head__title,
+.fxh-head__title,
+.fxlc-head__title,
+.fxsb-head__title,
+.fxtp-head__title,
+.fxan-head__title,
+.fxpr-head__title,
+.fxfr-head__title,
+.fxfd-head__title,
+.fxsf-head__title,
+.fxcl-head__title,
+.fxps-head__title {
+  font-family: $fx-pixel;
+  font-size: 0.62rem;
+  color: var(--fx-tx);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fxd-head__sub,
+.fxr-head__sub,
+.fxx-head__sub,
+.fxh-head__sub,
+.fxlc-head__sub,
+.fxtp-head__sub,
+.fxpr-head__sub,
+.fxfr-head__sub,
+.fxps-head__sub {
+  display: block;
+  font-size: 0.58rem;
+  color: var(--fx-tx3);
+}
+
+.fxa-btn,
+.fxb-tab,
+.fxlc-btn,
+.fxsb-tab,
+.fxan-tab,
+.fxpr-btn,
+.fxfd-tab,
+.fxsf-tab,
+.fxcl-btn,
+.fxps-btn {
+  padding: 0.16rem 0.48rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.22rem;
+  background: var(--fx-bg2);
+  font-family: $fx-pixel;
+  font-size: 0.55rem;
+  color: var(--fx-tx2);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--fx-tx);
+    border-color: var(--fx-tx3);
+    outline: 0;
+  }
+
+  &.is-active {
+    border-color: var(--fx-green);
+    background: tint(var(--fx-green), 14%);
+    color: var(--fx-tx);
+  }
+}
+
+.fxb-foot,
+.fxan-foot,
+.fxpr-foot,
+.fxfr-foot,
+.fxfd-foot,
+.fxps-foot {
+  padding: 0.5rem 0.85rem;
+  border-top: 1px solid var(--fx-ui);
+  background: var(--fx-bg);
+  font-size: 0.62rem;
+  color: var(--fx-tx2);
+
+  b {
+    font-family: $fx-pixel;
+    font-weight: 500;
+    color: var(--fx-tx);
+  }
+}
+
+// 1. Arbitrage Ticker ---------------------------------------------------------
+.fxa-controls {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.fxa-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  @media (max-width: 680px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fxa-col {
+  padding: 0.7rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+
+  &.is-lab {
+    border-left: 1px solid var(--fx-ui);
+
+    @media (max-width: 680px) {
+      border-left: 0;
+      border-top: 1px solid var(--fx-ui);
+    }
+  }
+}
+
+.fxa-col__kicker {
+  font-family: $fx-pixel;
+  font-size: 0.54rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fx-tx3);
+}
+
+.fxa-col__big {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+
+  b {
+    font-family: $fx-pixel;
+    font-size: 1.05rem;
+    color: var(--fx-tx);
+  }
+
+  .is-lab & b {
+    color: var(--fx-green);
+  }
+
+  span {
+    font-size: 0.58rem;
+    color: var(--fx-tx3);
+  }
+}
+
+.fxa-stream,
+.fxa-cards {
+  display: grid;
+  gap: 0.22rem;
+  font-family: $fx-mono;
+  font-size: 0.56rem;
+}
+
+.fxa-turn {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding: 0.18rem 0.4rem;
+  border-radius: 0.18rem;
+  background: var(--fx-bg);
+  color: var(--fx-tx3);
+
+  &.is-veto {
+    background: tint(var(--fx-red), 11%);
+    color: var(--fx-tx);
+
+    b {
+      color: var(--fx-red);
+      font-family: $fx-pixel;
+    }
+  }
+}
+
+.fxa-pair {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.28rem 0.45rem;
+  border: 1px solid tint(var(--fx-green), 35%);
+  border-radius: 0.22rem;
+  background: tint(var(--fx-green), 7%);
+
+  code {
+    font-family: $fx-pixel;
+    font-size: 0.54rem;
+    color: var(--fx-green);
+  }
+
+  span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--fx-tx);
+  }
+
+  b {
+    font-family: $fx-pixel;
+    font-size: 0.52rem;
+    color: var(--fx-tx2);
+  }
+}
+
+.fxa-foot {
+  margin-top: auto;
+  font-size: 0.58rem;
+  color: var(--fx-tx2);
+}
+
+.fxa-meter {
+  margin-top: auto;
+  padding-top: 0.45rem;
+  border-top: 1px dashed var(--fx-ui);
+  display: grid;
+  gap: 0.28rem;
+}
+
+.fxa-meter__row {
+  display: grid;
+  grid-template-columns: 5.8rem 1fr auto;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.56rem;
+
+  span {
+    font-family: $fx-pixel;
+    color: var(--fx-tx2);
+  }
+
+  i {
+    height: 0.38rem;
+    border-radius: 0.1rem;
+    background: var(--fx-ui);
+    overflow: hidden;
+  }
+
+  u {
+    display: block;
+    height: 100%;
+    transform-origin: left;
+    transition: transform 0.5s $fx-ease;
+  }
+
+  .is-dev u {
+    background: var(--fx-tx3);
+  }
+
+  .is-lab u {
+    background: var(--fx-green);
+  }
+
+  b {
+    font-family: $fx-mono;
+    font-weight: 500;
+    color: var(--fx-tx2);
+  }
+}
+
+// 2. Employment Bargain Slider ------------------------------------------------
+.fxb-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.fxb-body {
+  position: relative;
+  min-height: 195px;
+  padding: 0.65rem 0.85rem;
+}
+
+.fxb-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+
+  @media (max-width: 680px) {
+    display: none;
+  }
+}
+
+.fxb-route {
+  fill: none;
+  stroke-width: 1.8;
+  transition: d 0.5s $fx-ease, stroke 0.3s, opacity 0.3s;
+
+  &.is-code {
+    stroke: var(--fx-tx3);
+    stroke-dasharray: 3 3;
+  }
+
+  &.is-scar {
+    stroke: var(--fx-red);
+  }
+
+  &.is-local {
+    stroke: var(--fx-green);
+    opacity: 0;
+  }
+
+  [data-era='old'] &.is-scar {
+    stroke: var(--fx-green);
+  }
+
+  [data-era='sov'] &.is-local {
+    opacity: 1;
+  }
+}
+
+.fxb-door {
+  stroke: var(--fx-tx3);
+  stroke-width: 1.2;
+  stroke-dasharray: 2 4;
+}
+
+.fxb-door-lbl {
+  font-family: $fx-pixel;
+  font-size: 8.5px;
+  fill: var(--fx-tx3);
+}
+
+.fxb-cards {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1.15fr;
+  gap: 0.7rem;
+  align-items: stretch;
+
+  @media (max-width: 680px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fxb-card {
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.32rem;
+  background: var(--fx-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+}
+
+.fxb-card__title {
+  font-family: $fx-pixel;
+  font-size: 0.62rem;
+  color: var(--fx-tx);
+  text-transform: uppercase;
+}
+
+.fxb-card__sub {
+  font-size: 0.56rem;
+  color: var(--fx-tx3);
+}
+
+.fxb-chip,
+.fxb-pill {
+  display: inline-block;
+  padding: 0.14rem 0.4rem;
+  border-radius: 0.2rem;
+  border: 1px solid var(--fx-ui);
+  background: var(--fx-bg2);
+  font-family: $fx-mono;
+  font-size: 0.56rem;
+  color: var(--fx-tx2);
+}
+
+.fxb-vault-items,
+.fxb-you-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem;
+  margin-top: 0.15rem;
+}
+
+.fxb-pill.is-stolen {
+  border-color: tint(var(--fx-red), 45%);
+  background: tint(var(--fx-red), 11%);
+  color: var(--fx-red);
+}
+
+[data-era='old'] .fxb-pill.is-stolen {
+  display: none;
+}
+
+.fxb-pill.is-kept {
+  border-color: tint(var(--fx-green), 45%);
+  background: tint(var(--fx-green), 12%);
+  color: var(--fx-green);
+}
+
+[data-era='new'] .fxb-pill.is-kept {
+  display: none;
+}
+
+.fxb-pill.is-harness-pill {
+  display: none;
+  border-color: var(--fx-green);
+  background: tint(var(--fx-green), 16%);
+  color: var(--fx-green);
+}
+
+[data-era='sov'] .fxb-pill.is-harness-pill {
+  display: inline-block;
+}
+
+.fxb-pill.is-zero {
+  display: none;
+  border-color: tint(var(--fx-red), 45%);
+  color: var(--fx-red);
+}
+
+[data-era='new'] .fxb-pill.is-zero {
+  display: inline-block;
+}
+
+// 4. Six Divergent Engineers --------------------------------------------------
+.fxd-wrap {
+  position: relative;
+  height: 232px;
+
+  @media (max-width: 640px) {
+    height: auto;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+.fxd-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+
+  @media (max-width: 640px) {
+    display: none;
+  }
+}
+
+.fxd-stem {
+  stroke: var(--fx-tx3);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+
+.fxd-branch {
+  fill: none;
+  stroke: var(--fx-tx3);
+  stroke-width: 1.3;
+  opacity: 0.45;
+  transition: stroke 0.2s, stroke-width 0.2s, opacity 0.2s;
+
+  &.is-active {
+    stroke-width: 2.3;
+    opacity: 1;
+    stroke: var(--fx-green);
+  }
+
+  &.is-accept.is-active {
+    stroke: var(--fx-red);
+  }
+}
+
+.fxd-badge {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.28rem;
+  background: var(--fx-bg);
+  font-size: 0.55rem;
+
+  span {
+    display: block;
+    font-family: $fx-pixel;
+    color: var(--fx-tx3);
+  }
+
+  b {
+    font-family: $fx-mono;
+    font-weight: 500;
+    color: var(--fx-tx);
+  }
+
+  &.is-prompt {
+    left: 0.7rem;
+  }
+
+  &.is-agent {
+    left: 22%;
+  }
+
+  @media (max-width: 640px) {
+    position: static;
+    transform: none;
+    margin-bottom: 0.35rem;
+  }
+}
+
+.fxd-rows {
+  position: absolute;
+  top: 0;
+  right: 0.75rem;
+  bottom: 0;
+  width: 50%;
+
+  @media (max-width: 640px) {
+    position: static;
+    width: 100%;
+    display: grid;
+    gap: 0.25rem;
+  }
+}
+
+.fxd-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.22rem;
+  background: var(--fx-bg);
+  font-size: 0.56rem;
+  cursor: pointer;
+  text-align: left;
+
+  @media (max-width: 640px) {
+    position: static;
+    transform: none;
+  }
+
+  .fxd-row__role {
+    font-family: $fx-pixel;
+    color: var(--fx-tx);
+    white-space: nowrap;
+  }
+
+  .fxd-row__act {
+    font-family: $fx-mono;
+    color: var(--fx-tx2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &.is-active {
+    border-color: var(--fx-green);
+    background: tint(var(--fx-green), 10%);
+  }
+
+  &.is-accept.is-active {
+    border-color: var(--fx-red);
+    background: tint(var(--fx-red), 10%);
+  }
+}
+
+.fxd-detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 0.8rem;
+  padding: 0.5rem 0.85rem;
+  border-top: 1px solid var(--fx-ui);
+  background: var(--fx-bg);
+  font-size: 0.6rem;
+
+  .fxd-detail__role {
+    font-family: $fx-pixel;
+    color: var(--fx-tx);
+  }
+
+  .fxd-detail__delta {
+    font-family: $fx-mono;
+    color: var(--fx-tx2);
+  }
+
+  .fxd-detail__out {
+    font-family: $fx-pixel;
+    color: var(--fx-green);
+
+    &.is-accept {
+      color: var(--fx-red);
+    }
+  }
+}
+
+// 5. Biological Retry Loop ----------------------------------------------------
+.fxr-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.22rem 0.55rem;
+  border: 1px solid var(--fx-border);
+  border-radius: 1rem;
+  background: var(--fx-bg2);
+  font-family: $fx-pixel;
+  font-size: 0.56rem;
+  color: var(--fx-tx);
+  cursor: pointer;
+
+  .fxr-toggle__track {
+    position: relative;
+    width: 1.5rem;
+    height: 0.8rem;
+    border-radius: 1rem;
+    background: var(--fx-tx3);
+
+    i {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: calc(0.8rem - 4px);
+      height: calc(0.8rem - 4px);
+      border-radius: 50%;
+      background: var(--fx-bg);
+      transition: transform 0.25s $fx-ease;
+    }
+  }
+
+  .is-compiled & .fxr-toggle__track {
+    background: var(--fx-green);
+
+    i {
+      transform: translateX(0.7rem);
+    }
+  }
+
+  .fxr-toggle__state {
+    color: var(--fx-tx2);
+    text-transform: uppercase;
+  }
+
+  .is-compiled & .fxr-toggle__state {
+    color: var(--fx-green);
+  }
+}
+
+.fxr-days {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fxr-day {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.3rem;
+  background: var(--fx-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  font-size: 0.58rem;
+
+  &.is-loop {
+    border-color: tint(var(--fx-red), 38%);
+  }
+
+  &.is-compiled {
+    border-color: tint(var(--fx-green), 50%);
+    background: tint(var(--fx-green), 7%);
+  }
+}
+
+.fxr-day__top {
+  display: flex;
+  justify-content: space-between;
+  font-family: $fx-pixel;
+  font-size: 0.56rem;
+
+  .is-loop & .fxr-day__tag {
+    color: var(--fx-red);
+  }
+
+  .is-compiled & .fxr-day__tag {
+    color: var(--fx-green);
+  }
+}
+
+.fxr-day__err {
+  font-family: $fx-mono;
+  color: var(--fx-tx);
+}
+
+.fxr-day__resp {
+  color: var(--fx-tx2);
+}
+
+.fxr-day__cost {
+  margin-top: auto;
+  padding-top: 0.25rem;
+  border-top: 1px dashed var(--fx-ui);
+  font-family: $fx-pixel;
+  font-size: 0.52rem;
+  color: var(--fx-tx3);
+}
+
+// 6. Packet X-Ray -------------------------------------------------------------
+.fxx-body {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+
+  @media (max-width: 680px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fxx-stack {
+  padding: 0.6rem 0.75rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.fxx-layer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.42rem 0.6rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.28rem;
+  background: var(--fx-bg);
+  text-align: left;
+  cursor: pointer;
+
+  .fxx-layer__lbl {
+    font-family: $fx-pixel;
+    font-size: 0.58rem;
+    color: var(--fx-tx);
+  }
+
+  .fxx-layer__tag {
+    font-family: $fx-mono;
+    font-size: 0.52rem;
+    color: var(--fx-tx3);
+  }
+
+  &.is-active {
+    border-color: var(--fx-red);
+    background: tint(var(--fx-red), 9%);
+
+    &.is-git {
+      border-color: var(--fx-green);
+      background: tint(var(--fx-green), 9%);
+    }
+  }
+}
+
+.fxx-inspector {
+  padding: 0.6rem 0.85rem;
+  border-left: 1px solid var(--fx-ui);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  @media (max-width: 680px) {
+    border-left: 0;
+    border-top: 1px solid var(--fx-ui);
+  }
+}
+
+.fxx-inspector__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.56rem;
+
+  code {
+    font-family: $fx-mono;
+    color: var(--fx-tx2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.fxx-badge {
+  padding: 0.08rem 0.35rem;
+  border-radius: 0.2rem;
+  font-family: $fx-pixel;
+  font-size: 0.52rem;
+  background: tint(var(--fx-red), 15%);
+  color: var(--fx-red);
+
+  &.is-git {
+    background: tint(var(--fx-green), 15%);
+    color: var(--fx-green);
+  }
+}
+
+.fxx-inspector__code {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.28rem;
+  background: var(--fx-bg);
+  font-family: $fx-mono;
+  font-size: 0.56rem;
+  line-height: 1.5;
+  color: var(--fx-tx);
+  overflow-x: auto;
+}
+
+.fxx-inspector__note {
+  font-size: 0.58rem;
+  color: var(--fx-tx2);
+}
+
+// 8. Enterprise Hill-Climber --------------------------------------------------
+.fxh-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: $fx-pixel;
+  font-size: 0.6rem;
+
+  input {
+    width: 7.5rem;
+    accent-color: var(--fx-red);
+    cursor: pointer;
+  }
+}
+
+.fxh-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.45rem;
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px solid var(--fx-ui);
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.fxh-kpi {
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.26rem;
+  background: var(--fx-bg);
+
+  .fxh-kpi__lbl {
+    display: block;
+    font-family: $fx-pixel;
+    font-size: 0.52rem;
+    color: var(--fx-tx3);
+    text-transform: uppercase;
+  }
+
+  .fxh-kpi__val {
+    font-family: $fx-mono;
+    font-size: 0.78rem;
+    color: var(--fx-tx);
+
+    &.is-pass {
+      color: var(--fx-green);
+    }
+
+    &.is-zero {
+      color: var(--fx-red);
+    }
+  }
+}
+
+.fxh-viz {
+  padding: 0.65rem 0.85rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.fxh-dots {
+  display: grid;
+  grid-template-columns: repeat(20, 1fr);
+  gap: 0.28rem;
+
+  @media (max-width: 540px) {
+    grid-template-columns: repeat(12, 1fr);
+  }
+}
+
+.fxh-dot {
+  height: 0.55rem;
+  border-radius: 0.12rem;
+  background: var(--fx-tx2);
+  transition: background 0.25s, opacity 0.25s;
+
+  &.is-replaced {
+    background: tint(var(--fx-red), 35%);
+    border: 1px dashed var(--fx-red);
+  }
+}
+
+.fxh-legend {
+  display: flex;
+  gap: 1rem;
+  font-family: $fx-pixel;
+  font-size: 0.54rem;
+  color: var(--fx-tx2);
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  i {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 0.1rem;
+  }
+
+  .is-human {
+    background: var(--fx-tx2);
+  }
+
+  .is-agent {
+    background: tint(var(--fx-red), 35%);
+    border: 1px dashed var(--fx-red);
+  }
+}
+
+// 9. Compounding Ledger Calculator --------------------------------------------
+.fxlc-rate {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: $fx-pixel;
+  font-size: 0.55rem;
+  color: var(--fx-tx3);
+}
+
+.fxlc-chart {
+  padding: 0.4rem 0.6rem 0.1rem;
+}
+
+.fxlc-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.fxlc-grid line {
+  stroke: var(--fx-ui);
+  stroke-dasharray: 2 3;
+}
+
+.fxlc-axis {
+  font-family: $fx-pixel;
+  font-size: 9px;
+  fill: var(--fx-tx3);
+}
+
+.fxlc-area {
+  fill: tint(var(--fx-green), 12%);
+}
+
+.fxlc-line {
+  fill: none;
+  stroke-width: 2;
+
+  &.is-flat {
+    stroke: var(--fx-tx3);
+    stroke-dasharray: 4 4;
+  }
+
+  &.is-comp {
+    stroke: var(--fx-green);
+  }
+}
+
+.fxlc-lbl {
+  font-family: $fx-pixel;
+  font-size: 9.5px;
+
+  &.is-flat {
+    fill: var(--fx-tx3);
+  }
+
+  &.is-comp {
+    fill: var(--fx-green);
+  }
+}
+
+.fxlc-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--fx-ui);
+  background: var(--fx-bg);
+
+  @media (max-width: 580px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fxlc-stat {
+  padding: 0.45rem 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.58rem;
+
+  span {
+    font-family: $fx-pixel;
+    color: var(--fx-tx3);
+  }
+
+  b {
+    font-family: $fx-mono;
+    color: var(--fx-tx);
+  }
+
+  &.is-comp {
+    border-left: 1px solid var(--fx-ui);
+
+    b {
+      color: var(--fx-green);
+    }
+  }
+}
+
+// 10. Harness Interview Sandbox -----------------------------------------------
+.fxsb-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.fxsb-list {
+  padding: 0.55rem 0.85rem;
+  display: grid;
+  gap: 0.32rem;
+}
+
+.fxsb-row {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.38rem 0.55rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.25rem;
+  background: var(--fx-bg);
+  font-size: 0.58rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+
+  .fxsb-row__agent {
+    font-family: $fx-pixel;
+    color: var(--fx-tx3);
+  }
+
+  .fxsb-row__patch {
+    font-family: $fx-mono;
+    color: var(--fx-tx);
+  }
+
+  .fxsb-row__haz {
+    font-size: 0.54rem;
+    color: var(--fx-tx3);
+  }
+
+  .fxsb-row__verdict {
+    font-family: $fx-pixel;
+    font-size: 0.54rem;
+    white-space: nowrap;
+  }
+
+  &.is-blocked {
+    border-color: tint(var(--fx-green), 40%);
+    background: tint(var(--fx-green), 7%);
+
+    .fxsb-row__verdict {
+      color: var(--fx-green);
+    }
+  }
+
+  &.is-leaked {
+    border-color: tint(var(--fx-red), 45%);
+    background: tint(var(--fx-red), 9%);
+
+    .fxsb-row__verdict {
+      color: var(--fx-red);
+    }
+  }
+
+  &.is-clean {
+    border-color: var(--fx-green);
+
+    .fxsb-row__verdict {
+      color: var(--fx-green);
+    }
+  }
+}
+
+.fxsb-summary {
+  padding: 0.5rem 0.85rem;
+  border-top: 1px solid var(--fx-ui);
+  font-size: 0.6rem;
+
+  &.is-pass {
+    background: tint(var(--fx-green), 12%);
+    color: var(--fx-tx);
+
+    b {
+      color: var(--fx-green);
+      font-family: $fx-pixel;
+    }
+  }
+
+  &.is-fail {
+    background: tint(var(--fx-red), 12%);
+    color: var(--fx-tx);
+
+    b {
+      color: var(--fx-red);
+      font-family: $fx-pixel;
+    }
+  }
+}
+
+// 11. Multi-Machine Trace Topology --------------------------------------------
+.fxtp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+
+  @media (max-width: 680px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fxtp-hosts {
+  padding: 0.6rem 0.75rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.fxtp-host {
+  padding: 0.42rem 0.6rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.28rem;
+  background: var(--fx-bg);
+  text-align: left;
+  cursor: pointer;
+
+  .fxtp-host__top {
+    display: flex;
+    justify-content: space-between;
+    font-family: $fx-pixel;
+    font-size: 0.58rem;
+    color: var(--fx-tx);
+
+    span {
+      color: var(--fx-tx3);
+    }
+  }
+
+  .fxtp-host__sub {
+    font-family: $fx-mono;
+    font-size: 0.54rem;
+    color: var(--fx-tx2);
+    margin-top: 0.12rem;
+  }
+
+  &.is-active {
+    border-color: var(--fx-green);
+    background: tint(var(--fx-green), 9%);
+  }
+}
+
+.fxtp-hub {
+  padding: 0.6rem 0.85rem;
+  border-left: 1px solid var(--fx-ui);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+
+  @media (max-width: 680px) {
+    border-left: 0;
+    border-top: 1px solid var(--fx-ui);
+  }
+}
+
+.fxtp-hub__box {
+  padding: 0.5rem 0.65rem;
+  border: 1px dashed var(--fx-green);
+  border-radius: 0.28rem;
+  background: tint(var(--fx-green), 6%);
+  text-align: center;
+
+  .fxtp-hub__title {
+    font-family: $fx-pixel;
+    font-size: 0.64rem;
+    color: var(--fx-green);
+  }
+
+  .fxtp-hub__sub,
+  .fxtp-hub__arrow {
+    font-size: 0.54rem;
+    color: var(--fx-tx2);
+  }
+
+  .fxtp-hub__sync {
+    font-family: $fx-mono;
+    font-size: 0.56rem;
+    color: var(--fx-tx);
+    margin-top: 0.15rem;
+  }
+}
+
+.fxtp-detail {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.28rem;
+  background: var(--fx-bg);
+  display: grid;
+  gap: 0.28rem;
+  font-size: 0.56rem;
+
+  .fxtp-detail__host {
+    font-family: $fx-pixel;
+    color: var(--fx-tx2);
+  }
+
+  .fxtp-detail__row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+
+    span {
+      font-family: $fx-pixel;
+      font-size: 0.5rem;
+      text-transform: uppercase;
+      color: var(--fx-tx3);
+    }
+
+    code {
+      font-family: $fx-mono;
+    }
+
+    &.is-err code {
+      color: var(--fx-red);
+    }
+
+    &.is-fix code {
+      color: var(--fx-green);
+    }
+  }
+}
+
+// 13. Anatomy of a Compiled Veto ----------------------------------------------
+.fxan-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.fxan-pipe {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fxan-stage {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.28rem;
+  background: var(--fx-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+  min-width: 0;
+
+  &.is-raw {
+    border-color: tint(var(--fx-red), 40%);
+  }
+
+  &.is-gate {
+    border-color: tint(var(--fx-green), 45%);
+  }
+}
+
+.fxan-stage__hdr {
+  display: flex;
+  justify-content: space-between;
+  font-family: $fx-pixel;
+  font-size: 0.52rem;
+  color: var(--fx-tx3);
+  text-transform: uppercase;
+
+  b {
+    color: var(--fx-tx);
+  }
+}
+
+.fxan-stage__code {
+  margin: 0;
+  font-family: $fx-mono;
+  font-size: 0.54rem;
+  line-height: 1.45;
+  color: var(--fx-tx);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.fxan-stage__text {
+  font-size: 0.58rem;
+  color: var(--fx-tx2);
+}
+
+// 14. Vanity Pareto Curve -----------------------------------------------------
+.fxpr-bars {
+  padding: 0.55rem 0.85rem;
+  display: grid;
+  gap: 0.22rem;
+}
+
+.fxpr-row {
+  display: grid;
+  grid-template-columns: 1.8rem 11.5rem 1fr 4.2rem;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.56rem;
+  transition: opacity 0.35s, transform 0.35s;
+
+  @media (max-width: 580px) {
+    grid-template-columns: 1.5rem 8.5rem 1fr 3rem;
+  }
+
+  .fxpr-row__idx {
+    font-family: $fx-pixel;
+    color: var(--fx-tx3);
+  }
+
+  .fxpr-row__lbl {
+    font-family: $fx-mono;
+    color: var(--fx-tx);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .fxpr-row__bar {
+    height: 0.42rem;
+    border-radius: 0.1rem;
+    background: var(--fx-ui);
+    overflow: hidden;
+
+    u {
+      display: block;
+      height: 100%;
+      background: var(--fx-tx2);
+      transition: width 0.5s $fx-ease, background 0.3s;
+    }
+  }
+
+  .fxpr-row__cnt {
+    font-family: $fx-mono;
+    text-align: right;
+    color: var(--fx-tx2);
+  }
+
+  .is-compiled &:not(.is-rare) {
+    opacity: 0.32;
+
+    .fxpr-row__bar u {
+      width: 2% !important;
+      background: var(--fx-green);
+    }
+  }
+
+  &.is-rare {
+    margin-top: 0.25rem;
+    padding-top: 0.25rem;
+    border-top: 1px dashed var(--fx-ui);
+
+    .fxpr-row__idx,
+    .fxpr-row__cnt {
+      color: var(--fx-green);
+      font-family: $fx-pixel;
+    }
+
+    .fxpr-row__bar u {
+      background: var(--fx-green);
+    }
+  }
+}
+
+// 15. Operator Flight Recorder ------------------------------------------------
+.fxfr-scrubber {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+
+  .fxfr-time {
+    font-family: $fx-pixel;
+    font-size: 0.66rem;
+    color: var(--fx-tx);
+  }
+
+  input {
+    width: 7rem;
+    accent-color: var(--fx-red);
+    cursor: pointer;
+  }
+}
+
+.fxfr-readouts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border-bottom: 1px solid var(--fx-ui);
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.fxfr-stat {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.24rem;
+  background: var(--fx-bg);
+
+  span {
+    display: block;
+    font-family: $fx-pixel;
+    font-size: 0.5rem;
+    color: var(--fx-tx3);
+    text-transform: uppercase;
+  }
+
+  b {
+    font-family: $fx-mono;
+    font-size: 0.72rem;
+    color: var(--fx-tx);
+  }
+
+  .is-fatigued &.is-alert {
+    border-color: var(--fx-red);
+    background: tint(var(--fx-red), 10%);
+
+    b {
+      color: var(--fx-red);
+    }
+  }
+}
+
+.fxfr-tracks {
+  padding: 0.35rem 0.6rem 0.1rem;
+}
+
+.fxfr-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.fxfr-line {
+  fill: none;
+  stroke-width: 1.8;
+
+  &.is-trees {
+    stroke: var(--fx-tx2);
+  }
+
+  &.is-words {
+    stroke: var(--fx-green);
+  }
+
+  &.is-rev {
+    stroke: var(--fx-tx3);
+    stroke-dasharray: 3 3;
+  }
+
+  &.is-spike {
+    stroke: var(--fx-red);
+    stroke-width: 2.2;
+  }
+}
+
+.fxfr-cursor {
+  stroke: var(--fx-tx);
+  stroke-width: 1.2;
+  stroke-dasharray: 2 2;
+}
+
+.fxfr-axis {
+  font-family: $fx-pixel;
+  font-size: 9px;
+  fill: var(--fx-tx3);
+}
+
+// 16. Tired Approval Diff -----------------------------------------------------
+.fxfd-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.fxfd-ci {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0.85rem;
+  border-bottom: 1px solid var(--fx-ui);
+  background: tint(var(--fx-green), 10%);
+  font-size: 0.58rem;
+
+  .fxfd-ci__badge {
+    font-family: $fx-pixel;
+    color: var(--fx-green);
+  }
+
+  [data-mode='tired'] & {
+    background: tint(var(--fx-green), 22%);
+  }
+}
+
+.fxfd-code {
+  padding: 0.5rem 0;
+  font-family: $fx-mono;
+  font-size: 0.58rem;
+  line-height: 1.65;
+}
+
+.fxfd-line {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 0.85rem;
+  transition: opacity 0.35s, filter 0.35s, background 0.35s;
+
+  > span {
+    width: 1.8rem;
+    color: var(--fx-tx3);
+    user-select: none;
+  }
+
+  > code {
+    color: var(--fx-tx);
+  }
+
+  &.is-hazard {
+    background: tint(var(--fx-red), 12%);
+
+    .fxfd-flag {
+      margin-left: auto;
+      padding: 0.05rem 0.38rem;
+      border-radius: 0.2rem;
+      background: tint(var(--fx-red), 18%);
+      font-family: $fx-pixel;
+      font-style: normal;
+      font-size: 0.52rem;
+      color: var(--fx-red);
+    }
+  }
+
+  [data-mode='tired'] &.is-hazard {
+    background: transparent;
+    opacity: 0.38;
+    filter: blur(0.6px);
+
+    .fxfd-flag {
+      opacity: 0;
+    }
+  }
+}
+
+// 17. Shrinking Human Surface Area --------------------------------------------
+.fxsf-tabs {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.fxsf-bar {
+  display: flex;
+  height: 3.1rem;
+  margin: 0.7rem 0.85rem 0.45rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.32rem;
+  overflow: hidden;
+}
+
+.fxsf-seg {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 0.5rem;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: width 0.5s $fx-ease;
+
+  b {
+    font-family: $fx-pixel;
+    font-size: 0.68rem;
+  }
+
+  span {
+    font-size: 0.52rem;
+  }
+
+  &.is-comp {
+    background: tint(var(--fx-green), 18%);
+    color: var(--fx-green);
+  }
+
+  &.is-man {
+    background: tint(var(--fx-red), 14%);
+    color: var(--fx-red);
+    border-left: 1px solid var(--fx-ui);
+    border-right: 1px solid var(--fx-ui);
+  }
+
+  &.is-high {
+    background: var(--fx-bg);
+    color: var(--fx-tx);
+  }
+}
+
+.fxsf-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  padding: 0 0.85rem 0.5rem;
+  font-family: $fx-pixel;
+  font-size: 0.53rem;
+  color: var(--fx-tx2);
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  i {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 0.1rem;
+  }
+
+  .is-comp i {
+    background: var(--fx-green);
+  }
+
+  .is-man i {
+    background: var(--fx-red);
+  }
+
+  .is-high i {
+    border: 1px solid var(--fx-tx);
+    background: var(--fx-bg);
+  }
+}
+
+.fxsf-meta {
+  padding: 0.5rem 0.85rem;
+  border-top: 1px solid var(--fx-ui);
+  background: var(--fx-bg);
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.58rem;
+
+  .fxsf-meta__row {
+    display: grid;
+    grid-template-columns: 7.8rem 1fr;
+    gap: 0.5rem;
+
+    > span:first-child {
+      font-family: $fx-pixel;
+      color: var(--fx-tx3);
+      text-transform: uppercase;
+      font-size: 0.52rem;
+    }
+  }
+}
+
+// 19. Decision-Boundary Clone Classifier --------------------------------------
+.fxcl-patches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.fxcl-diff {
+  margin: 0.55rem 0.85rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.28rem;
+  background: var(--fx-bg);
+  font-family: $fx-mono;
+  font-size: 0.58rem;
+  color: var(--fx-tx);
+  overflow-x: auto;
+}
+
+.fxcl-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--fx-ui);
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fxcl-col {
+  padding: 0.55rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.58rem;
+
+  &.is-trace {
+    border-left: 1px solid var(--fx-ui);
+
+    @media (max-width: 640px) {
+      border-left: 0;
+      border-top: 1px solid var(--fx-ui);
+    }
+  }
+
+  .fxcl-col__hdr {
+    display: flex;
+    justify-content: space-between;
+    font-family: $fx-pixel;
+    font-size: 0.54rem;
+    color: var(--fx-tx3);
+    text-transform: uppercase;
+  }
+
+  .fxcl-col__body {
+    color: var(--fx-tx2);
+  }
+
+  .fxcl-col__pred {
+    margin-top: auto;
+    padding: 0.3rem 0.48rem;
+    border-radius: 0.22rem;
+    font-family: $fx-pixel;
+    font-size: 0.55rem;
+
+    &.is-unknown {
+      background: var(--fx-bg);
+      color: var(--fx-tx3);
+    }
+
+    &.is-veto {
+      background: tint(var(--fx-red), 15%);
+      color: var(--fx-red);
+    }
+
+    &.is-approve {
+      background: tint(var(--fx-green), 15%);
+      color: var(--fx-green);
+    }
+  }
+}
+
+// 20. Decision-Boundary Phase Space -------------------------------------------
+.fxps-modes {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.fxps-wrap {
+  padding: 0.4rem 0.65rem 0.15rem;
+}
+
+.fxps-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.fxps-zone {
+  fill: tint(var(--fx-green), 10%);
+}
+
+.fxps-boundary {
+  fill: none;
+  stroke: var(--fx-tx);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+
+.fxps-pt {
+  transition: fill 0.3s, r 0.3s;
+
+  &.is-approve {
+    fill: var(--fx-green);
+    opacity: 0.75;
+  }
+
+  &.is-veto {
+    fill: var(--fx-red);
+    opacity: 0.65;
+  }
+
+  &.is-slip {
+    fill: var(--fx-red);
+    stroke: var(--fx-tx);
+    stroke-width: 1;
+  }
+}
+
+.fxps-axis text {
+  font-family: $fx-pixel;
+  font-size: 9px;
+  fill: var(--fx-tx3);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fx-figure *,
   .fx-figure *::before,
