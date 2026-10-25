@@ -1,4 +1,15 @@
-import { createRandom, h, mountCanvas, scrollProgress } from './util';
+import {
+  clamp,
+  createRandom,
+  createSpring,
+  drawBlueprint,
+  drawChip,
+  drawGlowNode,
+  h,
+  lerp,
+  mountCanvas,
+  scrollProgress,
+} from './util';
 
 // Fig. 15 (fatigue-diff): 10:00 vs 01:00 tunnel-vision aperture over a 300-line diff.
 export function initFatigueDiffFigure(fig: HTMLElement): void {
@@ -20,53 +31,60 @@ export function initFatigueDiffFigure(fig: HTMLElement): void {
   }));
 
   let tired = false;
-  let k = 0;
+  const kSp = createSpring(0);
 
   const setMode = (tMode: boolean) => {
     tired = tMode;
+    kSp.target = tMode ? 1 : 0;
     b10.classList.toggle('is-active', !tMode);
     b01.classList.toggle('is-active', tMode);
   };
   b10.addEventListener('click', () => setMode(false));
   b01.addEventListener('click', () => setMode(true));
+  stage.style.cursor = 'pointer';
+  stage.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    setMode(!tired);
+  });
 
   mountCanvas(
     stage,
-    (w) => (w < 540 ? 205 : 230),
-    (ctx, W, H, c) => {
-      k += ((tired ? 1 : 0) - k) * 0.1;
+    (w) => (w < 540 ? 210 : 235),
+    (ctx, W, H, c, _t, dt) => {
+      const k = clamp(kSp.step(dt, 140, 18), 0, 1);
       ctx.clearRect(0, 0, W, H);
+      drawBlueprint(ctx, W, H, c);
 
       const padX = W * 0.14;
-      // Top green CI banner
+
+      // Top green CI banner (glows brighter at 01:00 as operator tunnel-visions on it)
       ctx.fillStyle = c.green;
-      ctx.globalAlpha = 0.18 + k * 0.25;
-      ctx.fillRect(padX, 16, W - padX * 2, 22);
+      ctx.globalAlpha = lerp(0.14, 0.34, k);
+      ctx.beginPath();
+      ctx.roundRect(padX, 16, W - padX * 2, 24, 4);
+      ctx.fill();
+
+      ctx.strokeStyle = c.green;
+      ctx.globalAlpha = lerp(0.45, 0.95, k);
+      ctx.lineWidth = lerp(1, 2, k);
+      ctx.stroke();
       ctx.globalAlpha = 1;
 
-      ctx.font = `500 10px 'Geist Pixel', monospace`;
-      ctx.fillStyle = c.green;
-      ctx.textAlign = 'left';
-      ctx.fillText('CI ✓', padX + 10, 31);
+      drawChip(ctx, 'CI ✓', padX + 10, 28, c.green, c.bg, c.green, 'left');
 
       // 14 diff bars below
       lines.forEach((ln, i) => {
-        const y = 50 + i * 11.5;
+        const y = 52 + i * 11.5;
         const x = padX + ln.indent;
         const bw = Math.min(ln.w, W - padX * 2 - ln.indent);
 
         if (ln.fault) {
-          // At 10:00: bright red fault bar. At 01:00: fades into dull grey bar
           ctx.fillStyle = k > 0.6 ? c.tx3 : c.red;
-          ctx.globalAlpha = (1 - k) * 0.9 + k * 0.16;
+          ctx.globalAlpha = lerp(0.92, 0.14, k);
           ctx.fillRect(x, y, bw, 6);
 
-          if (k < 0.75) {
-            ctx.fillStyle = c.red;
-            ctx.globalAlpha = 1 - k;
-            ctx.beginPath();
-            ctx.arc(padX - 10, y + 3, 3, 0, Math.PI * 2);
-            ctx.fill();
+          if (k < 0.8) {
+            drawGlowNode(ctx, padX - 10, y + 3, 3, c.red, (1 - k) * 0.25, 2.6);
           }
         } else {
           ctx.fillStyle = c.tx3;
@@ -76,51 +94,54 @@ export function initFatigueDiffFigure(fig: HTMLElement): void {
       });
       ctx.globalAlpha = 1;
 
-      if (k < 0.6) {
-        ctx.font = `500 10px 'Geist Pixel', monospace`;
-        ctx.fillStyle = c.red;
-        ctx.globalAlpha = 1 - k;
-        ctx.textAlign = 'right';
-        ctx.fillText('faults', W - padX, 50 + 6 * 11.5 + 6);
-        ctx.globalAlpha = 1;
+      if (k < 0.65) {
+        drawChip(ctx, 'faults', W - padX, 52 + 6 * 11.5 + 3, c.red, c.bg, c.red, 'right');
       }
     },
   );
 }
 
-// Fig. 16 (recorder): Coupled oscilloscope (midnight focus dip -> +48h revert spike).
+// Fig. 16 (recorder): Coupled dual-channel oscilloscope (01:00 focus dip -> +48h revert spike).
 export function initRecorderFigure(fig: HTMLElement): void {
   const stage = h('div', 'fx-figure__stage fxv');
   fig.prepend(stage);
 
-  let dip = 0.85;
+  const dipSp = createSpring(0.85);
   let userTouched = false;
 
-  const ctrl = mountCanvas(
+  mountCanvas(
     stage,
-    (w) => (w < 540 ? 200 : 225),
-    (ctx, W, H, c, t) => {
+    (w) => (w < 540 ? 210 : 235),
+    (ctx, W, H, c, t, dt, pointer) => {
       ctx.clearRect(0, 0, W, H);
-      const d = userTouched ? dip : 0.35 + 0.55 * (0.5 + 0.5 * Math.sin(t * 0.7));
+      drawBlueprint(ctx, W, H, c);
+
+      if (pointer.inside) {
+        userTouched = true;
+        dipSp.target = clamp(pointer.y, 0.2, 1);
+      } else if (!userTouched) {
+        dipSp.target = 0.38 + 0.54 * (0.5 + 0.5 * Math.sin(t * 0.75));
+      }
+      const d = clamp(dipSp.step(dt, 160, 20), 0.15, 1);
 
       const x0 = 28;
       const x1 = W - 28;
       const w = x1 - x0;
-      const topBase = H * 0.28;
-      const botBase = H * 0.78;
+      const topBase = H * 0.26;
+      const botBase = H * 0.8;
 
-      const dipX = 0.42; // 01:00 midnight dip
-      const spikeX = 0.76; // +48h Thursday revert wave
+      const dipX = 0.38;
+      const spikeX = 0.74;
 
-      // Phase-lag connector between 01:00 dip and +48h spike
       const dxPx = x0 + dipX * w;
       const sxPx = x0 + spikeX * w;
       const dyPx = topBase + d * 48;
       const syPx = botBase - d * 68;
 
+      // Phase-lag coupling vector between 01:00 dip and +48h spike
       ctx.strokeStyle = c.tx3;
       ctx.setLineDash([3, 3]);
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 1.2;
       ctx.beginPath();
       ctx.moveTo(dxPx, dyPx);
       ctx.lineTo(sxPx, syPx);
@@ -134,60 +155,44 @@ export function initRecorderFigure(fig: HTMLElement): void {
       for (let i = 0; i <= 80; i++) {
         const u = i / 80;
         const x = x0 + u * w;
-        const g = Math.exp(-Math.pow((u - dipX) / 0.09, 2));
+        const g = Math.exp(-Math.pow((u - dipX) / 0.085, 2));
         const y = topBase + g * d * 48;
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
       ctx.stroke();
 
-      // Bottom curve: +48h revert rate
-      ctx.strokeStyle = c.red;
-      ctx.lineWidth = 2.2;
+      // Bottom curve: +48h revert rate with red area fill
       ctx.beginPath();
       for (let i = 0; i <= 80; i++) {
         const u = i / 80;
         const x = x0 + u * w;
-        const g = Math.exp(-Math.pow((u - spikeX) / 0.08, 2));
+        const g = Math.exp(-Math.pow((u - spikeX) / 0.075, 2));
         const y = botBase - g * d * 68;
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
+      ctx.strokeStyle = c.red;
+      ctx.lineWidth = 2.4;
       ctx.stroke();
 
-      // Peak markers
-      ctx.fillStyle = c.green;
-      ctx.beginPath();
-      ctx.arc(dxPx, dyPx, 4, 0, Math.PI * 2);
-      ctx.fill();
-
+      ctx.lineTo(x1, botBase);
+      ctx.lineTo(x0, botBase);
+      ctx.closePath();
       ctx.fillStyle = c.red;
-      ctx.beginPath();
-      ctx.arc(sxPx, syPx, 4.5, 0, Math.PI * 2);
+      ctx.globalAlpha = 0.1;
       ctx.fill();
+      ctx.globalAlpha = 1;
 
-      // 3 words on canvas: focus, 01:00, +48h reverts
-      ctx.font = `500 10px 'Geist Pixel', monospace`;
-      ctx.textAlign = 'left';
-      ctx.fillStyle = c.green;
-      ctx.fillText('focus', x0, topBase - 12);
+      drawGlowNode(ctx, dxPx, dyPx, 4, c.green, 0.25, 2.8);
+      drawGlowNode(ctx, sxPx, syPx, 4.5, c.red, 0.35, 3);
 
-      ctx.textAlign = 'center';
-      ctx.fillStyle = c.tx2;
-      ctx.fillText('01:00', dxPx, dyPx + 16);
-
-      ctx.fillStyle = c.red;
-      ctx.fillText('+48h reverts', sxPx, syPx - 10);
+      drawChip(ctx, 'focus', x0, topBase - 14, c.green, c.bg, c.green, 'left');
+      drawChip(ctx, '01:00', dxPx, dyPx + 18, c.tx2, c.bg, c.ui, 'center');
+      drawChip(ctx, '+48h reverts', sxPx, syPx - 16, c.red, c.bg, c.red, 'center');
     },
   );
-
   stage.style.cursor = 'ns-resize';
-  stage.addEventListener('pointermove', (e) => {
-    const rect = ctrl.canvas.getBoundingClientRect();
-    userTouched = true;
-    dip = Math.max(0.15, Math.min(1, (e.clientY - rect.top) / Math.max(1, rect.height)));
-    ctrl.redraw();
-  });
 }
 
 // Fig. 17 (surface): Concentric Iris of Automation shrinking manual review onto the core.
@@ -195,22 +200,25 @@ export function initSurfaceFigure(fig: HTMLElement): void {
   const stage = h('div', 'fx-figure__stage fxv');
   fig.prepend(stage);
 
-  let userP: number | null = null;
+  const pSp = createSpring(0.5);
 
-  const ctrl = mountCanvas(
+  mountCanvas(
     stage,
-    (w) => (w < 540 ? 210 : 235),
-    (ctx, W, H, c) => {
+    (w) => (w < 540 ? 215 : 240),
+    (ctx, W, H, c, t, dt, pointer) => {
       ctx.clearRect(0, 0, W, H);
-      const p = userP ?? scrollProgress(stage, 0.9, 0.2);
+      drawBlueprint(ctx, W, H, c);
+
+      pSp.target = pointer.inside ? pointer.x : scrollProgress(stage, 0.9, 0.2);
+      const p = clamp(pSp.step(dt, 140, 20), 0, 1);
 
       const cx = W * 0.5;
-      const cy = H * 0.52;
-      const maxR = Math.min(86, H * 0.38);
+      const cy = H * 0.5;
+      const maxR = Math.min(88, H * 0.39);
 
-      // Outer disk: total review surface (green compiled ring grows inward)
+      // Outer disk: compiled harness checks
       ctx.fillStyle = c.green;
-      ctx.globalAlpha = 0.18;
+      ctx.globalAlpha = 0.16;
       ctx.beginPath();
       ctx.arc(cx, cy, maxR, 0, Math.PI * 2);
       ctx.fill();
@@ -218,6 +226,22 @@ export function initSurfaceFigure(fig: HTMLElement): void {
       ctx.strokeStyle = c.green;
       ctx.lineWidth = 2;
       ctx.stroke();
+
+      // Radial shutter ticks on the compiled iris ring
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(t * 0.1 + p * 0.8);
+      ctx.strokeStyle = c.green;
+      ctx.globalAlpha = 0.35;
+      ctx.lineWidth = 1;
+      for (let a = 0; a < 24; a++) {
+        const ang = (a / 24) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(ang) * (maxR - 8), Math.sin(ang) * (maxR - 8));
+        ctx.lineTo(Math.cos(ang) * maxR, Math.sin(ang) * maxR);
+        ctx.stroke();
+      }
+      ctx.restore();
 
       // Middle ring: uncompiled manual bug-catching (shrinks as p -> 1)
       const manR = maxR * (0.85 - p * 0.56);
@@ -227,45 +251,35 @@ export function initSurfaceFigure(fig: HTMLElement): void {
       ctx.fill();
 
       ctx.fillStyle = c.red;
-      ctx.globalAlpha = 0.16;
+      ctx.globalAlpha = 0.15;
       ctx.beginPath();
       ctx.arc(cx, cy, manR, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 1;
       ctx.strokeStyle = c.red;
       ctx.setLineDash([3, 3]);
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.6;
       ctx.stroke();
       ctx.setLineDash([]);
 
       // Inner core: high-entropy human judgment ("you")
-      const coreR = maxR * 0.24;
+      const coreR = maxR * 0.25;
       ctx.fillStyle = c.tx;
       ctx.beginPath();
       ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
       ctx.fill();
 
-      // 3 words on canvas: checks, manual, you
       ctx.font = `500 10px 'Geist Pixel', monospace`;
       ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       ctx.fillStyle = c.bg;
-      ctx.fillText('you', cx, cy + 3.5);
+      ctx.fillText('you', cx, cy + 0.5);
 
-      ctx.textAlign = 'left';
-      ctx.fillStyle = c.green;
-      ctx.fillText('checks', cx + maxR + 12, cy - maxR * 0.55);
-
+      drawChip(ctx, 'checks', cx + maxR + 14, cy - maxR * 0.55, c.green, c.bg, c.green, 'left');
       if (manR > coreR + 8) {
-        ctx.fillStyle = c.red;
-        ctx.fillText('manual', cx + manR + 10, cy + 4);
+        drawChip(ctx, 'manual', cx + manR + 12, cy + 16, c.red, c.bg, c.red, 'left');
       }
     },
   );
-
   stage.style.cursor = 'ew-resize';
-  stage.addEventListener('pointermove', (e) => {
-    const rect = ctrl.canvas.getBoundingClientRect();
-    userP = Math.max(0, Math.min(1, (e.clientX - rect.left) / Math.max(1, rect.width)));
-    ctrl.redraw();
-  });
 }

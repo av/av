@@ -377,13 +377,26 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
 .fx-figure__stage {
   position: relative;
   contain: layout paint;
-  border: 1px solid var(--fx-ui);
-  border-radius: 0.5rem;
-  background: var(--fx-bg2);
+  border: 1px solid var(--fx-border);
+  border-radius: 0.55rem;
+  background:
+    radial-gradient(120% 90% at 50% 0%, tint(var(--fx-bg), 55%), transparent 70%),
+    var(--fx-bg2);
+  box-shadow:
+    inset 0 1px 0 tint(var(--fx-bg), 75%),
+    0 4px 18px -6px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   isolation: isolate;
   font-size: 0.7rem;
   line-height: 1.45;
+  transition: border-color 0.35s $fx-ease, box-shadow 0.35s $fx-ease;
+
+  &:hover {
+    border-color: var(--fx-tx3);
+    box-shadow:
+      inset 0 1px 0 tint(var(--fx-bg), 85%),
+      0 8px 24px -8px rgba(0, 0, 0, 0.12);
+  }
 
   &::before {
     content: '';
@@ -412,27 +425,29 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
 
 .fxv-pill {
   position: absolute;
-  top: 0.55rem;
-  right: 0.65rem;
+  top: 0.6rem;
+  right: 0.7rem;
   z-index: 2;
   display: inline-flex;
-  gap: 0.25rem;
-  padding: 0.15rem;
-  border: 1px solid var(--fx-ui);
-  border-radius: 0.3rem;
-  background: var(--fx-bg);
+  gap: 0.22rem;
+  padding: 0.16rem;
+  border: 1px solid var(--fx-border);
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, var(--fx-bg) 88%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .fxv-pill__btn {
-  padding: 0.14rem 0.45rem;
+  padding: 0.16rem 0.5rem;
   border: 0;
-  border-radius: 0.2rem;
+  border-radius: 0.22rem;
   background: transparent;
   font-family: $fx-pixel;
   font-size: 0.56rem;
   color: var(--fx-tx2);
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.25s $fx-ease, color 0.25s $fx-ease, transform 0.15s;
 
   &:hover,
   &:focus-visible {
@@ -440,8 +455,12 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
     outline: 0;
   }
 
+  &:active {
+    transform: scale(0.96);
+  }
+
   &.is-active {
-    background: tint(var(--fx-green), 18%);
+    background: tint(var(--fx-green), 20%);
     color: var(--fx-green);
   }
 }

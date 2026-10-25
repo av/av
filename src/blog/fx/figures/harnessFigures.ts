@@ -1,4 +1,14 @@
-import { createRandom, h, mountCanvas } from './util';
+import {
+  clamp,
+  createRandom,
+  createSpring,
+  drawBlueprint,
+  drawChip,
+  drawGlowNode,
+  h,
+  lerp,
+  mountCanvas,
+} from './util';
 
 // Fig. 10 (sandbox): Falling swarm patches filtered by 0, 4, or 15 horizontal laser gates.
 export function initSandboxFigure(fig: HTMLElement): void {
@@ -18,8 +28,8 @@ export function initSandboxFigure(fig: HTMLElement): void {
   const drops: Drop[] = Array.from({ length: 28 }, () => ({
     x: 0.14 + r() * 0.72,
     y: r(),
-    vy: 0.22 + r() * 0.18,
-    bad: r() < 0.72,
+    vy: 0.28 + r() * 0.22,
+    bad: r() < 0.74,
     stopGate: Math.floor(r() * 15),
   }));
 
@@ -35,21 +45,23 @@ export function initSandboxFigure(fig: HTMLElement): void {
 
   mountCanvas(
     stage,
-    (w) => (w < 540 ? 210 : 235),
-    (ctx, W, H, c) => {
+    (w) => (w < 540 ? 215 : 240),
+    (ctx, W, H, c, _t, dt) => {
       ctx.clearRect(0, 0, W, H);
-      const padX = W * 0.12;
-      const topY = 32;
-      const botY = H - 28;
-      const gateZoneH = botY - topY - 24;
+      drawBlueprint(ctx, W, H, c);
 
-      // Draw active horizontal laser gates
+      const padX = W * 0.12;
+      const topY = 34;
+      const botY = H - 28;
+      const gateZoneH = botY - topY - 22;
+
+      // Active horizontal laser gates
       for (let g = 0; g < 15; g++) {
-        const active = (gates === 15) || (gates === 4 && g % 4 === 0);
+        const active = gates === 15 || (gates === 4 && g % 4 === 0);
         if (!active) continue;
         const gy = topY + 12 + (g / 14) * gateZoneH;
         ctx.strokeStyle = c.green;
-        ctx.globalAlpha = 0.35;
+        ctx.globalAlpha = 0.36;
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(padX, gy);
@@ -60,53 +72,49 @@ export function initSandboxFigure(fig: HTMLElement): void {
 
       // Main branch baseline at bottom
       ctx.strokeStyle = c.tx;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.2;
       ctx.beginPath();
       ctx.moveTo(padX, botY);
       ctx.lineTo(W - padX, botY);
       ctx.stroke();
 
-      // Update & draw falling patches
       for (const d of drops) {
-        d.y += d.vy * 0.008;
+        d.y += d.vy * dt * 0.65;
         if (d.y > 1) {
           d.y = 0;
           d.x = 0.14 + r() * 0.72;
-          d.bad = r() < 0.72;
+          d.bad = r() < 0.74;
           d.stopGate = Math.floor(r() * 15);
         }
 
-        const blocked =
-          d.bad &&
-          ((gates === 15) || (gates === 4 && d.stopGate % 4 === 0));
-        const stopY = blocked
-          ? (topY + 12 + (d.stopGate / 14) * gateZoneH) / H
-          : botY / H;
+        const blocked = d.bad && (gates === 15 || (gates === 4 && d.stopGate % 4 === 0));
+        const stopY = blocked ? (topY + 12 + (d.stopGate / 14) * gateZoneH) / H : botY / H;
 
         const px = d.x * W;
         const py = Math.min(d.y, stopY) * H;
 
         if (blocked && d.y >= stopY) {
-          // Vaporized spark on gate
+          const age = clamp((d.y - stopY) * 6);
           ctx.strokeStyle = c.red;
-          ctx.globalAlpha = Math.max(0, 1 - (d.y - stopY) * 6);
-          ctx.lineWidth = 1.4;
-          const rad = 3 + (d.y - stopY) * 28;
-          ctx.strokeRect(px - rad, py - 2, rad * 2, 4);
+          ctx.globalAlpha = 1 - age;
+          ctx.lineWidth = 1.5;
+          const rad = 4 + age * 26;
+          ctx.beginPath();
+          ctx.arc(px, py, rad, 0, Math.PI * 2);
+          ctx.stroke();
           ctx.globalAlpha = 1;
         } else {
-          ctx.fillStyle = d.bad ? c.red : c.green;
-          ctx.globalAlpha = 0.88;
-          ctx.fillRect(px - 5, py - 3, 10, 6);
+          const col = d.bad ? c.red : c.green;
+          ctx.fillStyle = col;
+          ctx.globalAlpha = 0.25;
+          ctx.fillRect(px - 1, py - 14, 2, 12);
+          ctx.globalAlpha = 0.92;
+          ctx.fillRect(px - 4.5, py - 2.5, 9, 5);
         }
       }
       ctx.globalAlpha = 1;
 
-      // 1 word on canvas: main (+ 3 words in pill = 4 words)
-      ctx.font = `500 10px 'Geist Pixel', monospace`;
-      ctx.fillStyle = c.tx2;
-      ctx.textAlign = 'left';
-      ctx.fillText('main', padX, botY + 15);
+      drawChip(ctx, 'main', padX, botY - 14, c.tx, c.bg, c.ui, 'left');
     },
   );
 }
@@ -134,82 +142,92 @@ export function initTopologyFigure(fig: HTMLElement): void {
 
   mountCanvas(
     stage,
-    (w) => (w < 540 ? 205 : 230),
-    (ctx, W, H, c) => {
+    (w) => (w < 540 ? 215 : 240),
+    (ctx, W, H, c, _t, dt) => {
       ctx.clearRect(0, 0, W, H);
-      pulseT += 0.014;
+      drawBlueprint(ctx, W, H, c);
+
+      pulseT += dt * 0.85;
       if (pulseT > 2.2) {
         pulseT = 0;
         triggerNode = (triggerNode + 1) % NODES.length;
       }
 
       const cx = W * 0.5;
-      const cy = H * 0.52;
-      const rx = Math.min(185, W * 0.34);
-      const ry = Math.min(68, H * 0.31);
+      const cy = H * 0.5;
+      const rx = Math.min(195, W * 0.35);
+      const ry = Math.min(72, H * 0.32);
 
-      // Spokes & nodes
+      // Expanding green sync wave ring from central hub
+      if (pulseT >= 0.8 && pulseT <= 1.9) {
+        const u = (pulseT - 0.8) / 1.1;
+        ctx.strokeStyle = c.green;
+        ctx.globalAlpha = (1 - u) * 0.45;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, rx * u, ry * u, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+
       NODES.forEach((n, i) => {
         const nx = cx + Math.cos(n.ang) * rx;
         const ny = cy + Math.sin(n.ang) * ry;
 
-        ctx.strokeStyle = c.ui;
+        ctx.strokeStyle = c.tx3;
+        ctx.globalAlpha = 0.45;
         ctx.lineWidth = 1.4;
+        ctx.setLineDash([3, 3]);
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.lineTo(nx, ny);
         ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
 
         // Phase 1 (0..0.8): Red error travels inward from triggerNode to hub
         if (i === triggerNode && pulseT < 0.8) {
           const u = pulseT / 0.8;
-          const px = nx + (cx - nx) * u;
-          const py = ny + (cy - ny) * u;
-          ctx.fillStyle = c.red;
-          ctx.beginPath();
-          ctx.arc(px, py, 4.5, 0, Math.PI * 2);
-          ctx.fill();
+          const px = lerp(nx, cx, u);
+          const py = lerp(ny, cy, u);
+          drawGlowNode(ctx, px, py, 4.5, c.red, 0.35, 3);
         }
 
         // Phase 2 (0.8..1.8): Green compiled rule broadcasts outward to all 4 hosts
         if (pulseT >= 0.8 && pulseT <= 1.8) {
           const u = (pulseT - 0.8) / 1.0;
-          const px = cx + (nx - cx) * u;
-          const py = cy + (ny - cy) * u;
-          ctx.fillStyle = c.green;
-          ctx.beginPath();
-          ctx.arc(px, py, 4, 0, Math.PI * 2);
-          ctx.fill();
+          const px = lerp(cx, nx, u);
+          const py = lerp(cy, ny, u);
+          drawGlowNode(ctx, px, py, 3.8, c.green, 0.3, 2.8);
         }
 
-        const immunized = pulseT > 1.65;
+        const immunized = pulseT > 1.6;
+        const nodeCol = immunized ? c.green : i === triggerNode && pulseT < 0.8 ? c.red : c.tx2;
+
         ctx.fillStyle = c.bg;
-        ctx.strokeStyle = immunized ? c.green : i === triggerNode && pulseT < 0.8 ? c.red : c.tx2;
+        ctx.strokeStyle = nodeCol;
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(nx, ny, 9, 0, Math.PI * 2);
+        ctx.arc(nx, ny, 10, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
+        drawGlowNode(ctx, nx, ny, 3, nodeCol, immunized ? 0.25 : 0.1, 3);
 
-        ctx.font = `500 10px 'Geist Pixel', monospace`;
-        ctx.fillStyle = c.tx2;
-        ctx.textAlign = 'center';
-        ctx.fillText(n.name, nx, ny + (ny < cy ? -14 : 22));
+        drawChip(ctx, n.name, nx, ny + (ny < cy ? -22 : 22), nodeCol, c.bg, c.ui, 'center');
       });
 
       // Central tracequest hub
+      const hubActive = pulseT >= 0.72 && pulseT <= 1.25;
       ctx.fillStyle = c.bg;
-      ctx.strokeStyle = pulseT >= 0.75 && pulseT <= 1.2 ? c.green : c.tx;
-      ctx.lineWidth = 2.2;
+      ctx.strokeStyle = hubActive ? c.green : c.tx;
+      ctx.lineWidth = 2.4;
       ctx.beginPath();
-      ctx.arc(cx, cy, 16, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 17, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
+      drawGlowNode(ctx, cx, cy, 4.5, hubActive ? c.green : c.tx, 0.25, 3);
 
-      ctx.font = `500 10px 'Geist Pixel', monospace`;
-      ctx.fillStyle = c.tx;
-      ctx.textAlign = 'center';
-      ctx.fillText('tracequest', cx, cy + 28);
+      drawChip(ctx, 'tracequest', cx, cy + 32, c.tx, c.bg, c.ui, 'center');
     },
   );
 }
@@ -221,30 +239,28 @@ export function initAnatomyFigure(fig: HTMLElement): void {
 
   mountCanvas(
     stage,
-    (w) => (w < 540 ? 195 : 220),
+    (w) => (w < 540 ? 205 : 230),
     (ctx, W, H, c, t) => {
       ctx.clearRect(0, 0, W, H);
+      drawBlueprint(ctx, W, H, c);
 
       const x0 = 28;
       const slitX = W * 0.46;
       const gateX = W * 0.8;
-      const midY = H * 0.52;
+      const midY = H * 0.54;
 
       // Left: 3 chaotic red traces converging on optical collimator slit
       for (let k = -1; k <= 1; k++) {
         ctx.strokeStyle = c.red;
-        ctx.globalAlpha = 0.7;
-        ctx.lineWidth = 1.6;
+        ctx.globalAlpha = 0.75;
+        ctx.lineWidth = 1.7;
         ctx.beginPath();
-        const steps = 40;
+        const steps = 48;
         for (let i = 0; i <= steps; i++) {
           const u = i / steps;
-          const x = x0 + u * (slitX - x0);
-          const env = 1 - u;
-          const y =
-            midY +
-            k * 42 * env +
-            Math.sin(u * 14 - t * 3 + k * 2) * 14 * env;
+          const x = lerp(x0, slitX, u);
+          const env = Math.pow(1 - u, 1.1);
+          const y = midY + k * 44 * env + Math.sin(u * 15 - t * 3.4 + k * 2.1) * 15 * env;
           if (i === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
@@ -254,47 +270,52 @@ export function initAnatomyFigure(fig: HTMLElement): void {
 
       // Collimator slit jaws at slitX
       ctx.strokeStyle = c.tx;
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(slitX, 24);
-      ctx.lineTo(slitX, midY - 8);
-      ctx.moveTo(slitX, midY + 8);
-      ctx.lineTo(slitX, H - 24);
+      ctx.moveTo(slitX, 26);
+      ctx.lineTo(slitX, midY - 9);
+      ctx.moveTo(slitX, midY + 9);
+      ctx.lineTo(slitX, H - 22);
       ctx.stroke();
 
-      // Middle: extracted invariant laser beam
+      // Middle: extracted invariant laser beam + glow
       ctx.strokeStyle = c.green;
+      ctx.globalAlpha = 0.2;
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(slitX, midY);
+      ctx.lineTo(gateX - 20, midY);
+      ctx.stroke();
+
+      ctx.globalAlpha = 1;
       ctx.lineWidth = 2.4;
       ctx.beginPath();
       ctx.moveTo(slitX, midY);
-      ctx.lineTo(gateX - 18, midY);
+      ctx.lineTo(gateX - 20, midY);
       ctx.stroke();
 
-      // Right: crystalline gate block
-      ctx.strokeStyle = c.green;
-      ctx.fillStyle = c.bg;
-      ctx.lineWidth = 2.2;
-      ctx.fillRect(gateX - 18, midY - 26, 36, 52);
-      ctx.strokeRect(gateX - 18, midY - 26, 36, 52);
+      // Traveling coherent pulse
+      const px = lerp(slitX, gateX - 20, (t * 0.65) % 1);
+      drawGlowNode(ctx, px, midY, 3.2, c.green, 0.3, 2.8);
 
-      // Checkmark inside gate
+      // Right: crystalline gate block
+      ctx.fillStyle = c.bg;
+      ctx.strokeStyle = c.green;
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.roundRect(gateX - 20, midY - 26, 40, 52, 5);
+      ctx.fill();
+      ctx.stroke();
+
       ctx.beginPath();
       ctx.moveTo(gateX - 7, midY);
       ctx.lineTo(gateX - 1, midY + 6);
       ctx.lineTo(gateX + 9, midY - 6);
       ctx.stroke();
 
-      // 3 words on canvas: traces, invariant, gate
-      ctx.font = `500 10px 'Geist Pixel', monospace`;
-      ctx.textAlign = 'center';
-      ctx.fillStyle = c.red;
-      ctx.fillText('traces', (x0 + slitX) * 0.5, 20);
-
-      ctx.fillStyle = c.tx2;
-      ctx.fillText('invariant', (slitX + gateX) * 0.5, 20);
-
-      ctx.fillStyle = c.green;
-      ctx.fillText('gate', gateX, midY + 42);
+      drawChip(ctx, 'traces', (x0 + slitX) * 0.46, 20, c.red, c.bg, c.red, 'center');
+      drawChip(ctx, 'invariant', (slitX + gateX) * 0.5, 20, c.tx2, c.bg, c.ui, 'center');
+      drawChip(ctx, 'gate', gateX, midY + 42, c.green, c.bg, c.green, 'center');
     },
   );
 }
@@ -310,9 +331,10 @@ export function initParetoFigure(fig: HTMLElement): void {
   fig.prepend(stage);
 
   let compiled = false;
-  let k = 0;
+  const compSp = createSpring(0);
   const toggle = () => {
     compiled = !compiled;
+    compSp.target = compiled ? 1 : 0;
     btn.classList.toggle('is-active', compiled);
   };
   stage.style.cursor = 'pointer';
@@ -320,47 +342,49 @@ export function initParetoFigure(fig: HTMLElement): void {
 
   mountCanvas(
     stage,
-    (w) => (w < 540 ? 210 : 235),
-    (ctx, W, H, c) => {
-      k += ((compiled ? 1 : 0) - k) * 0.12;
+    (w) => (w < 540 ? 215 : 240),
+    (ctx, W, H, c, _t, dt) => {
+      const k = clamp(compSp.step(dt, 150, 18), 0, 1);
       ctx.clearRect(0, 0, W, H);
+      drawBlueprint(ctx, W, H, c);
 
       const cx = W * 0.5;
       const maxW = Math.min(360, W * 0.64);
       const botY = H - 24;
 
-      // 15 Pareto slabs (90% of height)
       for (let i = 0; i < 15; i++) {
         const u = i / 14;
         const w = maxW * Math.pow(1 - u * 0.68, 0.85);
         const y = botY - (i + 1) * 9.5;
         const slide = k * ((i % 2 === 0 ? 1 : -1) * (W * 0.36));
-        const alpha = 0.75 * (1 - k * 0.78);
+        const alpha = 0.78 * (1 - k * 0.82);
 
         ctx.fillStyle = k > 0.5 ? c.green : c.tx3;
         ctx.globalAlpha = alpha;
-        ctx.fillRect(cx - w / 2 + slide, y, w, 7);
+        ctx.beginPath();
+        ctx.roundRect(cx - w * 0.5 + slide, y, w, 7, 2);
+        ctx.fill();
       }
       ctx.globalAlpha = 1;
 
-      // Top 10% rare judgment capstone (drops to center when 90% compiles away)
-      const capY = (botY - 15 * 9.5 - 22) * (1 - k) + (H * 0.46) * k;
-      const capW = 64 + k * 24;
-      const capH = 18 + k * 8;
-      ctx.fillStyle = c.green;
-      ctx.fillRect(cx - capW / 2, capY, capW, capH);
+      const capY = lerp(botY - 15 * 9.5 - 22, H * 0.48, k);
+      const capW = lerp(68, 96, k);
+      const capH = lerp(18, 26, k);
 
-      // 3 words on canvas: 10% taste, 90% (+ compile pill = 4 words)
-      ctx.font = `500 10px 'Geist Pixel', monospace`;
-      ctx.textAlign = 'center';
       ctx.fillStyle = c.green;
-      ctx.fillText('10% taste', cx, capY - 8);
+      ctx.globalAlpha = 0.18;
+      ctx.beginPath();
+      ctx.roundRect(cx - capW * 0.5 - 5, capY - 5, capW + 10, capH + 10, 6);
+      ctx.fill();
 
-      if (k < 0.7) {
-        ctx.fillStyle = c.tx2;
-        ctx.globalAlpha = 1 - k;
-        ctx.fillText('90%', cx, botY - 68);
-        ctx.globalAlpha = 1;
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.roundRect(cx - capW * 0.5, capY, capW, capH, 4);
+      ctx.fill();
+
+      drawChip(ctx, '10% taste', cx, capY - 14, c.green, c.bg, c.green, 'center');
+      if (k < 0.65) {
+        drawChip(ctx, '90%', cx, botY - 68, c.tx, c.bg, c.ui, 'center');
       }
     },
   );

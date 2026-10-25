@@ -1,12 +1,21 @@
-import { h, mountCanvas } from './util';
+import {
+  clamp,
+  createSpring,
+  drawBlueprint,
+  drawChip,
+  drawGlowNode,
+  h,
+  lerp,
+  mountCanvas,
+} from './util';
 
 // Fig. 3 (cut): Trajectory divergence & the 5 shear cuts.
 const CUTS = [
-  { x: 0.24, ay: 0.34, hy: 0.62, sym: '✕', a: '≥400', b: '≥500' },
-  { x: 0.41, ay: 0.25, hy: 0.66, sym: '✎', a: '2**n', b: 'jitter' },
-  { x: 0.58, ay: 0.19, hy: 0.68, sym: '↺', a: '300s', b: '30s' },
-  { x: 0.74, ay: 0.15, hy: 0.69, sym: '↺', a: '200|422', b: '422' },
-  { x: 0.89, ay: 0.12, hy: 0.7, sym: '■', a: 'run #2', b: 'SIGKILL' },
+  { x: 0.24, ay: 0.34, hy: 0.63, sym: '✕', a: '≥400', b: '≥500' },
+  { x: 0.41, ay: 0.25, hy: 0.67, sym: '✎', a: '2**n', b: 'jitter' },
+  { x: 0.58, ay: 0.19, hy: 0.69, sym: '↺', a: '300s', b: '30s' },
+  { x: 0.74, ay: 0.15, hy: 0.71, sym: '↺', a: '200|422', b: '422' },
+  { x: 0.89, ay: 0.12, hy: 0.72, sym: '■', a: 'run #2', b: 'SIGKILL' },
 ];
 
 export function initCutFigure(fig: HTMLElement): void {
@@ -15,20 +24,48 @@ export function initCutFigure(fig: HTMLElement): void {
 
   let active = 0;
   let userMoved = false;
+  const focusSp = createSpring(0);
 
   const ctrl = mountCanvas(
     stage,
-    (w) => (w < 540 ? 210 : 240),
-    (ctx, W, H, c, t) => {
+    (w) => (w < 540 ? 220 : 250),
+    (ctx, W, H, c, t, dt, pointer) => {
       ctx.clearRect(0, 0, W, H);
-      if (!userMoved) active = Math.floor(t * 0.55) % CUTS.length;
+      drawBlueprint(ctx, W, H, c);
+
+      if (pointer.inside) {
+        userMoved = true;
+        let best = 0;
+        let bestD = 99;
+        CUTS.forEach((k, i) => {
+          const d = Math.abs(k.x - pointer.x);
+          if (d < bestD) {
+            bestD = d;
+            best = i;
+          }
+        });
+        active = best;
+      } else if (!userMoved) {
+        active = Math.floor(t * 0.5) % CUTS.length;
+      }
+
+      focusSp.target = active;
+      const focusIdx = focusSp.step(dt, 180, 22);
 
       const ox = W * 0.08;
-      const oy = H * 0.58;
-      const endX = W * 0.95;
+      const oy = H * 0.56;
+      const endX = W * 0.94;
 
-      const aPts: [number, number][] = [[ox, oy], ...CUTS.map((k): [number, number] => [k.x * W, k.ay * H]), [endX, H * 0.1]];
-      const hPts: [number, number][] = [[ox, oy], ...CUTS.map((k): [number, number] => [k.x * W, k.hy * H]), [endX, H * 0.7]];
+      const aPts: [number, number][] = [
+        [ox, oy],
+        ...CUTS.map((k): [number, number] => [k.x * W, k.ay * H]),
+        [endX, H * 0.11],
+      ];
+      const hPts: [number, number][] = [
+        [ox, oy],
+        ...CUTS.map((k): [number, number] => [k.x * W, k.hy * H]),
+        [endX, H * 0.72],
+      ];
 
       const traceCurve = (pts: [number, number][]) => {
         ctx.moveTo(pts[0][0], pts[0][1]);
@@ -40,7 +77,7 @@ export function initCutFigure(fig: HTMLElement): void {
         }
       };
 
-      // Shaded correction delta wedge
+      // Shaded correction delta wedge with diagonal hatch lines
       ctx.save();
       ctx.beginPath();
       traceCurve(aPts);
@@ -49,13 +86,24 @@ export function initCutFigure(fig: HTMLElement): void {
       }
       ctx.closePath();
       ctx.fillStyle = c.red;
-      ctx.globalAlpha = 0.08;
+      ctx.globalAlpha = 0.07;
       ctx.fill();
+      ctx.clip();
+
+      ctx.strokeStyle = c.red;
+      ctx.globalAlpha = 0.14;
+      ctx.lineWidth = 1;
+      for (let x = -H; x < W + H; x += 11) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x + H, H);
+        ctx.stroke();
+      }
       ctx.restore();
 
-      // Agent curve (dashed red/grey)
+      // Agent curve (dashed red)
       ctx.strokeStyle = c.red;
-      ctx.globalAlpha = 0.7;
+      ctx.globalAlpha = 0.75;
       ctx.lineWidth = 1.6;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
@@ -64,9 +112,16 @@ export function initCutFigure(fig: HTMLElement): void {
       ctx.setLineDash([]);
       ctx.globalAlpha = 1;
 
-      // Human curve (solid green)
+      // Human curve (solid green + subtle underglow)
       ctx.strokeStyle = c.green;
-      ctx.lineWidth = 2.5;
+      ctx.globalAlpha = 0.18;
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      traceCurve(hPts);
+      ctx.stroke();
+
+      ctx.globalAlpha = 1;
+      ctx.lineWidth = 2.4;
       ctx.beginPath();
       traceCurve(hPts);
       ctx.stroke();
@@ -76,66 +131,43 @@ export function initCutFigure(fig: HTMLElement): void {
         const x = k.x * W;
         const ay = k.ay * H;
         const hy = k.hy * H;
-        const isAct = i === active;
+        const prox = clamp(1 - Math.abs(focusIdx - i));
 
-        ctx.strokeStyle = isAct ? c.tx : c.tx3;
-        ctx.globalAlpha = isAct ? 0.9 : 0.35;
-        ctx.lineWidth = isAct ? 1.6 : 1;
+        ctx.strokeStyle = prox > 0.5 ? c.tx : c.tx3;
+        ctx.globalAlpha = lerp(0.32, 0.95, prox);
+        ctx.lineWidth = lerp(1, 1.8, prox);
         ctx.beginPath();
         ctx.moveTo(x, ay);
         ctx.lineTo(x, hy);
         ctx.stroke();
         ctx.globalAlpha = 1;
 
-        // Top & bottom nodes
-        ctx.fillStyle = c.red;
-        ctx.beginPath();
-        ctx.arc(x, ay, isAct ? 4.5 : 3, 0, Math.PI * 2);
-        ctx.fill();
+        drawGlowNode(ctx, x, ay, lerp(2.8, 4.5, prox), c.red, prox * 0.25, 2.8);
+        drawGlowNode(ctx, x, hy, lerp(3.2, 5.2, prox), c.green, prox * 0.3, 2.8);
 
-        ctx.fillStyle = c.green;
-        ctx.beginPath();
-        ctx.arc(x, hy, isAct ? 5.5 : 3.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Symbol on the cut
-        ctx.font = `500 ${isAct ? 12 : 10}px 'Geist Pixel', monospace`;
+        ctx.font = `500 ${Math.round(lerp(10, 12, prox))}px 'Geist Pixel', monospace`;
         ctx.textAlign = 'center';
-        ctx.fillStyle = isAct ? c.tx : c.tx2;
+        ctx.fillStyle = prox > 0.5 ? c.tx : c.tx2;
         ctx.fillText(k.sym, x, hy + 18);
 
-        if (isAct) {
-          ctx.font = `500 10px 'Geist Mono', monospace`;
-          ctx.fillStyle = c.red;
-          ctx.fillText(`-${k.a}`, x, ay - 9);
-          ctx.fillStyle = c.green;
-          ctx.fillText(`+${k.b}`, x, hy + 32);
+        if (i === active) {
+          drawChip(ctx, `-${k.a}`, x, ay - 16, c.red, c.bg, c.red, 'center');
+          drawChip(ctx, `+${k.b}`, x, hy + 34, c.green, c.bg, c.green, 'center');
         }
       });
 
-      // Origin node
-      ctx.fillStyle = c.tx;
-      ctx.beginPath();
-      ctx.arc(ox, oy, 4.5, 0, Math.PI * 2);
-      ctx.fill();
+      drawGlowNode(ctx, ox, oy, 5, c.tx, 0.18, 2.5);
 
-      // 3 words on canvas: prompt, agent, you
-      ctx.font = `500 10px 'Geist Pixel', monospace`;
-      ctx.textAlign = 'left';
-      ctx.fillStyle = c.tx2;
-      ctx.fillText('prompt', ox - 6, oy - 12);
-
-      ctx.textAlign = 'right';
-      ctx.fillStyle = c.red;
-      ctx.fillText('agent', endX, H * 0.1 - 8);
-      ctx.fillStyle = c.green;
-      ctx.fillText('you', endX, H * 0.7 - 10);
+      drawChip(ctx, 'prompt', ox + 4, oy - 18, c.tx2, c.bg, c.ui, 'left');
+      drawChip(ctx, 'agent', endX, H * 0.11 - 12, c.red, c.bg, c.red, 'right');
+      drawChip(ctx, 'you', endX, H * 0.72 - 14, c.green, c.bg, c.green, 'right');
     },
   );
 
-  const pickFromEvent = (clientX: number) => {
+  stage.style.cursor = 'crosshair';
+  stage.addEventListener('click', (e) => {
     const rect = ctrl.canvas.getBoundingClientRect();
-    const nx = (clientX - rect.left) / Math.max(1, rect.width);
+    const nx = (e.clientX - rect.left) / Math.max(1, rect.width);
     let best = 0;
     let bestD = 99;
     CUTS.forEach((k, i) => {
@@ -148,8 +180,5 @@ export function initCutFigure(fig: HTMLElement): void {
     userMoved = true;
     active = best;
     ctrl.redraw();
-  };
-
-  stage.addEventListener('pointermove', (e) => pickFromEvent(e.clientX));
-  stage.addEventListener('click', (e) => pickFromEvent(e.clientX));
+  });
 }

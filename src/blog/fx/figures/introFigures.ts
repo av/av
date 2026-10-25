@@ -1,131 +1,192 @@
-import { createRandom, h, mountCanvas } from './util';
+import {
+  clamp,
+  createRandom,
+  createSpring,
+  drawBlueprint,
+  drawChip,
+  drawGlowNode,
+  easeInOutCubic,
+  h,
+  lerp,
+  mountCanvas,
+} from './util';
 
-// Fig. 1 (arbitrage): Magnetic particle separator.
-// 96% grey noise tokens fall into the $1 trough; 4% red/green veto sparks
-// deflect upward into the weight crystal.
+// Fig. 1 (arbitrage): Magnetic Mass Spectrometer.
+// Raw token particles enter from the left; an electromagnetic field separator
+// bends the 4% red/green veto ions upward into a 3D rotating weight tesseract,
+// while 96% grey noise tokens fall into the $1 collector trough.
 export function initArbitrageFigure(fig: HTMLElement): void {
   const stage = h('div', 'fx-figure__stage fxv');
   fig.prepend(stage);
 
   const r = createRandom(101);
-  type P = { x: number; y: number; vx: number; vy: number; veto: boolean; phase: number };
-  const pts: P[] = Array.from({ length: 180 }, () => ({
+  type Ion = {
+    x: number;
+    y0: number;
+    speed: number;
+    veto: boolean;
+    phase: number;
+    trail: [number, number][];
+  };
+
+  const ions: Ion[] = Array.from({ length: 130 }, () => ({
     x: r(),
-    y: 0.42 + (r() - 0.5) * 0.08,
-    vx: 0.18 + r() * 0.14,
-    vy: 0,
-    veto: r() < 0.08,
+    y0: 0.46 + (r() - 0.5) * 0.08,
+    speed: 0.22 + r() * 0.16,
+    veto: r() < 0.12,
     phase: r() * Math.PI * 2,
+    trail: [],
   }));
 
-  let boost = 0;
+  const boostSp = createSpring(0);
   stage.style.cursor = 'pointer';
   stage.addEventListener('click', () => {
-    boost = 1;
+    boostSp.vel += 4.5;
   });
 
   mountCanvas(
     stage,
-    (w) => (w < 540 ? 200 : 230),
-    (ctx, W, H, c, t) => {
+    (w) => (w < 540 ? 215 : 245),
+    (ctx, W, H, c, t, dt, pointer) => {
       ctx.clearRect(0, 0, W, H);
-      boost *= 0.95;
+      drawBlueprint(ctx, W, H, c);
 
-      const splitX = W * 0.44;
-      const crystalX = W * 0.84;
-      const crystalY = H * 0.27;
-      const troughY = H * 0.82;
+      boostSp.target = pointer.inside ? 0.45 : 0;
+      const boost = clamp(boostSp.step(dt, 140, 16), 0, 1.5);
 
-      // Magnetic separator gate
-      ctx.strokeStyle = c.ui;
-      ctx.lineWidth = 1;
-      ctx.setLineDash([3, 4]);
+      const splitX = W * 0.42;
+      const crystalX = W * 0.82;
+      const crystalY = H * 0.28;
+      const troughY = H * 0.81;
+      const beamY = H * 0.46;
+
+      // Magnetic field flux rings around the separator plane
+      ctx.save();
+      for (let k = 0; k < 3; k++) {
+        const rad = 18 + k * 14 + Math.sin(t * 2.5 + k) * 3;
+        ctx.strokeStyle = c.tx3;
+        ctx.globalAlpha = 0.14 - k * 0.03;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.ellipse(splitX, beamY, rad * 0.45, rad * 1.6, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Separator vertical axis
+      ctx.strokeStyle = c.tx3;
+      ctx.globalAlpha = 0.45;
+      ctx.setLineDash([2, 4]);
       ctx.beginPath();
       ctx.moveTo(splitX, 18);
       ctx.lineTo(splitX, H - 18);
       ctx.stroke();
       ctx.setLineDash([]);
-
-      // Guide trajectories
-      ctx.strokeStyle = c.tx3;
-      ctx.globalAlpha = 0.25;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(24, H * 0.44);
-      ctx.bezierCurveTo(splitX, H * 0.44, splitX + 40, troughY, crystalX, troughY);
-      ctx.stroke();
-
-      ctx.strokeStyle = c.green;
-      ctx.globalAlpha = 0.45;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(splitX, H * 0.44);
-      ctx.bezierCurveTo(splitX + 50, H * 0.44, crystalX - 60, crystalY, crystalX, crystalY);
-      ctx.stroke();
       ctx.globalAlpha = 1;
 
-      // Update & draw particles
-      for (const p of pts) {
-        p.x += p.vx * 0.009;
-        if (p.x > 0.92) {
-          p.x = 0.03;
-          p.y = 0.44 + (r() - 0.5) * 0.07;
-          p.veto = r() < (boost > 0.15 ? 0.38 : 0.09);
+      // Update & draw ion streams with velocity ribbon trails
+      for (const p of ions) {
+        const prevX = p.x;
+        p.x += p.speed * dt * (1 + boost * 0.45);
+        if (p.x > 0.9) {
+          p.x = 0.04;
+          p.y0 = 0.46 + (r() - 0.5) * 0.07;
+          p.veto = r() < (0.12 + boost * 0.18);
+          p.trail.length = 0;
         }
+
         const px = p.x * W;
-        let py = p.y * H;
-        if (p.x > 0.44) {
-          const u = Math.min(1, (p.x - 0.44) / 0.4);
-          const ease = u * u * (3 - 2 * u);
-          const targetY = p.veto
-            ? crystalY + Math.sin(t * 3 + p.phase) * 9
-            : troughY + Math.cos(p.phase * 7) * 8;
-          py = py + (targetY - py) * ease;
+        let py = p.y0 * H;
+        if (p.x > 0.4) {
+          const u = clamp((p.x - 0.4) / 0.42);
+          const e = easeInOutCubic(u);
+          const destY = p.veto
+            ? crystalY + Math.sin(t * 3.2 + p.phase) * 7
+            : troughY + Math.cos(p.phase * 5) * 6;
+          py = lerp(py, destY, e);
+        }
+
+        if (p.x > prevX) {
+          p.trail.push([px, py]);
+          if (p.trail.length > (p.veto ? 8 : 4)) p.trail.shift();
         }
 
         if (p.veto && p.x > 0.36) {
-          ctx.fillStyle = p.x > 0.55 ? c.green : c.red;
-          ctx.globalAlpha = 0.95;
-          ctx.fillRect(px - 2.5, py - 2.5, 5, 5);
+          const col = p.x > 0.52 ? c.green : c.red;
+          if (p.trail.length > 1) {
+            ctx.strokeStyle = col;
+            ctx.globalAlpha = 0.45;
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            ctx.moveTo(p.trail[0][0], p.trail[0][1]);
+            for (let i = 1; i < p.trail.length; i++) ctx.lineTo(p.trail[i][0], p.trail[i][1]);
+            ctx.stroke();
+          }
+          drawGlowNode(ctx, px, py, 2.6, col, 0.22, 2.8);
         } else {
           ctx.fillStyle = c.tx3;
-          ctx.globalAlpha = p.x > 0.44 ? 0.35 : 0.55;
+          ctx.globalAlpha = p.x > 0.42 ? 0.28 : 0.52;
           ctx.fillRect(px - 1.5, py - 1.5, 3, 3);
         }
       }
       ctx.globalAlpha = 1;
 
-      // Rotating weight lattice on the top-right
-      const rad = 22 + boost * 8;
+      // 3D Isometric rotating weight octahedron / crystal at (crystalX, crystalY)
+      const rad = 24 + boost * 6;
+      const rot = t * 0.65;
+      const verts: [number, number][] = [
+        [0, -rad],
+        [Math.cos(rot) * rad, 0],
+        [Math.sin(rot) * rad * 0.7, rad * 0.35],
+        [-Math.cos(rot) * rad, 0],
+        [-Math.sin(rot) * rad * 0.7, -rad * 0.35],
+        [0, rad],
+      ];
       ctx.save();
       ctx.translate(crystalX, crystalY);
-      ctx.rotate(t * 0.35);
       ctx.strokeStyle = c.green;
+      ctx.fillStyle = c.green;
+      ctx.globalAlpha = 0.1;
+      ctx.beginPath();
+      ctx.arc(0, 0, rad * 1.25, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.globalAlpha = 0.85;
       ctx.lineWidth = 1.4;
-      ctx.strokeRect(-rad / 1.4, -rad / 1.4, rad * 1.4, rad * 1.4);
-      ctx.rotate(Math.PI / 4);
-      ctx.globalAlpha = 0.5;
-      ctx.strokeRect(-rad / 1.4, -rad / 1.4, rad * 1.4, rad * 1.4);
+      const edges = [
+        [0, 1], [0, 2], [0, 3], [0, 4],
+        [5, 1], [5, 2], [5, 3], [5, 4],
+        [1, 2], [2, 3], [3, 4], [4, 1],
+      ];
+      ctx.beginPath();
+      for (const [i, j] of edges) {
+        ctx.moveTo(verts[i][0], verts[i][1]);
+        ctx.lineTo(verts[j][0], verts[j][1]);
+      }
+      ctx.stroke();
+      drawGlowNode(ctx, 0, 0, 3.5, c.green, 0.35, 3.2);
       ctx.restore();
+
+      // Collector trough bar at bottom right
+      ctx.strokeStyle = c.tx3;
+      ctx.globalAlpha = 0.5;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(crystalX - 42, troughY + 8);
+      ctx.lineTo(crystalX - 42, troughY + 14);
+      ctx.lineTo(crystalX + 42, troughY + 14);
+      ctx.lineTo(crystalX + 42, troughY + 8);
+      ctx.stroke();
       ctx.globalAlpha = 1;
 
-      // Minimalist labels (4 words total on canvas)
-      ctx.font = `500 10px 'Geist Pixel', monospace`;
-      ctx.fillStyle = c.tx2;
-      ctx.textAlign = 'left';
-      ctx.fillText('tokens', 24, H * 0.44 - 14);
-
-      ctx.textAlign = 'center';
-      ctx.fillStyle = c.green;
-      ctx.fillText('weights', crystalX, crystalY + rad + 18);
-
-      ctx.fillStyle = c.tx3;
-      ctx.fillText('$1 noise', crystalX, troughY + 22);
+      drawChip(ctx, 'tokens', 22, beamY - 22, c.tx2, c.bg, c.ui, 'left');
+      drawChip(ctx, 'weights', crystalX, crystalY + rad + 18, c.green, c.bg, c.green, 'center');
+      drawChip(ctx, '$1 noise', crystalX, troughY - 14, c.tx2, c.bg, c.ui, 'center');
     },
   );
 }
 
-// Fig. 2 (bargain): The Exit Door Prism (1985 vs 2026).
+// Fig. 2 (bargain): The Exit Threshold Prism (1985 vs 2026).
 export function initBargainFigure(fig: HTMLElement): void {
   const stage = h('div', 'fx-figure__stage fxv');
   const toggle = h('div', 'fxv-pill');
@@ -137,115 +198,132 @@ export function initBargainFigure(fig: HTMLElement): void {
   stage.append(toggle);
   fig.prepend(stage);
 
-  let mode: '1985' | '2026' = '2026';
-  let anim = 1; // 0 = 1985, 1 = 2026
+  const eraSp = createSpring(1); // 0 = 1985, 1 = 2026
 
   const ctrl = mountCanvas(
     stage,
-    (w) => (w < 540 ? 200 : 225),
-    (ctx, W, H, c, t) => {
-      const target = mode === '2026' ? 1 : 0;
-      anim += (target - anim) * 0.12;
+    (w) => (w < 540 ? 210 : 235),
+    (ctx, W, H, c, t, dt) => {
+      const anim = clamp(eraSp.step(dt, 150, 20), 0, 1);
       ctx.clearRect(0, 0, W, H);
+      drawBlueprint(ctx, W, H, c);
 
       const deskX = W * 0.14;
       const doorX = W * 0.54;
       const vaultX = W * 0.34;
-      const vaultY = H * 0.82;
+      const vaultY = H * 0.8;
       const outX = W * 0.86;
-      const midY = H * 0.44;
+      const midY = H * 0.42;
 
-      // Exit threshold line
-      ctx.strokeStyle = c.tx3;
-      ctx.lineWidth = 1.2;
-      ctx.setLineDash([4, 4]);
+      // Exit threshold gate with architectural ticks
+      ctx.strokeStyle = c.tx2;
+      ctx.globalAlpha = 0.55;
+      ctx.lineWidth = 1.4;
+      ctx.setLineDash([3, 4]);
       ctx.beginPath();
-      ctx.moveTo(doorX, 20);
+      ctx.moveTo(doorX, 26);
       ctx.lineTo(doorX, H - 20);
       ctx.stroke();
       ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
 
       // Code stream (always loops back into employer vault)
       ctx.strokeStyle = c.tx3;
+      ctx.globalAlpha = 0.65;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(deskX, midY - 10);
-      ctx.bezierCurveTo(doorX - 40, midY - 10, doorX - 40, vaultY, vaultX, vaultY);
+      ctx.moveTo(deskX, midY - 8);
+      ctx.bezierCurveTo(doorX - 42, midY - 8, doorX - 42, vaultY, vaultX, vaultY);
       ctx.stroke();
+      ctx.globalAlpha = 1;
 
-      // Judgment / scar-tissue stream: morphs from exiting door (1985) to captured in vault (2026)
-      const endX = outX * (1 - anim) + vaultX * anim;
-      const endY = (midY + 6) * (1 - anim) + vaultY * anim;
-      const cp2X = (doorX + 60) * (1 - anim) + (doorX - 10) * anim;
-      const cp2Y = (midY + 6) * (1 - anim) + vaultY * anim;
+      // Judgment stream: smoothly bends from exiting door (1985) into company vault (2026)
+      const endX = lerp(outX, vaultX, anim);
+      const endY = lerp(midY + 6, vaultY, anim);
+      const cp1X = doorX - 6;
+      const cp1Y = midY + 6;
+      const cp2X = lerp(doorX + 64, doorX - 18, anim);
+      const cp2Y = lerp(midY + 6, vaultY - 8, anim);
 
-      ctx.strokeStyle = anim > 0.5 ? c.red : c.green;
-      ctx.lineWidth = 2.6;
+      const streamCol = anim > 0.5 ? c.red : c.green;
+
+      // Soft glow behind judgment curve
+      ctx.strokeStyle = streamCol;
+      ctx.globalAlpha = 0.18;
+      ctx.lineWidth = 7;
       ctx.beginPath();
       ctx.moveTo(deskX, midY + 6);
-      ctx.bezierCurveTo(doorX - 10, midY + 6, cp2X, cp2Y, endX, endY);
+      ctx.bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, endX, endY);
       ctx.stroke();
 
-      // Animated pulse dots along judgment stream
-      for (let i = 0; i < 7; i++) {
-        const u = ((t * 0.35 + i / 7) % 1);
+      ctx.globalAlpha = 0.95;
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(deskX, midY + 6);
+      ctx.bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, endX, endY);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      // Animated luminous packets along the judgment curve
+      for (let i = 0; i < 8; i++) {
+        const u = (t * 0.34 + i / 8) % 1;
         const inv = 1 - u;
         const x =
           inv * inv * inv * deskX +
-          3 * inv * inv * u * (doorX - 10) +
+          3 * inv * inv * u * cp1X +
           3 * inv * u * u * cp2X +
           u * u * u * endX;
         const y =
           inv * inv * inv * (midY + 6) +
-          3 * inv * inv * u * (midY + 6) +
+          3 * inv * inv * u * cp1Y +
           3 * inv * u * u * cp2Y +
           u * u * u * endY;
-        ctx.fillStyle = anim > 0.5 && u > 0.45 ? c.red : c.green;
-        ctx.beginPath();
-        ctx.arc(x, y, 3, 0, Math.PI * 2);
-        ctx.fill();
+        drawGlowNode(ctx, x, y, 2.8, streamCol, 0.25, 2.6);
       }
 
-      // Desk node
-      ctx.fillStyle = c.tx;
-      ctx.fillRect(deskX - 6, midY - 14, 12, 26);
+      // Origin engineer workstation node
+      drawGlowNode(ctx, deskX, midY, 5.5, c.tx, 0.15, 2.5);
 
-      // Vault box inside company
-      ctx.strokeStyle = anim > 0.5 ? c.red : c.tx3;
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(vaultX - 28, vaultY - 14, 56, 28);
-
-      // Departing engineer node on right of exit door
-      ctx.strokeStyle = anim < 0.5 ? c.green : c.tx3;
-      ctx.fillStyle = anim < 0.5 ? c.green : 'transparent';
-      ctx.lineWidth = 2;
+      // Company vault node
+      ctx.fillStyle = c.bg;
+      ctx.strokeStyle = anim > 0.5 ? c.red : c.tx2;
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
-      ctx.arc(outX, midY + 6, 12, 0, Math.PI * 2);
-      if (anim < 0.5) {
-        ctx.globalAlpha = 0.25 * (1 - anim);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
+      ctx.roundRect(vaultX - 34, vaultY - 13, 68, 26, 4);
+      ctx.fill();
       ctx.stroke();
 
-      // Minimal labels (5 words total on stage including toggle)
-      ctx.font = `500 10px 'Geist Pixel', monospace`;
-      ctx.fillStyle = c.tx3;
-      ctx.textAlign = 'center';
-      ctx.fillText('exit', doorX, 14);
-      ctx.fillText('code', vaultX, vaultY + 4);
+      // Departing engineer halo outside the door
+      ctx.save();
+      ctx.translate(outX, midY + 6);
+      ctx.strokeStyle = anim < 0.5 ? c.green : c.tx3;
+      ctx.lineWidth = 1.8;
+      if (anim > 0.5) ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.arc(0, 0, 15, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+      if (anim < 0.5) {
+        drawGlowNode(ctx, outX, midY + 6, 4.5, c.green, 0.3 * (1 - anim), 3);
+      }
 
-      ctx.fillStyle = anim > 0.5 ? c.red : c.green;
-      ctx.fillText('judgment', (deskX + doorX) * 0.5, midY - 18);
+      drawChip(ctx, 'exit', doorX, 18, c.tx2, c.bg, c.ui, 'center');
+      drawChip(ctx, 'code', vaultX, vaultY, anim > 0.5 ? c.red : c.tx2, c.bg, anim > 0.5 ? c.red : c.ui, 'center');
+      drawChip(ctx, 'judgment', (deskX + doorX) * 0.48, midY - 20, streamCol, c.bg, streamCol, 'center');
     },
   );
 
-  const setMode = (m: '1985' | '2026') => {
-    mode = m;
-    bOld.classList.toggle('is-active', m === '1985');
-    bNew.classList.toggle('is-active', m === '2026');
+  const setEra = (target: 0 | 1) => {
+    eraSp.target = target;
+    bOld.classList.toggle('is-active', target === 0);
+    bNew.classList.toggle('is-active', target === 1);
     ctrl.redraw();
   };
-  bOld.addEventListener('click', () => setMode('1985'));
-  bNew.addEventListener('click', () => setMode('2026'));
+  bOld.addEventListener('click', () => setEra(0));
+  bNew.addEventListener('click', () => setEra(1));
+  stage.style.cursor = 'pointer';
+  stage.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    setEra(eraSp.target > 0.5 ? 0 : 1);
+  });
 }
