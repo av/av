@@ -41,17 +41,29 @@ const prepare: Record<string, Effect> = {
       '<svg viewBox="0 0 60 16" preserveAspectRatio="none"><path class="fx-spark__base" d="M1 12 L8 11.5 L15 12.4 L22 11.2 L29 12 L36 11.6 L41 12.2" /><path class="fx-spark__hot" d="M41 12.2 L46 11 L50 2.5 L54 9 L59 7" /><circle cx="50" cy="2.5" r="1.8" /></svg>',
     );
   },
+
+  type: (el) => {
+    const text = el.textContent ?? '';
+    el.setAttribute('aria-label', text);
+    el.dataset.text = text;
+    el.innerHTML =
+      '<span class="fx-term__sig" aria-hidden="true">&gt;</span>' +
+      `<span class="fx-term__txt">${text}</span>` +
+      '<i class="fx-term__cur" aria-hidden="true"></i>' +
+      '<kbd class="fx-term__send" aria-hidden="true">↵</kbd>';
+  },
 };
 
 // Run when the phrase is seen.
 const play: Record<string, Effect> = {
   type: (el) => {
-    const text = el.textContent ?? '';
-    el.setAttribute('aria-label', text);
+    const text = el.dataset.text ?? '';
+    const txt = el.querySelector<HTMLElement>('.fx-term__txt');
+    if (!txt) return;
     void (async () => {
       for (let i = 0; i <= text.length; i++) {
-        el.textContent = text.slice(0, i);
-        await sleep(46 + Math.random() * 28);
+        txt.textContent = text.slice(0, i);
+        await sleep(38 + Math.random() * 24);
       }
       el.classList.add('is-done');
     })();
