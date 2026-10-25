@@ -1,203 +1,310 @@
-import { h, prefersReduced, sleep, watchVisible } from './util';
+import { cssVar, h, prefersReduced, s, watchVisible } from './util';
 
-// Fig. 1: the opening scene as a diff. The agent's green branch lands first,
-// then the human's five corrections play over it one at a time, and a log on
-// the side keeps the record that the prompt never contained.
+// Fig. 1: Trajectory Divergence (Agent branch vs Your cut).
+// Plots the agent's 6-step autonomous rollout (climbing in green) against
+// the human's 5 interventions right before merge, showing how the 6-word
+// prompt is noise while the correction delta is the training pair.
 
-type Line = { id?: string; sign: ' ' | '+' | '-'; code: string; file?: string };
-
-const PATCH: Line[] = [
-  { sign: ' ', code: 'upload_client.py', file: 'upload_client.py' },
-  { sign: ' ', code: 'def upload(payload):' },
-  { sign: '+', code: '    for attempt in range(5):' },
-  { sign: '+', code: '        r = session.post(URL, json=payload)' },
-  { id: 'retry', sign: '+', code: '        if r.status_code >= 400:' },
-  { id: 'sleep', sign: '+', code: '            time.sleep(2 ** attempt)' },
-  { sign: '+', code: '            continue' },
-  { sign: '+', code: '        return r' },
-  { sign: ' ', code: 'config/prod.yaml', file: 'config/prod.yaml' },
-  { id: 'cfg-old', sign: '-', code: '  timeout: 30' },
-  { id: 'cfg-new', sign: '+', code: '  timeout: 300' },
-  { sign: ' ', code: 'tests/test_upload.py', file: 'tests/test_upload.py' },
-  { id: 'test-old', sign: '-', code: '    assert r.status_code == 422' },
-  { id: 'test-new', sign: '+', code: '    assert r.status_code in (200, 422)' },
-];
-
-type Step = { at: string; icon: string; kind: 'reject' | 'edit' | 'revert' | 'stop'; text: string; run: (f: Fig) => void };
-
-type Fig = {
-  line: (id: string) => HTMLElement;
-  run2: HTMLElement;
+type EventSpec = {
+  id: string;
+  x: number;
+  ay: number;
+  hy: number;
+  kind: 'reject' | 'edit' | 'revert' | 'stop';
+  tag: string;
+  file: string;
+  agent: string;
+  human: string;
+  why: string;
 };
 
-const STEPS: Step[] = [
+const EVENTS: EventSpec[] = [
   {
-    at: '+00:40',
-    icon: '✕',
+    id: 'e1',
+    x: 0.2,
+    ay: 0.28,
+    hy: 0.62,
     kind: 'reject',
-    text: 'reject retry on 4xx',
-    run: (f) => {
-      const el = f.line('retry');
-      el.classList.add('is-rejected');
-      el.querySelector('.fxc-code')!.innerHTML = '        if r.status_code &gt;= <del>400</del><ins>500</ins>:';
-    },
+    tag: '✕ reject',
+    file: 'src/upload_client.py:42',
+    agent: '+ if r.status_code >= 400: continue',
+    human: '+ if r.status_code >= 500: continue',
+    why: 'Retrying HTTP 400 hammers your own auth service on a bad payload.',
   },
   {
-    at: '+03:15',
-    icon: '✎',
+    id: 'e2',
+    x: 0.38,
+    ay: 0.22,
+    hy: 0.66,
     kind: 'edit',
-    text: 'rewrite backoff by hand',
-    run: (f) => {
-      const el = f.line('sleep');
-      el.classList.add('is-edited');
-      el.querySelector('.fxc-code')!.innerHTML = '            time.sleep(<del>2 ** attempt</del><ins>backoff(attempt)</ins>)';
-    },
+    tag: '✎ edit',
+    file: 'src/upload_client.py:44',
+    agent: '+ time.sleep(2 ** attempt)',
+    human: '+ time.sleep(jitter_backoff(attempt, cap=8.0))',
+    why: 'Synchronized exponential sleeps thundering-herd the upstream after a blip.',
   },
   {
-    at: '+05:50',
-    icon: '↺',
+    id: 'e3',
+    x: 0.56,
+    ay: 0.18,
+    hy: 0.72,
     kind: 'revert',
-    text: 'revert drive-by config',
-    run: (f) => {
-      f.line('cfg-old').classList.add('is-restored');
-      f.line('cfg-new').classList.add('is-collapsed');
-    },
+    tag: '↺ revert',
+    file: 'config/prod.yaml:18',
+    agent: '- timeout: 30   + timeout: 300',
+    human: 'git checkout -- config/prod.yaml',
+    why: 'Leftover debugging guess from an abandoned attempt still sitting in the tree.',
   },
   {
-    at: '+07:30',
-    icon: '■',
+    id: 'e4',
+    x: 0.74,
+    ay: 0.15,
+    hy: 0.76,
+    kind: 'revert',
+    tag: '↺ revert',
+    file: 'tests/test_upload.py:89',
+    agent: '- assert r.status_code == 422   + assert r.status_code in (200, 422)',
+    human: 'restore assert r.status_code == 422',
+    why: 'The model loosened the assertion to make a broken run turn green.',
+  },
+  {
+    id: 'e5',
+    x: 0.9,
+    ay: 0.12,
+    hy: 0.8,
     kind: 'stop',
-    text: 'stop run 2 mid-turn',
-    run: (f) => f.run2.classList.add('is-stopped'),
-  },
-  {
-    at: '+09:05',
-    icon: '↺',
-    kind: 'revert',
-    text: 'restore the assertion',
-    run: (f) => {
-      f.line('test-old').classList.add('is-restored');
-      f.line('test-new').classList.add('is-collapsed');
-    },
+    tag: '■ abort',
+    file: 'run #2 · tests/test_auth.py',
+    agent: 'editing tests/test_auth.py to silence auth failure…',
+    human: 'SIGINT mid-turn · worktree discarded',
+    why: 'Stopped sibling run before it could gut a second test file.',
   },
 ];
 
 export function initCutFigure(fig: HTMLElement): void {
   const stage = h('div', 'fx-figure__stage fxc');
-  const prompt = h('div', 'fxc-prompt');
-  const promptText = h('span', 'fxc-prompt__text');
-  prompt.append(h('span', 'fxc-prompt__label', 'prompt'), promptText, h('span', 'fxc-prompt__count', '6 words'));
 
-  const body = h('div', 'fxc-body');
-  const diff = h('div', 'fxc-diff');
-  const lines = new Map<string, HTMLElement>();
-  PATCH.forEach((l, i) => {
-    const row = h('div', l.file ? 'fxc-file' : `fxc-line is-${l.sign === '+' ? 'add' : l.sign === '-' ? 'del' : 'ctx'}`);
-    row.style.setProperty('--i', String(i));
-    if (l.file) {
-      row.textContent = l.file;
-    } else {
-      row.append(h('span', 'fxc-sign', l.sign), h('span', 'fxc-code', l.code));
-    }
-    if (l.id) lines.set(l.id, row);
-    diff.append(row);
-  });
+  const head = h('div', 'fxc-head');
+  head.innerHTML =
+    '<div class="fxc-head__left">' +
+    '<span class="fxc-head__kicker">session trace · 20m + 10m cut</span>' +
+    '<span class="fxc-head__sub">click or hover any intervention node to inspect the training pair</span>' +
+    '</div>' +
+    '<div class="fxc-head__legend">' +
+    '<span class="is-agent"><i></i>agent rollout (tests ✓)</span>' +
+    '<span class="is-human"><i></i>your branch (shipped)</span>' +
+    '<span class="is-delta"><i></i>correction delta (weights)</span>' +
+    '</div>';
 
-  const runs = h('div', 'fxc-runs');
-  const run1 = h('div', 'fxc-run is-done');
-  run1.innerHTML = '<span>run 1 · upload retries</span><b>tests ✓</b><i><u></u></i>';
-  const run2 = h('div', 'fxc-run');
-  run2.innerHTML = '<span>run 2 · editing tests/test_auth.py</span><b></b><i><u></u></i>';
-  runs.append(run1, run2);
+  const canvasWrap = h('div', 'fxc-viz');
+  const svg = s('svg', { class: 'fxc-svg', 'aria-hidden': 'true' });
+  const areaPath = s('path', { class: 'fxc-area' });
+  const agentPath = s('path', { class: 'fxc-curve is-agent' });
+  const humanPath = s('path', { class: 'fxc-curve is-human' });
+  const divider = s('line', { class: 'fxc-divider' });
+  const deltaGroup = s('g', { class: 'fxc-deltas' });
+  const nodeGroup = s('g', { class: 'fxc-nodes' });
+  const labelGroup = s('g', { class: 'fxc-labels' });
+  svg.append(areaPath, divider, deltaGroup, agentPath, humanPath, nodeGroup, labelGroup);
 
-  const side = h('div', 'fxc-side');
-  const logTitle = h('div', 'fxc-side__title', 'your cut');
-  const log = h('ol', 'fxc-log');
-  const meter = h('div', 'fxc-meter');
-  meter.innerHTML =
-    '<div class="fxc-meter__row"><span>prompt</span><i class="is-noise"><u></u></i><b>6 words · noise</b></div>' +
-    '<div class="fxc-meter__row"><span>corrections</span><i class="is-signal"><u></u></i><b>5 decisions · signal</b></div>';
-  side.append(logTitle, log, meter);
+  const pins = h('div', 'fxc-pins');
+  canvasWrap.append(svg, pins);
 
-  const left = h('div', 'fxc-left');
-  left.append(diff, runs);
-  body.append(left, side);
+  const card = h('div', 'fxc-inspector');
+  const cardTag = h('span', 'fxc-inspector__tag');
+  const cardFile = h('code', 'fxc-inspector__file');
+  const cardWhy = h('span', 'fxc-inspector__why');
+  const cardTop = h('div', 'fxc-inspector__top');
+  cardTop.append(cardTag, cardFile, cardWhy);
 
-  const replay = h('button', 'fx-figure__replay', 'Replay');
-  replay.type = 'button';
-  stage.append(prompt, body, replay);
+  const cardDiff = h('div', 'fxc-inspector__diff');
+  const rowAgent = h('div', 'fxc-inspector__row is-agent');
+  const rowHuman = h('div', 'fxc-inspector__row is-human');
+  cardDiff.append(rowAgent, rowHuman);
+
+  const cardSteps = h('div', 'fxc-inspector__steps');
+  card.append(cardTop, cardDiff, cardSteps);
+
+  stage.append(head, canvasWrap, card);
   fig.prepend(stage);
 
-  const f: Fig = { line: (id) => lines.get(id)!, run2 };
-  const promptWords = 'add retries to the upload client';
-  let token = 0;
+  let activeIdx = 0;
+  let autoTimer = 0;
+  let userTouched = false;
+  let visible = false;
+  const pinButtons: HTMLButtonElement[] = [];
+  const stepButtons: HTMLButtonElement[] = [];
+  const deltaLines: SVGLineElement[] = [];
 
-  const reset = () => {
-    stage.classList.remove('is-landed', 'is-done');
-    promptText.textContent = '';
-    log.innerHTML = '';
-    stage.style.setProperty('--n', '0');
-    diff.querySelectorAll<HTMLElement>('.fxc-line').forEach((el) => {
-      el.classList.remove('is-rejected', 'is-edited', 'is-restored', 'is-collapsed');
-      const src = PATCH.find((l) => l.id && lines.get(l.id) === el);
-      if (src) el.querySelector('.fxc-code')!.textContent = src.code;
+  const select = (idx: number) => {
+    activeIdx = idx;
+    const ev = EVENTS[idx];
+    cardTag.className = `fxc-inspector__tag is-${ev.kind}`;
+    cardTag.textContent = ev.tag;
+    cardFile.textContent = ev.file;
+    cardWhy.textContent = ev.why;
+    rowAgent.innerHTML = `<span>agent proposed</span><code>${ev.agent}</code>`;
+    rowHuman.innerHTML = `<span>you shipped</span><code>${ev.human}</code>`;
+    pinButtons.forEach((b, i) => b.classList.toggle('is-active', i === idx));
+    stepButtons.forEach((b, i) => b.classList.toggle('is-active', i === idx));
+    deltaLines.forEach((l, i) => l.classList.toggle('is-active', i === idx));
+  };
+
+  EVENTS.forEach((ev, i) => {
+    const pin = h('button', `fxc-pin is-${ev.kind}`) as HTMLButtonElement;
+    pin.type = 'button';
+    pin.innerHTML = `<span class="fxc-pin__dot"></span><span class="fxc-pin__lbl">${ev.tag}</span>`;
+    pin.addEventListener('click', () => {
+      userTouched = true;
+      select(i);
     });
-    run2.classList.remove('is-stopped');
+    pin.addEventListener('mouseenter', () => {
+      userTouched = true;
+      select(i);
+    });
+    pinButtons.push(pin);
+    pins.append(pin);
+
+    const sb = h('button', `fxc-step-btn is-${ev.kind}`, `${i + 1}. ${ev.tag}`) as HTMLButtonElement;
+    sb.type = 'button';
+    sb.addEventListener('click', () => {
+      userTouched = true;
+      select(i);
+    });
+    stepButtons.push(sb);
+    cardSteps.append(sb);
+
+    const dl = s('line', { class: `fxc-delta is-${ev.kind}` });
+    deltaLines.push(dl);
+    deltaGroup.append(dl);
+  });
+
+  const smoothCurve = (pts: [number, number][]): string => {
+    if (pts.length === 0) return '';
+    let d = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [x0, y0] = pts[i];
+      const [x1, y1] = pts[i + 1];
+      const mx = (x0 + x1) / 2;
+      d += ` C ${mx.toFixed(1)} ${y0.toFixed(1)}, ${mx.toFixed(1)} ${y1.toFixed(1)}, ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+    }
+    return d;
   };
 
-  const addLog = (st: Step) => {
-    const li = h('li', `is-${st.kind}`);
-    li.append(h('span', 'fxc-log__icon', st.icon), h('span', 'fxc-log__text', st.text), h('span', 'fxc-log__at', st.at));
-    log.append(li);
-    stage.style.setProperty('--n', String(log.children.length));
-  };
+  const layout = () => {
+    const W = canvasWrap.clientWidth || 680;
+    const narrow = W < 560;
+    const H = narrow ? 230 : 250;
+    canvasWrap.style.height = `${H}px`;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('width', String(W));
+    svg.setAttribute('height', String(H));
 
-  const finish = () => {
-    promptText.textContent = promptWords;
-    stage.classList.add('is-landed', 'is-done');
-    STEPS.forEach((st) => {
-      st.run(f);
-      addLog(st);
+    const padL = narrow ? 18 : 28;
+    const padR = narrow ? 18 : 28;
+    const padT = 26;
+    const padB = 28;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    const px = (nx: number) => padL + nx * plotW;
+    const py = (ny: number) => padT + ny * plotH;
+
+    const startPt: [number, number] = [px(0.03), py(0.55)];
+    const agentPts: [number, number][] = [startPt, ...EVENTS.map((e): [number, number] => [px(e.x), py(e.ay)]), [px(0.97), py(0.11)]];
+    const humanPts: [number, number][] = [startPt, ...EVENTS.map((e): [number, number] => [px(e.x), py(e.hy)]), [px(0.97), py(0.81)]];
+
+    agentPath.setAttribute('d', smoothCurve(agentPts));
+    humanPath.setAttribute('d', smoothCurve(humanPts));
+
+    // Closed polygon between agent curve and human curve for the shaded correction delta
+    let areaD = smoothCurve(agentPts);
+    for (let i = humanPts.length - 1; i >= 0; i--) {
+      areaD += ` L ${humanPts[i][0].toFixed(1)} ${humanPts[i][1].toFixed(1)}`;
+    }
+    areaD += ' Z';
+    areaPath.setAttribute('d', areaD);
+
+    const divX = px(0.13);
+    divider.setAttribute('x1', String(divX));
+    divider.setAttribute('x2', String(divX));
+    divider.setAttribute('y1', String(padT - 6));
+    divider.setAttribute('y2', String(H - padB + 6));
+
+    nodeGroup.innerHTML = '';
+    labelGroup.innerHTML = '';
+
+    // Prompt origin node
+    const pDot = s('circle', { cx: startPt[0], cy: startPt[1], r: 4, class: 'fxc-origin' });
+    nodeGroup.append(pDot);
+    const pLbl = s('text', { x: startPt[0] + 6, y: startPt[1] - 8, class: 'fxc-svg-lbl' });
+    pLbl.textContent = 'prompt (6w)';
+    labelGroup.append(pLbl);
+
+    // End labels
+    const aEnd = agentPts[agentPts.length - 1];
+    const hEnd = humanPts[humanPts.length - 1];
+    const aLbl = s('text', { x: aEnd[0] - 6, y: aEnd[1] - 8, 'text-anchor': 'end', class: 'fxc-svg-lbl is-agent' });
+    aLbl.textContent = 'unreviewed PR (breaks prod)';
+    const hLbl = s('text', { x: hEnd[0] - 6, y: hEnd[1] - 10, 'text-anchor': 'end', class: 'fxc-svg-lbl is-human' });
+    hLbl.textContent = 'merged diff (your weights)';
+    labelGroup.append(aLbl, hLbl);
+
+    EVENTS.forEach((ev, i) => {
+      const x = px(ev.x);
+      const ay = py(ev.ay);
+      const hy = py(ev.hy);
+
+      const dl = deltaLines[i];
+      dl.setAttribute('x1', String(x));
+      dl.setAttribute('y1', String(ay));
+      dl.setAttribute('x2', String(x));
+      dl.setAttribute('y2', String(hy));
+
+      const aDot = s('circle', { cx: x, cy: ay, r: 3.2, class: 'fxc-a-dot' });
+      nodeGroup.append(aDot);
+
+      const pin = pinButtons[i];
+      pin.style.left = `${x}px`;
+      pin.style.top = `${hy}px`;
     });
   };
 
-  const play = async () => {
-    const my = ++token;
-    reset();
-    for (let i = 0; i <= promptWords.length; i++) {
-      if (my !== token) return;
-      promptText.textContent = promptWords.slice(0, i);
-      await sleep(38);
-    }
-    await sleep(350);
-    stage.classList.add('is-landed');
-    await sleep(1900);
-    for (const st of STEPS) {
-      if (my !== token) return;
-      st.run(f);
-      addLog(st);
-      await sleep(1250);
-    }
-    stage.classList.add('is-done');
+  layout();
+  select(0);
+  new ResizeObserver(() => layout()).observe(stage);
+
+  const startCycle = () => {
+    if (autoTimer || prefersReduced()) return;
+    autoTimer = window.setInterval(() => {
+      if (!userTouched && visible) {
+        select((activeIdx + 1) % EVENTS.length);
+      }
+    }, 2800);
   };
 
-  replay.addEventListener('click', () => void play());
+  const stopCycle = () => {
+    clearInterval(autoTimer);
+    autoTimer = 0;
+  };
 
   if (prefersReduced()) {
-    finish();
+    stage.classList.add('is-on');
     return;
   }
-  let started = false;
+
   watchVisible(
     stage,
     (on) => {
-      if (on && !started) {
-        started = true;
-        void play();
+      visible = on;
+      if (on) {
+        stage.classList.add('is-on');
+        startCycle();
+      } else {
+        stopCycle();
       }
     },
-    0.45,
+    0.3,
   );
-  // Looping bits (cursor, the live run) only animate while on screen.
-  watchVisible(stage, (on) => stage.classList.toggle('is-visible', on), 0);
+  void cssVar;
 }

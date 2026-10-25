@@ -24,7 +24,7 @@ When you sit back down, the tests pass and the branch will take down production 
 
 So you spend ten minutes cutting. You reject the 400 retry, rewrite the backoff math by hand, revert the config file, restore the test assertion, and stop a second run mid-turn when you see it opening `test_auth.py`.
 
-<figure class="fx-figure" data-figure="cut"><figcaption><span class="fx-figure__kicker">Fig. 1</span>The opening scene, replayed. The prompt is six words any engineer would type. The five corrections after it are the part only you could make.</figcaption></figure>
+<figure class="fx-figure" data-figure="cut"><figcaption><span class="fx-figure__kicker">Fig. 1</span>Trajectory divergence across the session. The six-word prompt starts both paths; the shaded correction delta between the agent's green-tests branch and the branch you actually merge is where your weights live.</figcaption></figure>
 
 ## The signal is in the correction
 

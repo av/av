@@ -17,6 +17,18 @@ function append(el: HTMLElement, cls: string, html = ''): HTMLElement {
   return s;
 }
 
+const AGENT_STEPS: [string, number][] = [
+  ['reading src/upload_client.py · 142 lines', 520],
+  ['editing upload_client.py (+6 −0) · retry on status >= 400', 620],
+  ['editing config/prod.yaml (+1 −1) · timeout 30 -> 300', 520],
+  ['pytest tests/test_upload.py · 1 failed (assert 422 == 200)', 640],
+  ['editing tests/test_upload.py (+1 −1) · assert status in (200, 422)', 560],
+  ['pytest · 14 passed in 0.84s', 480],
+];
+
+const FINAL_STATUS =
+  '<b>✓ branch ready</b> · <code>fix/upload-retries</code> · 3 files (+8 −2) · tests passing';
+
 // Built before the phrase is seen, so the reveal does not reflow the line.
 const prepare: Record<string, Effect> = {
   bar: (el) => {
@@ -47,13 +59,56 @@ const prepare: Record<string, Effect> = {
     el.setAttribute('aria-label', text);
     el.dataset.text = text;
     el.innerHTML =
+      '<div class="fx-term__row">' +
       '<span class="fx-term__sig" aria-hidden="true">&gt;</span>' +
       '<span class="fx-term__body" aria-hidden="true">' +
       `<span class="fx-term__txt">${text}</span>` +
       '<i class="fx-term__cur"></i>' +
       '<span class="fx-term__ghost"></span>' +
       '</span>' +
-      '<span class="fx-term__send" aria-hidden="true"><span>send</span><kbd>↵</kbd></span>';
+      '<button type="button" class="fx-term__send" aria-label="Send prompt to agent">' +
+      '<span class="fx-term__send-lbl">send</span><kbd>↵</kbd>' +
+      '</button>' +
+      '</div>' +
+      '<div class="fx-term__status" role="status" aria-live="polite">' +
+      '<i class="fx-term__dot" aria-hidden="true"></i>' +
+      '<span class="fx-term__msg">awaiting send · press <kbd>↵</kbd> or click send</span>' +
+      '</div>';
+
+    const btn = el.querySelector<HTMLButtonElement>('.fx-term__send')!;
+    const msg = el.querySelector<HTMLElement>('.fx-term__msg')!;
+    const lbl = el.querySelector<HTMLElement>('.fx-term__send-lbl')!;
+    const txt = el.querySelector<HTMLElement>('.fx-term__txt')!;
+    const ghost = el.querySelector<HTMLElement>('.fx-term__ghost')!;
+    let runToken = 0;
+
+    const runAgent = async () => {
+      const my = ++runToken;
+      txt.textContent = text;
+      ghost.textContent = '';
+      el.classList.add('is-done', 'is-running');
+      el.classList.remove('is-branch');
+      lbl.textContent = 'running';
+      if (reduced()) {
+        el.classList.remove('is-running');
+        el.classList.add('is-branch');
+        lbl.textContent = 'rerun';
+        msg.innerHTML = FINAL_STATUS;
+        return;
+      }
+      for (const [step, ms] of AGENT_STEPS) {
+        if (my !== runToken) return;
+        msg.textContent = step;
+        await sleep(ms);
+      }
+      if (my !== runToken) return;
+      el.classList.remove('is-running');
+      el.classList.add('is-branch');
+      lbl.textContent = 'rerun';
+      msg.innerHTML = FINAL_STATUS;
+    };
+
+    btn.addEventListener('click', () => void runAgent());
   },
 };
 
@@ -63,14 +118,15 @@ const play: Record<string, Effect> = {
     const text = el.dataset.text ?? '';
     const txt = el.querySelector<HTMLElement>('.fx-term__txt');
     const ghost = el.querySelector<HTMLElement>('.fx-term__ghost');
-    if (!txt || !ghost) return;
+    if (!txt || !ghost || el.classList.contains('is-running') || el.classList.contains('is-branch')) return;
     txt.textContent = '';
     ghost.textContent = text;
     void (async () => {
       for (let i = 0; i <= text.length; i++) {
+        if (el.classList.contains('is-running') || el.classList.contains('is-branch')) return;
         txt.textContent = text.slice(0, i);
         ghost.textContent = text.slice(i);
-        await sleep(38 + Math.random() * 24);
+        await sleep(34 + Math.random() * 20);
       }
       el.classList.add('is-done');
     })();
