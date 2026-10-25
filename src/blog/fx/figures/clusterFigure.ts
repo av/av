@@ -25,7 +25,7 @@ const RULES = [
 const N = 1000;
 const RARE = 0.1;
 
-type Pt = { sx: number; sy: number; tx: number; ty: number; c: number; delay: number; ph: number };
+type Pt = { sx: number; sy: number; tx: number; ty: number; c: number; delay: number };
 
 function gauss(r: () => number): number {
   return Math.sqrt(-2 * Math.log(r() + 1e-9)) * Math.cos(2 * Math.PI * r());
@@ -104,31 +104,35 @@ export function initClusterFigure(fig: HTMLElement): void {
           ty: c.y + gauss(r) * rad * 0.75,
           c: k,
           delay: r() * 0.35,
-          ph: r() * Math.PI * 2,
-        });
+                  });
       }
     });
     while (pts.length < N) {
       const x = pad + r() * (W - pad * 2);
       const y = top - 20 + r() * (H - top);
-      pts.push({ sx: x, sy: y, tx: x, ty: y, c: -1, delay: r() * 0.35, ph: r() * Math.PI * 2 });
+      pts.push({ sx: x, sy: y, tx: x, ty: y, c: -1, delay: r() * 0.35 });
     }
     colors = { tx: cssVar('tx'), tx2: cssVar('tx2'), green: cssVar('green'), bg: cssVar('bg2') };
   };
 
   const ease = (k: number) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
 
-  const draw = (t: number) => {
+  let hudKey = '';
+  const setHud = (main: string, sub: string) => {
+    if (main + sub === hudKey) return;
+    hudKey = main + sub;
+    hudMain.innerHTML = main;
+    hudSub.innerHTML = sub;
+  };
+
+  const draw = () => {
     ctx.clearRect(0, 0, W, H);
     const p = shown;
     const size = narrow ? 2 : 2.4;
-    const wob = prefersReduced() ? 0 : 1;
     for (const q of pts) {
       const k = ease(Math.min(1, Math.max(0, (p - q.delay) / 0.6)));
-      const jx = Math.sin(t * 0.0013 + q.ph) * 1.6 * wob * (1 - k * 0.8);
-      const jy = Math.cos(t * 0.0011 + q.ph * 1.3) * 1.6 * wob * (1 - k * 0.8);
-      const x = q.sx + (q.tx - q.sx) * k + jx;
-      const y = q.sy + (q.ty - q.sy) * k + jy;
+      const x = q.sx + (q.tx - q.sx) * k;
+      const y = q.sy + (q.ty - q.sy) * k;
       if (q.c < 0) {
         const g = Math.min(1, Math.max(0, (p - 0.7) / 0.25));
         ctx.globalAlpha = 0.55 + 0.45 * g;
@@ -155,41 +159,42 @@ export function initClusterFigure(fig: HTMLElement): void {
     ctx.globalAlpha = 1;
 
     if (p < 0.2) {
-      hudMain.textContent = `${N.toLocaleString('en-US')} interventions`;
-      hudSub.textContent = 'every reject, edit, revert and stop, unsorted';
+      setHud(`${N.toLocaleString('en-US')} interventions`, 'every reject, edit, revert and stop, unsorted');
     } else if (p < 0.85) {
-      hudMain.textContent = 'clustering…';
-      hudSub.textContent = `${Math.round(((p - 0.2) / 0.65) * 90)}% explained`;
+      setHud('clustering…', `${Math.round(((p - 0.2) / 0.65) * 9) * 10}% explained`);
     } else {
-      hudMain.innerHTML = '15 vetoes cover 90%';
-      hudSub.innerHTML = '<span class="fxk-green">■</span> the loose 10% is the judgment that does not compile';
+      setHud('15 vetoes cover 90%', '<span class="fxk-green">■</span> the loose 10% is the judgment that does not compile');
     }
   };
 
-  const tick = (t: number) => {
+  // Ease toward the scroll position and only repaint while it is moving.
+  let drawn = -1;
+  const tick = () => {
     raf = requestAnimationFrame(tick);
     const target = scrollProgress(stage, 0.95, 0.15);
-    shown += (target - shown) * 0.08;
-    if (Math.abs(target - shown) < 0.0005) shown = target;
-    draw(t);
+    shown += (target - shown) * 0.12;
+    if (Math.abs(target - shown) < 0.001) shown = target;
+    if (shown === drawn) return;
+    drawn = shown;
+    draw();
   };
 
   build();
   new ResizeObserver(() => {
     if (Math.abs(stage.clientWidth - W) > 1) {
       build();
-      draw(performance.now());
+      draw();
     }
   }).observe(stage);
 
   if (prefersReduced()) {
     shown = 1;
-    draw(0);
+    draw();
     return;
   }
 
   shown = scrollProgress(stage, 0.95, 0.15);
-  draw(0);
+  draw();
   watchVisible(
     stage,
     (on) => {
@@ -202,7 +207,7 @@ export function initClusterFigure(fig: HTMLElement): void {
     },
     0,
   );
-  document.fonts?.ready.then(() => draw(performance.now())).catch(() => {});
+  document.fonts?.ready.then(() => draw()).catch(() => {});
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       cancelAnimationFrame(raf);

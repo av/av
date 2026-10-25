@@ -137,14 +137,17 @@ life; the generator adds that script when the HTML contains `data-fx` or
 `data-figure`.
 
 1. Wrap a phrase in raw HTML: `<span data-fx="del">Your prompts are worthless</span>`.
-   It gets `is-on` when scrolled into view and plays once (a few loop quietly),
-   then rests as readable text. Effect names and their behaviour live in
-   `src/blog/fx/inlineFx.ts` and `src/blog-fx.scss`.
+   It gets `is-on` when scrolled into view, plays once, then rests as readable
+   text. Effect names and their behaviour live in `src/blog/fx/inlineFx.ts` and
+   `src/blog-fx.scss`.
 2. Embed a figure on one line, caption included as the no-JS fallback:
    `<figure class="fx-figure" data-figure="cut"><figcaption>…</figcaption></figure>`.
    Figures are registered in `src/blog/post-fx.ts`; their code is in
    `src/blog/fx/figures/`.
 3. Both honour `prefers-reduced-motion` by jumping to the final state.
+4. Pull quotes: `<aside class="pull-quote"><p>…</p></aside>` before the
+   paragraph it echoes. It hangs in the right margin from 1440px wide and sits
+   inline below that.
 
 ### Animated graph stories
 

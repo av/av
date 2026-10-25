@@ -198,4 +198,6 @@ export function initCutFigure(fig: HTMLElement): void {
     },
     0.45,
   );
+  // Looping bits (cursor, the live run) only animate while on screen.
+  watchVisible(stage, (on) => stage.classList.toggle('is-visible', on), 0);
 }

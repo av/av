@@ -1,45 +1,30 @@
 import { createSeededRandom } from './seededRandom';
 
-// A code minimap that is always being edited: rows of grey token blocks where
-// hunks keep turning red, shrinking away, and coming back green. The canvas is
-// pinned to the viewport. Below the header it only paints the gutters beside
-// the text column; on phones, where there are no gutters, it shrinks to an
-// editor-style change bar on each edge.
+// A code minimap behind the post header that is always being edited: rows of
+// grey token blocks where hunks keep turning red, shrinking away, and coming
+// back green. It covers the header only and pauses once scrolled out of view.
 
 type Metrics = {
   width: number;
   height: number;
   dpr: number;
-  mobile: boolean;
   reduced: boolean;
-  colL: number;
-  colR: number;
-  headerBottom: number;
   pitch: number;
   block: number;
   laneW: number;
-  laneGap: number;
   lanes: number[];
 };
 
-type Hunk = {
-  lane: number;
-  row: number;
-  len: number;
-  t0: number;
-  id: number;
-};
-
+type Hunk = { lane: number; row: number; len: number; t0: number };
 type Palette = { tx: string; red: string; green: string };
 
 const DEL_MS = 1500;
 const ADD_MS = 900;
 const SETTLE_MS = 3200;
 const HUNK_MS = DEL_MS + ADD_MS + SETTLE_MS;
-const PARALLAX = 0.35;
 const FRAME_MS = 1000 / 30;
-const EDGE_PAD = 28;
-const FADE_PX = 56;
+const FADE_PX = 90;
+const NEUTRAL_ALPHA = 0.2;
 
 function hash(a: number, b: number, c: number): number {
   let h = Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b + 0x632be5ab, 0xc2b2ae35) ^ Math.imul(c + 0x27d4eb2f, 0x165667b1);
@@ -51,11 +36,7 @@ function hash(a: number, b: number, c: number): number {
   return (h >>> 0) / 4294967296;
 }
 
-function seedNumber(seed: string): number {
-  return Math.floor(createSeededRandom(seed)() * 2 ** 31);
-}
-
-// Token widths for one line of fake code, laid out from the line's indent.
+// Token widths for one line of fake code, starting with the line's indent.
 function lineTokens(base: number, lane: number, row: number, version: number, maxW: number): number[] {
   const r = (k: number) => hash(base + version * 7919, lane * 131 + k, row);
   if (r(0) < 0.12) return [];
@@ -79,31 +60,22 @@ function readPalette(): Palette {
 }
 
 function measure(box: HTMLElement): Metrics {
-  const width = document.documentElement.clientWidth || window.innerWidth;
-  const height = window.innerHeight;
+  const rect = box.getBoundingClientRect();
+  const width = Math.max(1, Math.round(rect.width));
   const mobile = width < 768;
-  const content = box.querySelector('.blog-content') ?? box.querySelector('.blog-shell');
-  const rect = content?.getBoundingClientRect();
-  const colL = rect ? rect.left : width * 0.2;
-  const colR = rect ? rect.right : width * 0.8;
-  const headerBottom = rect ? rect.top + window.scrollY - 12 : 320;
+  const content = box.querySelector('.blog-content');
+  const height = content ? Math.round(content.getBoundingClientRect().top - rect.top) : 320;
   const laneW = mobile ? 150 : 210;
-  const laneGap = mobile ? 18 : 30;
   const lanes: number[] = [];
-  for (let x = mobile ? 10 : 18; x < width; x += laneW + laneGap) lanes.push(x);
+  for (let x = mobile ? 10 : 18; x < width; x += laneW + (mobile ? 18 : 30)) lanes.push(x);
   return {
     width,
-    height,
+    height: Math.max(1, height),
     dpr: Math.min(mobile ? 1.5 : 2, window.devicePixelRatio || 1),
-    mobile,
     reduced: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    colL,
-    colR,
-    headerBottom,
     pitch: mobile ? 9 : 11,
     block: mobile ? 3 : 4,
     laneW,
-    laneGap,
     lanes,
   };
 }
@@ -113,84 +85,52 @@ export function initDiffCanvas(canvas: HTMLCanvasElement, seed: string): () => v
   const ctx = canvas.getContext('2d');
   if (!box || !ctx) return () => {};
 
-  const base = seedNumber(`${seed}:diff`);
+  const base = Math.floor(createSeededRandom(`${seed}:diff`)() * 2 ** 31);
   const rand = createSeededRandom(`${seed}:hunks`);
   const versions = new Map<string, number>();
   let hunks: Hunk[] = [];
-  let hunkId = 0;
   let m = measure(box);
   let pal = readPalette();
   let now = 0;
   let raf = 0;
   let lastFrame = 0;
-  let alive = true;
-
-  Object.assign(canvas.style, { position: 'fixed', top: '0', left: '0', bottom: 'auto', right: 'auto' });
+  let visible = true;
 
   const size = () => {
     canvas.width = Math.round(m.width * m.dpr);
     canvas.height = Math.round(m.height * m.dpr);
     canvas.style.width = `${m.width}px`;
     canvas.style.height = `${m.height}px`;
+    canvas.style.bottom = 'auto';
   };
   size();
 
-  const rowOffset = () => (m.reduced ? 0 : window.scrollY * PARALLAX);
-  const headerScreenBottom = () => m.headerBottom - window.scrollY;
-
-  // Regions of the viewport the field may paint, as [x0, x1, y0, y1].
-  const regions = (): [number, number, number, number][] => {
-    const hb = Math.max(0, Math.min(m.height, headerScreenBottom()));
-    const out: [number, number, number, number][] = [];
-    if (hb > 0) out.push([0, m.width, 0, hb]);
-    if (m.mobile) {
-      out.push([0, 9, hb, m.height], [m.width - 9, m.width, hb, m.height]);
-    } else {
-      if (m.colL - EDGE_PAD > 0) out.push([0, m.colL - EDGE_PAD, hb, m.height]);
-      if (m.colR + EDGE_PAD < m.width) out.push([m.colR + EDGE_PAD, m.width, hb, m.height]);
-    }
-    return out;
-  };
-
-  const visibleRows = () => {
-    const off = rowOffset();
-    return { first: Math.floor(off / m.pitch), last: Math.ceil((off + m.height) / m.pitch), off };
-  };
+  const rows = () => Math.ceil(m.height / m.pitch);
 
   const spawn = () => {
-    const regs = regions();
-    if (regs.length === 0) return;
-    const [x0, x1, y0, y1] = regs[Math.floor(rand() * regs.length)];
-    if (y1 - y0 < m.pitch * 4) return;
-    const strip = x1 - x0 < 20;
-    const lanes = strip
-      ? [{ i: x0 === 0 ? 0 : 1 }]
-      : m.lanes.map((x, i) => ({ x, i })).filter(({ x }) => x + 40 > x0 && x < x1);
-    if (lanes.length === 0) return;
-    const lane = lanes[Math.floor(rand() * lanes.length)].i;
-    const off = rowOffset();
-    const row = Math.floor((off + y0 + rand() * (y1 - y0 - m.pitch * 3)) / m.pitch);
-    const len = 1 + Math.floor(rand() * (m.mobile ? 3 : 5));
+    const lane = Math.floor(rand() * m.lanes.length);
+    const len = 1 + Math.floor(rand() * 4);
+    const row = Math.floor(rand() * Math.max(1, rows() - len - 4));
     if (hunks.some((h) => h.lane === lane && row < h.row + h.len + 2 && h.row < row + len + 2)) return;
-    hunks.push({ lane, row, len, t0: now, id: hunkId++ });
+    hunks.push({ lane, row, len, t0: now });
   };
 
   const hunkAt = (lane: number, row: number) =>
     hunks.find((h) => h.lane === lane && row >= h.row && row < h.row + h.len);
 
-  const drawField = () => {
-    const { first, last, off } = visibleRows();
-    const neutralA = 0.2;
+  const draw = () => {
+    ctx.setTransform(m.dpr, 0, 0, m.dpr, 0, 0);
+    ctx.clearRect(0, 0, m.width, m.height);
+    const last = rows();
     for (let li = 0; li < m.lanes.length; li++) {
       const lx = m.lanes[li];
-      for (let row = first; row <= last; row++) {
-        const y = row * m.pitch - off;
-        const key = `${li}:${row}`;
-        const version = versions.get(key) ?? 0;
+      for (let row = 0; row <= last; row++) {
+        const y = row * m.pitch;
+        const version = versions.get(`${li}:${row}`) ?? 0;
         const h = hunkAt(li, row);
         let tokens = lineTokens(base, li, row, version, m.laneW);
         let color = pal.tx;
-        let alpha = neutralA;
+        let alpha = NEUTRAL_ALPHA;
         let reveal = 1;
         let band: string | null = null;
         let bandA = 0;
@@ -201,7 +141,7 @@ export function initDiffCanvas(canvas: HTMLCanvasElement, seed: string): () => v
           if (t < DEL_MS) {
             const k = Math.min(1, Math.max(0, (t - stagger) / 420));
             color = pal.red;
-            alpha = neutralA + (0.62 - neutralA) * k;
+            alpha = NEUTRAL_ALPHA + (0.62 - NEUTRAL_ALPHA) * k;
             reveal = 1 - Math.min(1, Math.max(0, (t - 600 - stagger) / 600));
             band = pal.red;
             bandA = 0.1 * k;
@@ -211,7 +151,7 @@ export function initDiffCanvas(canvas: HTMLCanvasElement, seed: string): () => v
             reveal = Math.min(1, Math.max(0, (ta - stagger) / (ADD_MS - 300)));
             const settle = Math.min(1, Math.max(0, (ta - ADD_MS) / SETTLE_MS));
             color = settle < 1 ? pal.green : pal.tx;
-            alpha = 0.66 - (0.66 - neutralA) * settle;
+            alpha = 0.66 - (0.66 - NEUTRAL_ALPHA) * settle;
             band = pal.green;
             bandA = 0.1 * (1 - settle);
           }
@@ -232,121 +172,56 @@ export function initDiffCanvas(canvas: HTMLCanvasElement, seed: string): () => v
         const total = tokens.slice(1).reduce((s, w) => s + w + 4, 0);
         let budget = total * reveal;
         for (let i = 1; i < tokens.length && budget > 0; i++) {
-          const w = Math.min(tokens[i], budget);
-          ctx.fillRect(x, y, w, m.block);
+          ctx.fillRect(x, y, Math.min(tokens[i], budget), m.block);
           budget -= tokens[i] + 4;
           x += tokens[i] + 4;
         }
       }
     }
-  };
 
-  // On phones the gutters only hold a change bar: one tick per row, coloured
-  // by whatever hunk currently covers it.
-  const drawChangeBars = () => {
-    const { first, last, off } = visibleRows();
-    const hb = Math.max(0, headerScreenBottom());
-    for (let row = first; row <= last; row++) {
-      const y = row * m.pitch - off;
-      if (y < hb) continue;
-      for (const [x, li] of [[3, 0], [m.width - 6, 1]] as const) {
-        const h = hunkAt(li, row);
-        if (!h) {
-          if (hash(base, li, row) < 0.55) continue;
-          ctx.globalAlpha = 0.28;
-          ctx.fillStyle = pal.tx;
-        } else {
-          const t = now - h.t0;
-          const settle = t < DEL_MS ? 0 : Math.min(1, (t - DEL_MS - ADD_MS) / SETTLE_MS);
-          ctx.globalAlpha = 0.75 * (1 - Math.max(0, settle));
-          ctx.fillStyle = t < DEL_MS ? pal.red : pal.green;
-        }
-        ctx.fillRect(x, y, 3, m.pitch - 3);
-      }
-    }
-  };
-
-  const fadeEdges = () => {
+    // Fade the field out above the first paragraph.
     ctx.globalCompositeOperation = 'destination-out';
     ctx.globalAlpha = 1;
-    const hb = headerScreenBottom();
-    if (hb > -FADE_PX && hb < m.height + FADE_PX && !m.mobile) {
-      const g = ctx.createLinearGradient(0, hb - FADE_PX * 2, 0, hb);
-      g.addColorStop(0, 'rgba(0,0,0,0)');
-      g.addColorStop(1, 'rgba(0,0,0,1)');
-      ctx.fillStyle = g;
-      ctx.fillRect(m.colL - EDGE_PAD, hb - FADE_PX * 2, m.colR - m.colL + EDGE_PAD * 2, FADE_PX * 2);
-    }
-    if (!m.mobile) {
-      for (const [edge, dir] of [[m.colL - EDGE_PAD, -1], [m.colR + EDGE_PAD, 1]] as const) {
-        const g = ctx.createLinearGradient(edge, 0, edge + dir * FADE_PX, 0);
-        g.addColorStop(0, 'rgba(0,0,0,1)');
-        g.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = g;
-        const x = dir < 0 ? edge - FADE_PX : edge;
-        ctx.fillRect(x, Math.max(0, hb), FADE_PX, m.height);
-      }
-    }
+    const g = ctx.createLinearGradient(0, m.height - FADE_PX, 0, m.height);
+    g.addColorStop(0, 'rgba(0,0,0,0)');
+    g.addColorStop(1, 'rgba(0,0,0,1)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, m.height - FADE_PX, m.width, FADE_PX);
     ctx.globalCompositeOperation = 'source-over';
-  };
-
-  const draw = () => {
-    ctx.setTransform(m.dpr, 0, 0, m.dpr, 0, 0);
-    ctx.clearRect(0, 0, m.width, m.height);
-    ctx.save();
-    ctx.beginPath();
-    const regs = regions();
-    const fieldRegs = m.mobile ? regs.filter(([, , y0]) => y0 === 0) : regs;
-    for (const [x0, x1, y0, y1] of fieldRegs) ctx.rect(x0, y0, x1 - x0, y1 - y0);
-    ctx.clip();
-    if (fieldRegs.length > 0) drawField();
-    ctx.restore();
-    if (m.mobile) drawChangeBars();
-    fadeEdges();
-    ctx.globalAlpha = 1;
   };
 
   const step = () => {
     for (const h of hunks) {
-      if (now - h.t0 >= HUNK_MS) {
-        for (let r = h.row; r < h.row + h.len; r++) {
-          const key = `${h.lane}:${r}`;
-          versions.set(key, (versions.get(key) ?? 0) + 1);
-        }
+      if (now - h.t0 < HUNK_MS) continue;
+      for (let r = h.row; r < h.row + h.len; r++) {
+        const key = `${h.lane}:${r}`;
+        versions.set(key, (versions.get(key) ?? 0) + 1);
       }
     }
     hunks = hunks.filter((h) => now - h.t0 < HUNK_MS);
-    const target = m.mobile ? 4 : 7;
+    const target = Math.max(2, Math.round(m.lanes.length * 1.2));
     if (hunks.length < target && rand() < 0.08) spawn();
   };
 
-  // Seed a still frame with hunks at different stages so the first paint
-  // already looks mid-edit, and reduced-motion users get a static diff.
-  const warm = () => {
-    now = 0;
-    hunks = [];
-    for (let i = 0; i < 400; i++) {
-      now += 50;
-      step();
-    }
-  };
-  warm();
+  // Start mid-edit so the first paint, and the reduced-motion still, already
+  // show hunks at different stages.
+  for (let i = 0; i < 400; i++) {
+    now += 50;
+    step();
+  }
   draw();
 
   const tick = (ts: number) => {
-    if (!alive) return;
     raf = requestAnimationFrame(tick);
     if (ts - lastFrame < FRAME_MS) return;
-    const dt = lastFrame === 0 ? FRAME_MS : Math.min(ts - lastFrame, 100);
+    now += lastFrame === 0 ? FRAME_MS : Math.min(ts - lastFrame, 100);
     lastFrame = ts;
-    now += dt;
     step();
     draw();
   };
 
-  const running = () => raf !== 0;
   const start = () => {
-    if (running() || m.reduced || document.visibilityState === 'hidden') return;
+    if (raf || m.reduced || !visible || document.visibilityState === 'hidden') return;
     lastFrame = 0;
     raf = requestAnimationFrame(tick);
   };
@@ -355,11 +230,10 @@ export function initDiffCanvas(canvas: HTMLCanvasElement, seed: string): () => v
     raf = 0;
   };
 
-  const onScroll = () => {
-    if (!running()) draw();
-  };
-  const onResize = () => {
-    m = measure(box);
+  const refit = () => {
+    const next = measure(box);
+    if (next.width === m.width && next.height === m.height && next.dpr === m.dpr) return;
+    m = next;
     size();
     draw();
   };
@@ -374,27 +248,27 @@ export function initDiffCanvas(canvas: HTMLCanvasElement, seed: string): () => v
     m = { ...m, reduced: moQ.matches };
     if (m.reduced) stop();
     else start();
-    draw();
   };
 
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onResize);
+  const io = new IntersectionObserver((es) => {
+    visible = es.some((e) => e.isIntersecting);
+    if (visible) start();
+    else stop();
+  });
+  io.observe(canvas);
+  window.addEventListener('resize', refit);
   document.addEventListener('visibilitychange', onVis);
   csQ.addEventListener('change', recolor);
   moQ.addEventListener('change', remotion);
-  const ro = new ResizeObserver(onResize);
-  ro.observe(box);
-  document.fonts?.ready.then(onResize).catch(() => {});
+  document.fonts?.ready.then(refit).catch(() => {});
   start();
 
   return () => {
-    alive = false;
     stop();
-    window.removeEventListener('scroll', onScroll);
-    window.removeEventListener('resize', onResize);
+    io.disconnect();
+    window.removeEventListener('resize', refit);
     document.removeEventListener('visibilitychange', onVis);
     csQ.removeEventListener('change', recolor);
     moQ.removeEventListener('change', remotion);
-    ro.disconnect();
   };
 }

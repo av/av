@@ -6,11 +6,12 @@ import { cssVar, h, prefersReduced, s, watchVisible } from './util';
 
 type Kind = 'accept' | 'reject' | 'edit' | 'revert' | 'stop';
 type Sink = 'vendor' | 'employer' | 'harness';
-type Particle = { el: SVGRectElement; path: SVGPathElement; len: number; t0: number; sink: Sink; kind: Kind };
+type Particle = { el: SVGRectElement; route: Float32Array; t0: number; sink: Sink; kind: Kind };
 
 const KINDS: [Kind, number][] = [['accept', 0.34], ['reject', 0.22], ['edit', 0.2], ['revert', 0.14], ['stop', 0.1]];
 const TRAVEL_MS = 1700;
 const EMIT_MS = 300;
+const SAMPLES = 120;
 
 function pickKind(r: number): Kind {
   let acc = 0;
@@ -78,6 +79,8 @@ export function initFlowFigure(fig: HTMLElement): void {
     return seed / 2147483647;
   };
   let colors = { red: '', green: '', tx: '' };
+  // Each pipe sampled once per layout, so particles never query the path.
+  const routes = {} as Record<Sink, Float32Array>;
 
   const setCount = (sink: Sink) => {
     const el = { vendor, employer, harness }[sink].querySelector('b')!;
@@ -120,6 +123,14 @@ export function initFlowFigure(fig: HTMLElement): void {
       const y1 = ys[i];
       const mx = (x0 + sx) / 2;
       paths[k].setAttribute('d', `M ${x0} ${yMid} C ${mx} ${yMid}, ${mx} ${y1}, ${sx} ${y1}`);
+      const len = paths[k].getTotalLength();
+      const pts = new Float32Array((SAMPLES + 1) * 2);
+      for (let i = 0; i <= SAMPLES; i++) {
+        const pt = paths[k].getPointAtLength((len * i) / SAMPLES);
+        pts[i * 2] = pt.x;
+        pts[i * 2 + 1] = pt.y;
+      }
+      routes[k] = pts;
     });
   };
 
@@ -129,10 +140,9 @@ export function initFlowFigure(fig: HTMLElement): void {
     const sinks: Sink[] = local ? ['vendor', 'employer', 'harness'] : ['vendor', 'employer'];
     const color = kind === 'accept' ? colors.tx : kind === 'edit' ? colors.green : colors.red;
     sinks.forEach((sink, i) => {
-      const path = paths[sink];
-      const el = s('rect', { width: 6, height: 6, x: -3, y: -3, fill: color, class: `fxf-dot is-${kind}` });
+      const el = s('rect', { width: 6, height: 6, x: -3, y: -3, fill: color, opacity: 0 });
       dots.append(el);
-      particles.push({ el, path, len: path.getTotalLength(), t0: now + i * 40, sink, kind });
+      particles.push({ el, route: routes[sink], t0: now + i * 40, sink, kind });
     });
     if (emitted % 3 === 0) {
       const tag = h('span', `fxf-tag is-${kind}`, kind);
@@ -156,26 +166,26 @@ export function initFlowFigure(fig: HTMLElement): void {
     setCount(p.sink);
   };
 
+  let lastFrame = 0;
   const tick = (now: number) => {
     raf = requestAnimationFrame(tick);
+    if (now - lastFrame < 32) return;
+    lastFrame = now;
     if (now - lastEmit > EMIT_MS) {
       lastEmit = now;
       emit(now);
     }
     particles = particles.filter((p) => {
       const k = (now - p.t0) / TRAVEL_MS;
-      if (k < 0) {
-        p.el.setAttribute('opacity', '0');
-        return true;
-      }
+      if (k < 0) return true;
       if (k >= 1) {
         arrive(p);
         p.el.remove();
         return false;
       }
       const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
-      const pt = p.path.getPointAtLength(e * p.len);
-      p.el.setAttribute('transform', `translate(${pt.x.toFixed(1)} ${pt.y.toFixed(1)})`);
+      const i = Math.round(e * SAMPLES) * 2;
+      p.el.setAttribute('transform', `translate(${p.route[i].toFixed(1)} ${p.route[i + 1].toFixed(1)})`);
       p.el.setAttribute('opacity', String(Math.min(1, k * 6, (1 - k) * 8)));
       return true;
     });

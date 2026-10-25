@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // Inline text effects (src/blog/fx/inlineFx.ts). A phrase marked
-// <span data-fx="name"> plays when it gets `is-on` and then rests in a state
-// that still reads as plain text. Red and green are the diff colours.
+// <span data-fx="name"> plays once when it gets `is-on` and then rests in a
+// state that still reads as plain text. Red and green are the diff colours.
 // ---------------------------------------------------------------------------
 @import "./vars.scss";
 
@@ -18,67 +18,24 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
   box-decoration-break: clone;
 }
 
-.fx-ch,
-.fx-word {
-  display: inline-block;
-  white-space: pre;
-}
-
-.fx-chword {
-  white-space: nowrap;
-}
-
-// Diff markers ---------------------------------------------------------------
-[data-fx='del'],
-[data-fx='add'] {
-  &::before {
-    display: inline-block;
-    width: 0;
-    margin-right: 0;
-    overflow: hidden;
-    font-family: $fx-pixel;
-    font-size: 0.8em;
-    vertical-align: 0.05em;
-    opacity: 0;
-    transition: width 0.4s $fx-ease, margin 0.4s $fx-ease, opacity 0.4s;
-  }
-
-  &.is-on::before {
-    width: 0.7em;
-    margin-right: 0.12em;
-    opacity: 1;
-  }
-}
-
+// Removed and added lines ---------------------------------------------------------
 [data-fx='del'] {
   background:
-    linear-gradient(var(--fx-red), var(--fx-red)) no-repeat 0 58% / 0% 0.09em,
+    linear-gradient(var(--fx-red), var(--fx-red)) no-repeat 0 58% / 0% 0.08em,
     linear-gradient(tint(var(--fx-red), 9%), tint(var(--fx-red), 9%)) no-repeat 0 0 / 0% 100%;
-  transition: background-size 1s $fx-ease, color 1s;
-
-  &::before {
-    content: '−';
-    color: var(--fx-red);
-  }
+  transition: background-size 0.9s $fx-ease, color 0.9s;
 
   &.is-on {
-    background-size: 100% 0.09em, 100% 100%;
+    background-size: 100% 0.08em, 100% 100%;
     color: var(--fx-tx2);
   }
 }
 
 [data-fx='add'] {
-  background: linear-gradient(tint(var(--fx-green), 20%), tint(var(--fx-green), 20%)) no-repeat 0 0 / 0% 100%;
-  transition: background-size 1.1s $fx-ease 0.15s;
+  background: linear-gradient(tint(var(--fx-green), 18%), tint(var(--fx-green), 18%)) no-repeat 0 0 / 0% 100%;
+  transition: background-size 1s $fx-ease 0.15s;
 
-  &::before {
-    content: '+';
-    color: var(--fx-green);
-  }
-
-  &.is-on {
-    background-size: 100% 100%;
-  }
+  &.is-on { background-size: 100% 100%; }
 }
 
 // Terminal prompt being typed -----------------------------------------------
@@ -94,7 +51,6 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
     color: var(--fx-tx3);
   }
 
-  &.is-typing::after,
   &.is-on:not(.is-done)::after {
     content: '';
     display: inline-block;
@@ -111,188 +67,8 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
   50% { opacity: 0; }
 }
 
-// Alarm: a wavy red underline that keeps a slow pulse ------------------------
-[data-fx='alarm'] {
-  text-decoration: underline wavy transparent;
-  text-decoration-thickness: 0.07em;
-  text-underline-offset: 0.22em;
-  transition: text-decoration-color 0.6s, color 0.6s;
-
-  &.is-on {
-    color: color-mix(in srgb, var(--fx-red) 55%, var(--fx-tx));
-    text-decoration-color: var(--fx-red);
-    animation: fx-alarm 2.4s ease-in-out infinite 0.6s;
-  }
-}
-
-@keyframes fx-alarm {
-  50% { text-decoration-color: tint(var(--fx-red), 25%); }
-}
-
-// Agent rewrote it / you edited it ------------------------------------------
-[data-fx='edit'],
-[data-fx='rewrite'] {
-  font-variant-ligatures: none;
-  background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0% 0.08em;
-  transition: background-size 0.7s $fx-ease 0.8s;
-
-  &.is-on {
-    background-size: 100% 0.08em;
-  }
-}
-
-[data-fx='edit'].is-on { color: var(--fx-green); }
-[data-fx='rewrite'] {
-  text-decoration: underline dotted transparent;
-  text-underline-offset: 0.2em;
-  background: none;
-  transition: text-decoration-color 0.6s 0.9s;
-
-  &.is-on {
-    text-decoration-color: var(--fx-red);
-  }
-}
-
-// Reject: struck in red with a mark ------------------------------------------
-[data-fx='reject'] {
-  background: linear-gradient(var(--fx-red), var(--fx-red)) no-repeat 0 58% / 0% 0.09em;
-  transition: background-size 0.5s $fx-ease, color 0.5s;
-
-  &.is-on {
-    color: var(--fx-red);
-    background-size: 100% 0.09em;
-  }
-}
-
-.fx-x {
-  display: inline-block;
-  margin-left: 0.1em;
-  font-size: 0.6em;
-  vertical-align: 0.7em;
-  color: var(--fx-red);
-  transform: scale(0);
-  transition: transform 0.35s cubic-bezier(0.3, 1.8, 0.5, 1) 0.4s;
-
-  .is-on > & { transform: scale(1); }
-}
-
-// Revert: the letters undo themselves ---------------------------------------
-[data-fx='revert'] {
-  font-variant-ligatures: none;
-
-  &.is-on::after {
-    content: '↺';
-    display: inline-block;
-    margin-left: 0.12em;
-    font-size: 0.75em;
-    color: var(--fx-tx2);
-    animation: fx-unspin 1.4s $fx-ease both;
-  }
-}
-
-@keyframes fx-unspin {
-  from { transform: rotate(360deg); opacity: 0; }
-  to { transform: rotate(0); opacity: 1; }
-}
-
-// Stop mid-run: typing halts on a red block -----------------------------------
-[data-fx='stop'] {
-  &.is-typing::after,
-  &.is-halted::after {
-    content: '';
-    display: inline-block;
-    width: 0.48em;
-    height: 0.48em;
-    margin-left: 0.12em;
-    vertical-align: 0.05em;
-    background: var(--fx-tx);
-  }
-
-  &.is-halted::after {
-    order: 2;
-    background: var(--fx-red);
-    animation: fx-halt 0.4s cubic-bezier(0.3, 1.8, 0.5, 1);
-  }
-}
-
-.fx-stop-rest {
-  color: var(--fx-tx3);
-}
-
-@keyframes fx-halt {
-  from { transform: scale(2.2); }
-}
-
-// Amnesia: letters fade out, come back as a ghost ------------------------------
-[data-fx='forget'] .fx-ch {
-  transition: opacity 0.5s, filter 0.5s;
-}
-
-[data-fx='forget'].is-on .fx-ch {
-  animation: fx-forget 2.6s ease-in-out both;
-  animation-delay: calc(var(--i) * 45ms);
-}
-
-@keyframes fx-forget {
-  0% { opacity: 1; filter: blur(0); }
-  40% { opacity: 0.05; filter: blur(4px); }
-  70% { opacity: 0.05; filter: blur(4px); }
-  100% { opacity: 0.5; filter: blur(0.3px); }
-}
-
-// Retry loop: a spinner and a marching underline -----------------------------
-[data-fx='loop'] {
-  background: repeating-linear-gradient(90deg, var(--fx-tx2) 0 0.25em, transparent 0.25em 0.5em) no-repeat 0 100% / 0% 0.07em;
-  transition: background-size 0.8s $fx-ease;
-
-  &.is-on {
-    background-size: 100% 0.07em;
-    animation: fx-march 1.2s linear infinite;
-  }
-
-  &.is-on::after {
-    content: '↻';
-    display: inline-block;
-    margin-left: 0.15em;
-    font-size: 0.8em;
-    color: var(--fx-tx2);
-    animation: fx-spin 2.2s linear infinite;
-  }
-}
-
-@keyframes fx-march {
-  to { background-position: 0.5em 100%; }
-}
-
-@keyframes fx-spin {
-  to { transform: rotate(360deg); }
-}
-
-// The vendor keeps the tape: recording light ----------------------------------
-[data-fx='rec'] {
-  &::before {
-    content: '';
-    display: inline-block;
-    width: 0.42em;
-    height: 0.42em;
-    margin-right: 0.3em;
-    border-radius: 50%;
-    vertical-align: 0.1em;
-    background: var(--fx-red);
-    opacity: 0;
-    transform: scale(0);
-    transition: transform 0.4s cubic-bezier(0.3, 1.8, 0.5, 1), opacity 0.3s;
-  }
-
-  &.is-on::before {
-    opacity: 1;
-    transform: scale(1);
-    animation: fx-rec 1.6s steps(1) infinite 0.5s;
-  }
-}
-
-@keyframes fx-rec {
-  50% { opacity: 0.15; }
+@keyframes fx-pop {
+  from { transform: scale(0.5); opacity: 0; }
 }
 
 // Numbers --------------------------------------------------------------------
@@ -303,23 +79,14 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
 
 [data-fx='pos'],
 [data-fx='neg'] {
-  display: inline-block;
   padding: 0 0.3em;
   border-radius: 0.25em;
   font-family: $fx-mono;
   font-size: 0.88em;
-  line-height: 1.45;
-
-  &.is-on { animation: fx-pop 0.5s cubic-bezier(0.3, 1.8, 0.5, 1) both; }
 }
 
 [data-fx='pos'] { color: var(--fx-green); background: tint(var(--fx-green), 15%); }
 [data-fx='neg'] { color: var(--fx-red); background: tint(var(--fx-red), 13%); }
-
-@keyframes fx-pop {
-  0% { transform: scale(0.5); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
 
 [data-fx='bar'] {
   font-weight: 600;
@@ -345,183 +112,21 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
   }
 
   .fx-bar__old { width: var(--from); background: var(--fx-tx3); }
-  .fx-bar__new { width: var(--from); background: var(--fx-tx2); transition: width 1.4s $fx-ease 0.3s; }
+  .fx-bar__new {
+    width: 100%;
+    background: var(--fx-tx2);
+    transform: scaleX(var(--from-k));
+    transform-origin: left;
+    transition: transform 1.4s $fx-ease 0.3s;
+  }
 
   &.is-down .fx-bar__old { background: var(--fx-red); }
   &.is-up .fx-bar__new { background: var(--fx-green); }
   &.is-up .fx-bar__old { z-index: 1; background: var(--fx-tx2); }
 
-  .is-on > & .fx-bar__new { width: var(--to); }
+  .is-on > & .fx-bar__new { transform: scaleX(var(--to-k)); }
 }
 
-// Escape key gets pressed ------------------------------------------------------
-[data-fx='key'] {
-  display: inline-block;
-  padding: 0 0.35em;
-  border: 1px solid var(--fx-border);
-  border-bottom-width: 3px;
-  border-radius: 0.28em;
-  background: var(--fx-bg);
-  font-family: $fx-mono;
-  font-size: 0.82em;
-  line-height: 1.5;
-
-  &.is-on { animation: fx-press 1.3s ease-out both; }
-}
-
-@keyframes fx-press {
-  0%, 30%, 60%, 100% { transform: none; border-bottom-width: 3px; }
-  15%, 45% { transform: translateY(2px); border-bottom-width: 1px; background: tint(var(--fx-red), 18%); }
-  75% { background: tint(var(--fx-red), 10%); }
-}
-
-// A free gradient step leaves the page ---------------------------------------
-[data-fx='gift'] {
-  transition: color 1s 1.6s;
-
-  &.is-on {
-    color: var(--fx-tx2);
-    animation: fx-gift 2.4s ease-out both;
-  }
-}
-
-@keyframes fx-gift {
-  0% { text-shadow: 0 0 0 tint(var(--fx-green), 60%); }
-  33% { text-shadow: 1.4em -0.3em 0 transparent; }
-  34% { text-shadow: 0 0 0 tint(var(--fx-green), 60%); }
-  66% { text-shadow: 1.4em -0.3em 0 transparent; }
-  67% { text-shadow: 0 0 0 tint(var(--fx-green), 60%); }
-  100% { text-shadow: 1.4em -0.3em 0 transparent; }
-}
-
-// Pointer that travels the phrase and clicks -------------------------------------
-[data-fx='cursor'].is-on {
-  text-decoration: underline dotted var(--fx-tx3);
-}
-
-.fx-pointer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 10001;
-  pointer-events: none;
-  transition: opacity 0.4s;
-
-  svg {
-    display: block;
-    fill: var(--fx-tx);
-    stroke: var(--fx-bg);
-    stroke-width: 1;
-  }
-
-  &.is-gone { opacity: 0; }
-}
-
-.fx-click {
-  position: absolute;
-  top: -9px;
-  left: -9px;
-  z-index: 10001;
-  width: 18px;
-  height: 18px;
-  margin: 0;
-  border: 1.5px solid var(--fx-red);
-  border-radius: 50%;
-  pointer-events: none;
-  animation: fx-ring 0.7s ease-out forwards;
-}
-
-@keyframes fx-ring {
-  from { scale: 0.2; opacity: 1; }
-  to { scale: 1.6; opacity: 0; }
-}
-
-// tool_decision flips between accept and reject -----------------------------------
-.fx-chip {
-  display: inline-block;
-  margin-left: 0.3em;
-  padding: 0 0.35em;
-  border-radius: 0.2em;
-  font-family: $fx-pixel;
-  font-size: 0.7em;
-  line-height: 1.6;
-  vertical-align: 0.1em;
-  transition: transform 0.18s ease-in, opacity 0.18s;
-
-  &.is-accept { color: var(--fx-green); background: tint(var(--fx-green), 15%); }
-  &.is-reject { color: var(--fx-red); background: tint(var(--fx-red), 13%); }
-  &.is-flip { transform: rotateX(90deg); opacity: 0.3; }
-}
-
-// Lock the collector -----------------------------------------------------------
-.fx-lock {
-  display: inline-block;
-  margin-right: 0.25em;
-  vertical-align: -0.05em;
-
-  svg {
-    display: block;
-    width: 0.7em;
-    height: 0.82em;
-    overflow: visible;
-    fill: none;
-    stroke: var(--fx-tx);
-    stroke-width: 1.4;
-  }
-
-  rect { fill: var(--fx-tx); }
-
-  .fx-lock__shackle {
-    transform: translateY(-2.5px);
-    transition: transform 0.35s cubic-bezier(0.5, -0.5, 0.4, 1.6) 0.3s;
-  }
-
-  .is-on > & .fx-lock__shackle { transform: none; }
-}
-
-[data-fx='lock'] {
-  transition: background-size 0.8s $fx-ease 0.5s;
-  background: linear-gradient(var(--fx-tx), var(--fx-tx)) no-repeat 0 100% / 0% 0.08em;
-
-  &.is-on { background-size: 100% 0.08em; }
-}
-
-// A copy of you -------------------------------------------------------------
-[data-fx='clone'] {
-  transition: text-shadow 1.4s $fx-ease;
-
-  &.is-on {
-    text-shadow: 0.09em 0.07em 0 tint(var(--fx-tx3), 55%);
-  }
-}
-
-// Replaceable: the phrase keeps getting swapped for a copy -------------------
-[data-fx='swap'] {
-  display: inline-block;
-  height: 1.7em;
-  overflow: hidden;
-  vertical-align: bottom;
-}
-
-.fx-swap__inner {
-  display: flex;
-  flex-direction: column;
-
-  .is-on > & { animation: fx-swap 5s $fx-ease infinite 0.4s; }
-}
-
-.fx-swap__next {
-  color: var(--fx-tx2);
-  font-style: italic;
-}
-
-@keyframes fx-swap {
-  0%, 35% { transform: none; }
-  45%, 85% { transform: translateY(-50%); }
-  95%, 100% { transform: none; }
-}
-
-// Zero weights / ninety percent meters -------------------------------------------
 .fx-meter {
   position: relative;
   display: inline-block;
@@ -537,229 +142,14 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
   i {
     position: absolute;
     inset: 0 auto 0 0;
+    width: 100%;
     background: var(--fx-green);
-    transition: width 1.8s $fx-ease 0.3s, background 1.8s 0.3s;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 1.8s $fx-ease 0.3s;
   }
 
-  &.is-drain i { width: 100%; }
-  &.is-fill i { width: 0; }
-  .is-on > &.is-drain i { width: 0; background: var(--fx-red); }
-  .is-on > &.is-fill i { width: var(--to); }
-}
-
-[data-fx='drain'] {
-  transition: color 1.6s 0.5s;
-
-  &.is-on { color: var(--fx-tx2); }
-}
-
-// The gap widens -----------------------------------------------------------------
-[data-fx='gap'] {
-  background: repeating-linear-gradient(90deg, var(--fx-red) 0 0.2em, transparent 0.2em 0.36em) no-repeat 50% 58% / 0% 0.06em;
-  transition: letter-spacing 1.2s $fx-ease, background-size 1.2s $fx-ease, padding 1.2s $fx-ease;
-
-  &.is-on {
-    letter-spacing: 0.55em;
-    background-size: 100% 0.06em;
-  }
-}
-
-// Personal harness: corner brackets -------------------------------------------
-[data-fx='harness'] {
-  position: relative;
-  padding: 0 0.15em;
-
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    width: 0.45em;
-    height: 0.45em;
-    border: 0 solid var(--fx-green);
-    opacity: 0;
-    transition: all 0.6s $fx-ease;
-  }
-
-  &::before { top: -0.05em; left: -0.4em; border-top-width: 2px; border-left-width: 2px; }
-  &::after { bottom: -0.05em; right: -0.4em; border-bottom-width: 2px; border-right-width: 2px; }
-
-  &.is-on::before { left: -0.05em; opacity: 1; }
-  &.is-on::after { right: -0.05em; opacity: 1; }
-}
-
-// Blocked before merge ------------------------------------------------------------
-[data-fx='block'] {
-  background: linear-gradient(var(--fx-red), var(--fx-red)) no-repeat 0 100% / 0% 0.1em;
-  transition: background-size 0.6s $fx-ease 0.3s;
-
-  &::before {
-    content: '';
-    display: inline-block;
-    width: 0.5em;
-    height: 0.5em;
-    margin-right: 0.3em;
-    vertical-align: 0.05em;
-    background: var(--fx-red);
-    transform: scale(0);
-  }
-
-  &.is-on { background-size: 100% 0.1em; }
-  &.is-on::before { animation: fx-slam 0.45s cubic-bezier(0.3, 1.8, 0.5, 1) both; }
-}
-
-@keyframes fx-slam {
-  from { transform: scale(2.4) rotate(45deg); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-// Bruised ego ---------------------------------------------------------------------
-[data-fx='bruise'] {
-  background: radial-gradient(closest-side, tint(var(--fx-red), 22%), transparent) no-repeat 50% 50% / 0% 0%;
-  transition: background-size 1.2s $fx-ease;
-
-  &.is-on {
-    background-size: 120% 240%;
-    animation: fx-throb 0.25s ease-in-out 3 alternate;
-  }
-}
-
-@keyframes fx-throb {
-  to { background-size: 135% 280%; }
-}
-
-// Fifteen heuristics firing ---------------------------------------------------------
-.fx-dots {
-  display: inline-grid;
-  grid-template-columns: repeat(5, 0.26em);
-  grid-auto-rows: 0.26em;
-  gap: 0.07em;
-  margin-left: 0.3em;
-  vertical-align: 0.02em;
-
-  i {
-    background: var(--fx-ui);
-    transition: background 0.3s, transform 0.3s;
-  }
-
-  .is-on > & i {
-    background: var(--fx-tx3);
-    animation: fx-light 0.3s both;
-    animation-delay: calc(var(--i) * 70ms);
-  }
-
-  .is-on > & i.is-fire {
-    background: var(--fx-green);
-    transform: scale(1.25);
-  }
-}
-
-@keyframes fx-light {
-  from { background: var(--fx-ui); }
-  50% { background: var(--fx-green); }
-}
-
-// tracequest replays ------------------------------------------------------------
-[data-fx='replay'] {
-  position: relative;
-  white-space: nowrap;
-}
-
-.fx-play {
-  display: inline-block;
-  width: 0;
-  height: 0;
-  margin-right: 0.25em;
-  border-style: solid;
-  border-width: 0.3em 0 0.3em 0.48em;
-  border-color: transparent transparent transparent var(--fx-green);
-  vertical-align: 0.02em;
-}
-
-.fx-scrub {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -0.1em;
-  height: 0.08em;
-  background: var(--fx-ui);
-
-  i {
-    display: block;
-    width: 0;
-    height: 100%;
-    background: var(--fx-green);
-  }
-
-  .is-on > & i { animation: fx-scrub 3.2s linear infinite; }
-}
-
-@keyframes fx-scrub {
-  to { width: 100%; }
-}
-
-// Compiled out of your head: prose turns into pixel code ---------------------------
-[data-fx='compile'] .fx-ch.is-compiled {
-  font-family: $fx-pixel;
-  color: var(--fx-green);
-  animation: fx-pop 0.25s both;
-}
-
-// The rare part shimmers ------------------------------------------------------
-[data-fx='rare'].is-on {
-  background: linear-gradient(100deg, var(--fx-tx) 40%, var(--fx-green) 50%, var(--fx-tx) 60%) 0 0 / 300% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: fx-shimmer 5s ease-in-out infinite;
-}
-
-@keyframes fx-shimmer {
-  0% { background-position: 100% 0; }
-  40%, 100% { background-position: 0 0; }
-}
-
-// Mirror: the words flip -------------------------------------------------------
-[data-fx='mirror'].is-on .fx-word {
-  animation: fx-mirror 1.1s $fx-ease both;
-  animation-delay: calc(var(--i) * 90ms);
-}
-
-@keyframes fx-mirror {
-  0% { transform: scaleX(1); }
-  45% { transform: scaleX(-1); color: var(--fx-tx2); }
-  100% { transform: scaleX(1); }
-}
-
-// Cognitive drift: letters wander off their baseline ----------------------------
-[data-fx='drift'].is-on .fx-ch {
-  animation: fx-drift 5s ease-in-out infinite;
-  animation-delay: calc(var(--i) * -370ms);
-}
-
-@keyframes fx-drift {
-  0%, 100% { transform: translate(0, 0) rotate(0); }
-  25% { transform: translate(0.03em, -0.05em) rotate(-2deg); }
-  50% { transform: translate(-0.02em, 0.06em) rotate(1.5deg); }
-  75% { transform: translate(0.02em, 0.02em) rotate(-1deg); }
-}
-
-[data-fx='drop'] {
-  display: inline-block;
-  transition: transform 0.9s cubic-bezier(0.4, 1.7, 0.6, 1), color 0.9s;
-
-  &.is-on {
-    transform: translateY(0.3em) rotate(4deg);
-    color: var(--fx-tx2);
-  }
-}
-
-[data-fx='blur'].is-on {
-  animation: fx-vague 3.5s ease-in-out infinite;
-}
-
-@keyframes fx-vague {
-  0%, 100% { filter: blur(0.4px); opacity: 0.85; }
-  50% { filter: blur(1.8px); opacity: 0.6; }
+  .is-on > & i { transform: scaleX(var(--to-k)); }
 }
 
 // Revert rate spikes --------------------------------------------------------------
@@ -796,99 +186,6 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
   .is-on > & circle { transition: opacity 0.2s 1.6s; opacity: 1; }
 }
 
-// Entropy ladder: the letters climb ---------------------------------------------------
-[data-fx='ladder'] .fx-ch {
-  transition: transform 0.5s $fx-ease, color 0.5s;
-  transition-delay: calc(var(--i) * 60ms);
-}
-
-[data-fx='ladder'].is-on .fx-ch {
-  transform: translateY(calc(var(--i) * -0.035em));
-}
-
-[data-fx='ladder'].is-on .fx-chword:last-child .fx-ch:last-child {
-  color: var(--fx-green);
-}
-
-// Boundary: marching dashed box ---------------------------------------------------------
-[data-fx='boundary'] {
-  --c: transparent;
-  padding: 0 0.12em;
-  background:
-    linear-gradient(90deg, var(--c) 50%, transparent 50%) repeat-x 0 0 / 0.5em 1px,
-    linear-gradient(90deg, var(--c) 50%, transparent 50%) repeat-x 0 100% / 0.5em 1px,
-    linear-gradient(0deg, var(--c) 50%, transparent 50%) repeat-y 0 0 / 1px 0.5em,
-    linear-gradient(0deg, var(--c) 50%, transparent 50%) repeat-y 100% 0 / 1px 0.5em;
-
-  &.is-on {
-    --c: var(--fx-green);
-    animation: fx-ants 1.6s linear infinite;
-  }
-}
-
-@keyframes fx-ants {
-  to { background-position: 0.5em 0, -0.5em 100%, 0 -0.5em, 100% 0.5em; }
-}
-
-// Gradient of taste: red to green --------------------------------------------------
-[data-fx='gradient'].is-on {
-  background: linear-gradient(90deg, var(--fx-red), var(--fx-tx) 50%, var(--fx-green)) 0 0 / 100% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: fx-grad-in 1.4s $fx-ease both;
-}
-
-@keyframes fx-grad-in {
-  from { background-size: 400% 100%; background-position: 100% 0; }
-}
-
-// Ten-minute cut: scissors run along a dashed line ------------------------------------
-[data-fx='cut'] {
-  position: relative;
-  background: repeating-linear-gradient(90deg, var(--fx-tx2) 0 0.22em, transparent 0.22em 0.4em) no-repeat 0 100% / 0% 0.07em;
-  transition: background-size 1.3s linear;
-
-  &::after {
-    content: '\2702\FE0E';
-    position: absolute;
-    left: -0.4em;
-    bottom: -0.55em;
-    font-size: 0.75em;
-    color: var(--fx-tx2);
-    opacity: 0;
-  }
-
-  &.is-on { background-size: 100% 0.07em; }
-  &.is-on::after { animation: fx-scissors 1.3s linear both; }
-}
-
-@keyframes fx-scissors {
-  0% { left: -0.4em; opacity: 1; }
-  90% { opacity: 1; }
-  100% { left: calc(100% - 0.4em); opacity: 0; }
-}
-
-// No: a red stamp ---------------------------------------------------------------
-[data-fx='stamp'] {
-  display: inline-block;
-  padding: 0 0.22em;
-  border: 2px solid var(--fx-red);
-  border-radius: 0.15em;
-  font-family: $fx-pixel;
-  color: var(--fx-red);
-  line-height: 1.2;
-  transform: rotate(-6deg);
-
-  &.is-on { animation: fx-stamp 0.5s cubic-bezier(0.5, 0, 0.6, 1.4) both; }
-}
-
-@keyframes fx-stamp {
-  0% { transform: scale(3.4) rotate(-14deg); opacity: 0; }
-  70% { transform: scale(0.92) rotate(-5deg); opacity: 1; }
-  100% { transform: scale(1) rotate(-6deg); opacity: 1; }
-}
-
 @media (prefers-reduced-motion: reduce) {
   [data-fx],
   [data-fx] *,
@@ -897,6 +194,40 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
     animation: none !important;
     transition: none !important;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Pull quotes: <aside class="pull-quote"><p>…</p></aside>. They hang in the
+// right margin when the window has one, and sit inline otherwise.
+// ---------------------------------------------------------------------------
+.blog-content .pull-quote {
+  margin: 1.8rem 0;
+  padding: 0.2rem 0 0.2rem 1rem;
+  border-left: 3px solid var(--fx-green);
+  font-family: $fx-pixel;
+  font-size: 1.15rem;
+  line-height: 1.4;
+  color: var(--fx-tx);
+
+  p { margin: 0; font-size: inherit; }
+
+  // The column ends 450px right of centre; a 220px quote plus its 25px gap
+  // fits in the margin from 1440px up, taking no width from the text.
+  @media (min-width: 1440px) {
+    float: right;
+    clear: right;
+    width: 11rem;
+    margin: 0.35rem -12.25rem 1rem 1.25rem;
+    font-size: 0.8rem;
+  }
+}
+
+.blog-content blockquote cite {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  font-style: normal;
+  color: var(--fx-tx3);
 }
 
 // ---------------------------------------------------------------------------
@@ -921,6 +252,7 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
 
 .fx-figure__stage {
   position: relative;
+  contain: layout paint;
   border: 1px solid var(--fx-ui);
   border-radius: 0.5rem;
   background: var(--fx-bg2);
@@ -1002,9 +334,9 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
     margin-left: 0.1em;
     vertical-align: -0.15em;
     background: var(--fx-tx);
-    animation: fx-blink 0.9s steps(1) infinite;
   }
 
+  .is-visible & { &::after { animation: fx-blink 0.9s steps(1) infinite; } }
   .is-landed & { &::after { display: none; } }
 }
 
@@ -1152,13 +484,15 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
 
   u {
     display: block;
-    width: 35%;
     height: 100%;
     background: var(--fx-tx2);
-    animation: fxc-run 2.4s ease-in-out infinite alternate;
+    transform: scaleX(0.35);
+    transform-origin: left;
   }
 
-  &.is-done u { width: 100%; background: var(--fx-green); animation: none; }
+  .is-visible &:not(.is-done) u { animation: fxc-run 2.4s ease-in-out infinite alternate; }
+
+  &.is-done u { background: var(--fx-green); transform: none; }
 
   &.is-stopped {
     u { animation-play-state: paused; background: var(--fx-red); }
@@ -1168,8 +502,8 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
 }
 
 @keyframes fxc-run {
-  from { width: 20%; }
-  to { width: 78%; }
+  from { transform: scaleX(0.2); }
+  to { transform: scaleX(0.78); }
 }
 
 .fxc-side {
@@ -1244,11 +578,12 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
   u {
     display: block;
     height: 100%;
-    transition: width 0.8s $fx-ease;
+    transform-origin: left;
+    transition: transform 0.8s $fx-ease;
   }
 
-  .is-noise u { width: 0; background: var(--fx-tx3); }
-  .is-signal u { width: calc(var(--n, 0) * 20%); background: var(--fx-green); }
+  .is-noise u { transform: scaleX(0); background: var(--fx-tx3); }
+  .is-signal u { transform: scaleX(calc(var(--n, 0) * 0.2)); background: var(--fx-green); }
 
   b {
     grid-column: 2;
@@ -1257,7 +592,7 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
   }
 }
 
-.is-landed .fxc-meter__row .is-noise u { width: 12%; }
+.is-landed .fxc-meter__row .is-noise u { transform: scaleX(0.12); }
 
 // Fig. 2 — who keeps the gradient ---------------------------------------------
 .fxf {
