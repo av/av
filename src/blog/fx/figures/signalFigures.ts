@@ -1,219 +1,220 @@
-import { h, prefersReduced, s, watchVisible } from './util';
+import { createRandom, h, mountCanvas } from './util';
 
-// 4. Six Identical Prompts, Six Divergent Engineers
-type Lane = {
-  role: string;
-  action: string;
-  kind: 'accept' | 'reject' | 'edit' | 'stop';
-  delta: string;
-  outcome: string;
-  y: number;
-};
-
-const LANES: Lane[] = [
-  {
-    role: 'Junior SWE',
-    action: 'merges agent branch as-is',
-    kind: 'accept',
-    delta: '0 edits · waves through 14/14 green tests',
-    outcome: '400 retry storms auth service in prod',
-    y: 26,
-  },
-  {
-    role: 'Backend SWE',
-    action: 'patches status check only',
-    kind: 'edit',
-    delta: 'status >= 500 · misses config/prod.yaml hunk',
-    outcome: '300s worker timeout ships uninvited',
-    y: 62,
-  },
-  {
-    role: 'SRE / Infra',
-    action: 'rewrites backoff + reverts config',
-    kind: 'edit',
-    delta: 'jittered cap + git checkout config/prod.yaml',
-    outcome: 'misses widened 422 test assertion',
-    y: 98,
-  },
-  {
-    role: 'Security Eng',
-    action: 'blocks auth header leak on retry',
-    kind: 'reject',
-    delta: 'strips bearer token before cross-host redirect',
-    outcome: 'prevents credential leak in retry logs',
-    y: 134,
-  },
-  {
-    role: 'Staff SWE (you)',
-    action: '5 cuts: 5xx, jitter, revert cfg, fix test, SIGINT',
-    kind: 'reject',
-    delta: '+5 labeled preference pairs in 10 minutes',
-    outcome: 'clean fix + test invariant preserved',
-    y: 170,
-  },
-  {
-    role: 'Principal SWE',
-    action: 'aborts run · deletes retry loop entirely',
-    kind: 'stop',
-    delta: 'moves upload to idempotent presigned S3 PUT',
-    outcome: 'eliminates server-side upload proxy',
-    y: 206,
-  },
-];
-
+// Fig. 4 (divergent): Optical prism refracting 1 prompt into 6 distinct diff barcodes.
 export function initDivergentFigure(fig: HTMLElement): void {
-  const stage = h('div', 'fx-figure__stage fxd');
-
-  const head = h('div', 'fxd-head');
-  head.innerHTML =
-    '<span class="fxd-head__title">same 6-word prompt · 6 engineers · 6 completely different diffs</span>' +
-    '<span class="fxd-head__sub">t=0 prompt is identical noise; t=30m diff is the fingerprint of who sat at the keyboard</span>';
-
-  const wrap = h('div', 'fxd-wrap');
-  const svg = s('svg', { class: 'fxd-svg', viewBox: '0 0 680 232', 'aria-hidden': 'true' });
-
-  const pLine = s('line', { class: 'fxd-stem', x1: 24, y1: 116, x2: 190, y2: 116 });
-  svg.append(pLine);
-
-  const rowsWrap = h('div', 'fxd-rows');
-  const detail = h('div', 'fxd-detail');
-
-  const setActive = (idx: number) => {
-    const l = LANES[idx];
-    rowsWrap.querySelectorAll('.fxd-row').forEach((r, i) => r.classList.toggle('is-active', i === idx));
-    svg.querySelectorAll('.fxd-branch').forEach((b, i) => b.classList.toggle('is-active', i === idx));
-    detail.innerHTML =
-      `<span class="fxd-detail__role">${l.role}</span>` +
-      `<code class="fxd-detail__delta">${l.delta}</code>` +
-      `<span class="fxd-detail__out is-${l.kind}">→ ${l.outcome}</span>`;
-  };
-
-  LANES.forEach((l, i) => {
-    const path = s('path', {
-      class: `fxd-branch is-${l.kind}`,
-      d: `M 190 116 C 255 116, 265 ${l.y}, 330 ${l.y}`,
-    });
-    svg.append(path);
-
-    const row = h('button', `fxd-row is-${l.kind}`) as HTMLButtonElement;
-    row.type = 'button';
-    row.style.top = `${(l.y / 232) * 100}%`;
-    row.innerHTML = `<span class="fxd-row__role">${l.role}</span><span class="fxd-row__act">${l.action}</span>`;
-    row.addEventListener('mouseenter', () => setActive(i));
-    row.addEventListener('click', () => setActive(i));
-    rowsWrap.append(row);
-  });
-
-  const originBadge = h('div', 'fxd-badge is-prompt');
-  originBadge.innerHTML = '<span>t = 00:00</span><b>"add retries to the upload client"</b>';
-  const agentBadge = h('div', 'fxd-badge is-agent');
-  agentBadge.innerHTML = '<span>t = 20:00</span><b>identical agent patch</b>';
-
-  wrap.append(svg, originBadge, agentBadge, rowsWrap);
-  stage.append(head, wrap, detail);
+  const stage = h('div', 'fx-figure__stage fxv');
   fig.prepend(stage);
-  setActive(4);
+
+  const r = createRandom(404);
+  // 6 distinct diff barcode patterns (-1 = red del, 0 = grey ctx, 1 = green add)
+  const PATTERNS: number[][] = Array.from({ length: 6 }, (_, row) =>
+    Array.from({ length: 18 }, (__, col) => {
+      if (row === 0) return 0; // unedited pass-through
+      const v = r();
+      if (v < 0.18 + row * 0.06) return -1;
+      if (v < 0.36 + row * 0.09) return 1;
+      return 0;
+    }),
+  );
+
+  let hoverRow = 4;
+
+  const ctrl = mountCanvas(
+    stage,
+    (w) => (w < 540 ? 205 : 230),
+    (ctx, W, H, c, t) => {
+      ctx.clearRect(0, 0, W, H);
+      const px = W * 0.34;
+      const py = H * 0.5;
+
+      // Incoming single prompt beam
+      ctx.strokeStyle = c.tx;
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(24, py);
+      ctx.lineTo(px - 18, py);
+      ctx.stroke();
+
+      // Traveling pulse on input beam
+      const pulseX = 24 + ((t * 95) % Math.max(10, px - 42));
+      ctx.fillStyle = c.tx;
+      ctx.beginPath();
+      ctx.arc(pulseX, py, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Central triangular prism (agent)
+      ctx.strokeStyle = c.tx2;
+      ctx.fillStyle = c.bg;
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(px, py - 24);
+      ctx.lineTo(px + 22, py + 16);
+      ctx.lineTo(px - 22, py + 16);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // 6 refracted beams + diff barcode strips
+      const startX = W * 0.54;
+      const stripW = W * 0.38;
+      const blockW = Math.max(3, (stripW - 36) / 18);
+
+      for (let i = 0; i < 6; i++) {
+        const ry = 28 + (i / 5) * (H - 56);
+        const isAct = i === hoverRow;
+
+        ctx.strokeStyle = isAct ? c.green : c.tx3;
+        ctx.globalAlpha = isAct ? 0.9 : 0.35;
+        ctx.lineWidth = isAct ? 1.8 : 1;
+        ctx.beginPath();
+        ctx.moveTo(px + 12, py - 4 + (i - 2.5) * 3);
+        ctx.bezierCurveTo(px + 60, py, startX - 45, ry, startX, ry);
+        ctx.stroke();
+
+        // Barcode blocks along the lane
+        const pat = PATTERNS[i];
+        for (let j = 0; j < pat.length; j++) {
+          const kind = pat[j];
+          const bx = startX + j * (blockW + 2);
+          const bh = isAct ? 12 : 8;
+          ctx.fillStyle = kind < 0 ? c.red : kind > 0 ? c.green : c.tx3;
+          ctx.globalAlpha = isAct ? (kind === 0 ? 0.35 : 0.95) : kind === 0 ? 0.18 : 0.55;
+          ctx.fillRect(bx, ry - bh / 2, blockW, bh);
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      // 5 words total on canvas
+      ctx.font = `500 10px 'Geist Pixel', monospace`;
+      ctx.fillStyle = c.tx2;
+      ctx.textAlign = 'left';
+      ctx.fillText('1 prompt', 24, py - 12);
+
+      ctx.textAlign = 'center';
+      ctx.fillText('agent', px, py + 32);
+
+      ctx.textAlign = 'right';
+      ctx.fillStyle = c.green;
+      ctx.fillText('6 diffs', W - 20, 16);
+    },
+  );
+
+  stage.addEventListener('pointermove', (e) => {
+    const rect = ctrl.canvas.getBoundingClientRect();
+    const ny = (e.clientY - rect.top) / Math.max(1, rect.height);
+    hoverRow = Math.max(0, Math.min(5, Math.round((ny - 0.12) / 0.15)));
+    ctrl.redraw();
+  });
 }
 
-// 5. The Biological Retry Loop vs Compiled Gate
+// Fig. 5 (retry-loop): Sisyphus orbital trap vs compiled tangent escape.
 export function initRetryLoopFigure(fig: HTMLElement): void {
-  const stage = h('div', 'fx-figure__stage fxr');
-
-  const head = h('div', 'fxr-head');
-  head.innerHTML =
-    '<div class="fxr-head__left">' +
-    '<span class="fxr-head__title">the biological retry loop</span>' +
-    '<span class="fxr-head__sub">every uncompiled fix evaporates when the window closes</span>' +
-    '</div>' +
-    '<button type="button" class="fxr-toggle" role="switch" aria-checked="false">' +
-    '<span class="fxr-toggle__track"><i></i></span>' +
-    '<span class="fxr-toggle__lbl">compile trace into rule</span>' +
-    '<b class="fxr-toggle__state">off</b>' +
-    '</button>';
-
-  const days = h('div', 'fxr-days');
-  const renderDays = (compiled: boolean) => {
-    days.innerHTML = '';
-    const specs = [
-      {
-        day: 'Day 1 · Mon',
-        mistake: 'agent edits ~/.hermes/config.yaml (wrong file)',
-        resp: 'you fix path by hand · close terminal · model memory wiped',
-        cost: '14 min lost · 0 rules written',
-        blocked: false,
-      },
-      {
-        day: 'Day 2 · Wed',
-        mistake: 'fresh session edits ~/.hermes/config.yaml again',
-        resp: 'you fix path a 2nd time · sigh · close terminal',
-        cost: '12 min lost · 0 rules written',
-        blocked: false,
-      },
-      {
-        day: 'Day 3 · Fri',
-        mistake: 'fresh session reaches for ~/.hermes/config.yaml',
-        resp: compiled
-          ? 'GATE FIRED: ~/AGENTS.md redirects agent to ~/.hermes/data/config.yaml in 0ms'
-          : 'you fix path a 3rd time · you are now the model’s biological retry loop',
-        cost: compiled ? '0 min human time · bug class extinct' : '15 min lost · 41 min cumulative tax',
-        blocked: compiled,
-      },
-      {
-        day: 'Day 4 … Day 100',
-        mistake: 'every future session across all 4 machines',
-        resp: compiled
-          ? 'mounts /opt/data/config.yaml automatically · human never paged'
-          : 'repeats every week forever whenever context resets',
-        cost: compiled ? '96 future interventions prevented' : 'unpaid retry loop continues',
-        blocked: compiled,
-      },
-    ];
-
-    specs.forEach((sp) => {
-      const card = h('div', `fxr-day ${sp.blocked ? 'is-compiled' : 'is-loop'}`);
-      card.innerHTML =
-        `<div class="fxr-day__top"><span class="fxr-day__name">${sp.day}</span><b class="fxr-day__tag">${sp.blocked ? '✓ gate active' : '↻ manual retry'}</b></div>` +
-        `<div class="fxr-day__err">${sp.mistake}</div>` +
-        `<div class="fxr-day__resp">${sp.resp}</div>` +
-        `<div class="fxr-day__cost">${sp.cost}</div>`;
-      days.append(card);
-    });
-  };
-
-  stage.append(head, days);
+  const stage = h('div', 'fx-figure__stage fxv');
+  const pill = h('div', 'fxv-pill');
+  const btn = h('button', 'fxv-pill__btn', 'compile');
+  btn.type = 'button';
+  pill.append(btn);
+  stage.append(pill);
   fig.prepend(stage);
 
   let compiled = false;
-  let touched = false;
-  const btn = head.querySelector<HTMLButtonElement>('.fxr-toggle')!;
-  const stateEl = head.querySelector<HTMLElement>('.fxr-toggle__state')!;
+  let k = 0;
 
-  const setCompiled = (on: boolean) => {
-    compiled = on;
-    stage.classList.toggle('is-compiled', on);
-    btn.setAttribute('aria-checked', String(on));
-    stateEl.textContent = on ? 'on' : 'off';
-    renderDays(on);
+  const toggle = () => {
+    compiled = !compiled;
+    btn.classList.toggle('is-active', compiled);
   };
+  stage.style.cursor = 'pointer';
+  stage.addEventListener('click', toggle);
 
-  btn.addEventListener('click', () => {
-    touched = true;
-    setCompiled(!compiled);
-  });
+  mountCanvas(
+    stage,
+    (w) => (w < 540 ? 200 : 225),
+    (ctx, W, H, c, t) => {
+      k += ((compiled ? 1 : 0) - k) * 0.1;
+      ctx.clearRect(0, 0, W, H);
 
-  setCompiled(false);
+      const cx = W * 0.34;
+      const cy = H * 0.54;
+      const rad = Math.min(64, H * 0.33);
 
-  if (!prefersReduced()) {
-    watchVisible(
-      stage,
-      (on) => {
-        if (on && !touched && !compiled) {
-          setTimeout(() => {
-            if (!touched) setCompiled(true);
-          }, 3200);
+      // Circular retry orbit
+      ctx.strokeStyle = compiled ? c.tx3 : c.red;
+      ctx.globalAlpha = compiled ? 0.25 : 0.65;
+      ctx.lineWidth = 1.8;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+
+      // Red wall at top of orbit (12 o'clock)
+      const wallX = cx;
+      const wallY = cy - rad;
+      ctx.strokeStyle = compiled ? c. green : c.red;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(wallX - 8, wallY - 6);
+      ctx.lineTo(wallX + 8, wallY + 6);
+      ctx.stroke();
+
+      // Tangent escape beam when compiled
+      const exitEnd = W * 0.88;
+      if (k > 0.02) {
+        ctx.strokeStyle = c.green;
+        ctx.globalAlpha = k;
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ctx.moveTo(wallX, wallY);
+        ctx.lineTo(wallX + (exitEnd - wallX) * k, wallY);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+
+      // Orbiting / escaping particles
+      for (let i = 0; i < 6; i++) {
+        const u = (t * 0.55 + i / 6) % 1;
+        if (!compiled) {
+          const ang = -Math.PI / 2 + u * Math.PI * 2;
+          const px = cx + Math.cos(ang) * rad;
+          const py = cy + Math.sin(ang) * rad;
+          ctx.fillStyle = u < 0.08 ? c.red : c.tx2;
+          ctx.beginPath();
+          ctx.arc(px, py, u < 0.08 ? 4.5 : 3, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Climb left half of circle then launch straight along green tangent
+          if (u < 0.35) {
+            const ang = Math.PI / 2 + (u / 0.35) * Math.PI;
+            const px = cx + Math.cos(ang) * rad;
+            const py = cy + Math.sin(ang) * rad;
+            ctx.fillStyle = c.tx2;
+            ctx.beginPath();
+            ctx.arc(px, py, 3, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            const lin = (u - 0.35) / 0.65;
+            const px = wallX + lin * (exitEnd - wallX);
+            ctx.fillStyle = c.green;
+            ctx.beginPath();
+            ctx.arc(px, wallY, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
         }
-      },
-      0.4,
-    );
-  }
+      }
+
+      // 2 words on canvas: loop, rule (+ 1 word in pill = 3 words)
+      ctx.font = `500 10px 'Geist Pixel', monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = compiled ? c.tx3 : c.red;
+      ctx.fillText('loop', cx, cy + 4);
+
+      if (k > 0.2) {
+        ctx.fillStyle = c.green;
+        ctx.textAlign = 'right';
+        ctx.fillText('rule', exitEnd, wallY - 10);
+      }
+    },
+  );
 }

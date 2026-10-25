@@ -1,27 +1,8 @@
 import { createRandom, cssVar, h, prefersReduced, scrollProgress, watchVisible } from './util';
 
-// Fig. 3: a thousand simulated interventions. Scrolling pulls ninety percent
-// of them into fifteen clusters, one per veto; the rest stay loose and turn
-// green, the small part of judgment that does not compile.
-
-const RULES = [
-  'retry on 4xx',
-  'drive-by config',
-  'test bent to pass',
-  'wrong config path',
-  'env before code',
-  'migration heads',
-  'sleep-polling CI',
-  'unread full diff',
-  'lockfile churn',
-  'silent catch',
-  'scope creep',
-  'secrets in logs',
-  'unpinned deps',
-  'no rollback',
-  'dead code left',
-];
-
+// Fig. 11 (clusters): 1,000 interventions collapsing into 15 gravity wells on scroll,
+// leaving 10% glowing green stars free.
+const CLUSTER_COUNT = 15;
 const N = 1000;
 const RARE = 0.1;
 
@@ -37,10 +18,8 @@ export function initClusterFigure(fig: HTMLElement): void {
   canvas.setAttribute('aria-hidden', 'true');
   const hud = h('div', 'fxk-hud');
   const hudMain = h('div', 'fxk-hud__main');
-  const hudSub = h('div', 'fxk-hud__sub');
-  hud.append(hudMain, hudSub);
-  const note = h('div', 'fxk-note', 'simulated · illustration');
-  stage.append(canvas, hud, note);
+  hud.append(hudMain);
+  stage.append(canvas, hud);
   fig.prepend(stage);
 
   const ctx = canvas.getContext('2d');
@@ -51,16 +30,16 @@ export function initClusterFigure(fig: HTMLElement): void {
   let narrow = false;
   let pts: Pt[] = [];
   let centers: { x: number; y: number; n: number; r: number }[] = [];
-  let colors = { tx: '', tx2: '', green: '', bg: '' };
+  let colors = { tx: '', tx2: '', tx3: '', green: '', bg: '' };
   let shown = 0;
   let raf = 0;
   let visible = false;
 
   const build = () => {
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    W = stage.clientWidth;
+    W = stage.clientWidth || 680;
     narrow = W < 560;
-    H = narrow ? Math.round(W * 1.15) : Math.round(Math.min(480, W * 0.62));
+    H = narrow ? 250 : 280;
     canvas.width = Math.round(W * dpr);
     canvas.height = Math.round(H * dpr);
     canvas.style.width = `${W}px`;
@@ -69,105 +48,101 @@ export function initClusterFigure(fig: HTMLElement): void {
 
     const r = createRandom(20261025);
     const cols = narrow ? 3 : 5;
-    const rows = Math.ceil(RULES.length / cols);
-    const top = narrow ? 64 : 58;
+    const rows = Math.ceil(CLUSTER_COUNT / cols);
+    const top = 42;
     const cw = (W - 24) / cols;
-    const ch = (H - top - 26) / rows;
-    const weights = RULES.map((_, i) => 1 / Math.pow(i + 1, 0.75));
+    const ch = (H - top - 16) / rows;
+    const weights = Array.from({ length: CLUSTER_COUNT }, (_, i) => 1 / Math.pow(i + 1, 0.75));
     const wsum = weights.reduce((a, b) => a + b, 0);
     const clustered = Math.round(N * (1 - RARE));
-    // Bigger clusters sit near the middle of the grid.
+
     const cells = Array.from({ length: cols * rows }, (_, i) => i)
       .map((i) => ({ i, d: Math.hypot((i % cols) - (cols - 1) / 2, Math.floor(i / cols) - (rows - 1) / 2) + r() * 0.3 }))
       .sort((a, b) => a.d - b.d);
-    centers = RULES.map((_, k) => {
+
+    centers = weights.map((w, k) => {
       const cell = cells[k].i;
       return {
         x: 12 + cw * ((cell % cols) + 0.5) + (r() - 0.5) * cw * 0.12,
-        y: top + ch * (Math.floor(cell / cols) + 0.42) + (r() - 0.5) * ch * 0.1,
-        n: Math.round((weights[k] / wsum) * clustered),
+        y: top + ch * (Math.floor(cell / cols) + 0.5) + (r() - 0.5) * ch * 0.1,
+        n: Math.round((w / wsum) * clustered),
         r: 0,
       };
     });
 
     pts = [];
-    const pad = 10;
-    const spread = Math.min(cw, ch) * (narrow ? 0.15 : 0.13);
+    const pad = 12;
+    const spread = Math.min(cw, ch) * 0.15;
     centers.forEach((c, k) => {
       const rad = spread * (0.5 + Math.sqrt(c.n) / 12);
       c.r = rad;
       for (let i = 0; i < c.n; i++) {
         pts.push({
           sx: pad + r() * (W - pad * 2),
-          sy: top - 20 + r() * (H - top),
+          sy: top - 10 + r() * (H - top),
           tx: c.x + gauss(r) * rad,
-          ty: c.y + gauss(r) * rad * 0.75,
+          ty: c.y + gauss(r) * rad * 0.8,
           c: k,
           delay: r() * 0.35,
-                  });
+        });
       }
     });
     while (pts.length < N) {
       const x = pad + r() * (W - pad * 2);
-      const y = top - 20 + r() * (H - top);
+      const y = top - 10 + r() * (H - top);
       pts.push({ sx: x, sy: y, tx: x, ty: y, c: -1, delay: r() * 0.35 });
     }
-    colors = { tx: cssVar('tx'), tx2: cssVar('tx2'), green: cssVar('green'), bg: cssVar('bg2') };
+    colors = { tx: cssVar('tx'), tx2: cssVar('tx2'), tx3: cssVar('tx3'), green: cssVar('green'), bg: cssVar('bg2') };
   };
 
   const ease = (k: number) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
 
   let hudKey = '';
-  const setHud = (main: string, sub: string) => {
-    if (main + sub === hudKey) return;
-    hudKey = main + sub;
+  const setHud = (main: string) => {
+    if (main === hudKey) return;
+    hudKey = main;
     hudMain.innerHTML = main;
-    hudSub.innerHTML = sub;
   };
 
   const draw = () => {
     ctx.clearRect(0, 0, W, H);
     const p = shown;
     const size = narrow ? 2 : 2.4;
+
+    // Subtle gravity rings around the 15 wells as they lock in
+    const la = Math.min(1, Math.max(0, (p - 0.65) / 0.25));
+    if (la > 0) {
+      ctx.strokeStyle = colors.tx3;
+      ctx.globalAlpha = la * 0.35;
+      ctx.lineWidth = 1;
+      centers.forEach((c) => {
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.r * 2.1, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+    }
+
     for (const q of pts) {
       const k = ease(Math.min(1, Math.max(0, (p - q.delay) / 0.6)));
       const x = q.sx + (q.tx - q.sx) * k;
       const y = q.sy + (q.ty - q.sy) * k;
       if (q.c < 0) {
-        const g = Math.min(1, Math.max(0, (p - 0.7) / 0.25));
+        const g = Math.min(1, Math.max(0, (p - 0.65) / 0.25));
         ctx.globalAlpha = 0.55 + 0.45 * g;
-        ctx.fillStyle = g > 0.5 ? colors.green : colors.tx2;
-        const sz = size + g * 1.4;
+        ctx.fillStyle = g > 0.4 ? colors.green : colors.tx2;
+        const sz = size + g * 1.6;
         ctx.fillRect(x - sz / 2, y - sz / 2, sz, sz);
       } else {
-        ctx.globalAlpha = 0.5 + 0.25 * k;
+        ctx.globalAlpha = 0.45 + 0.3 * k;
         ctx.fillStyle = k > 0.95 ? colors.tx : colors.tx2;
         ctx.fillRect(x - size / 2, y - size / 2, size, size);
       }
     }
-    const la = Math.min(1, Math.max(0, (p - 0.72) / 0.2));
-    if (la > 0) {
-      ctx.globalAlpha = la;
-      ctx.fillStyle = colors.tx;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      ctx.font = `500 ${narrow ? 10 : 11}px 'Geist Pixel', ui-monospace, monospace`;
-      centers.forEach((c, k) => {
-        ctx.fillText(RULES[k], c.x, c.y + c.r * 0.75 * 2.7 + 6);
-      });
-    }
     ctx.globalAlpha = 1;
 
-    if (p < 0.2) {
-      setHud(`${N.toLocaleString('en-US')} interventions`, 'every reject, edit, revert and stop, unsorted');
-    } else if (p < 0.85) {
-      setHud('clustering…', `${Math.round(((p - 0.2) / 0.65) * 9) * 10}% explained`);
-    } else {
-      setHud('15 vetoes cover 90%', '<span class="fxk-green">■</span> the loose 10% is the judgment that does not compile');
-    }
+    setHud('90% · 15 rules &nbsp;&nbsp;<span class="fxk-green">■ 10% · rare</span>');
   };
 
-  // Ease toward the scroll position and only repaint while it is moving.
   let drawn = -1;
   const tick = () => {
     raf = requestAnimationFrame(tick);
@@ -207,13 +182,4 @@ export function initClusterFigure(fig: HTMLElement): void {
     },
     0,
   );
-  document.fonts?.ready.then(() => draw()).catch(() => {});
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      cancelAnimationFrame(raf);
-      raf = 0;
-    } else if (visible && !raf) {
-      raf = requestAnimationFrame(tick);
-    }
-  });
 }

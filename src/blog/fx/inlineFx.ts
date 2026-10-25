@@ -18,16 +18,16 @@ function append(el: HTMLElement, cls: string, html = ''): HTMLElement {
 }
 
 const AGENT_STEPS: [string, number][] = [
-  ['reading src/upload_client.py · 142 lines', 520],
-  ['editing upload_client.py (+6 −0) · retry on status >= 400', 620],
-  ['editing config/prod.yaml (+1 −1) · timeout 30 -> 300', 520],
-  ['pytest tests/test_upload.py · 1 failed (assert 422 == 200)', 640],
-  ['editing tests/test_upload.py (+1 −1) · assert status in (200, 422)', 560],
-  ['pytest · 14 passed in 0.84s', 480],
+  ['reading upload_client.py', 480],
+  ['editing upload_client.py (+6 −0)', 560],
+  ['editing config/prod.yaml (+1 −1)', 480],
+  ['pytest · 1 failed (422 != 200)', 580],
+  ['editing test_upload.py (+1 −1)', 520],
+  ['pytest · 14 passed', 440],
 ];
 
 const FINAL_STATUS =
-  '<b>✓ branch ready</b> · <code>fix/upload-retries</code> · 3 files (+8 −2) · tests passing';
+  '<b>✓ fix/upload-retries</b> · 3 files (+8 −2) · tests pass';
 
 // Built before the phrase is seen, so the reveal does not reflow the line.
 const prepare: Record<string, Effect> = {
@@ -72,7 +72,7 @@ const prepare: Record<string, Effect> = {
       '</div>' +
       '<div class="fx-term__status" role="status" aria-live="polite">' +
       '<i class="fx-term__dot" aria-hidden="true"></i>' +
-      '<span class="fx-term__msg">awaiting send · press <kbd>↵</kbd> or click send</span>' +
+      '<span class="fx-term__msg">ready · click send <kbd>↵</kbd></span>' +
       '</div>';
 
     const btn = el.querySelector<HTMLButtonElement>('.fx-term__send')!;

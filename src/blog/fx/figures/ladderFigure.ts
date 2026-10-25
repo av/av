@@ -1,44 +1,29 @@
 import { h, prefersReduced, scrollProgress, watchVisible } from './util';
 
-// Fig. 4: the entropy ladder. Each week of scrolling compiles the lowest
-// manual review into a check, the boundary of "you" climbs a rung, and the
-// top rungs stay human because nobody has written them down yet.
-
-type Rung = { human: string; check?: string };
-
-const RUNGS: Rung[] = [
-  { human: 'lockfiles left alone', check: 'no-lockfile-churn' },
-  { human: 'retry only on server errors', check: 'retry-5xx-only' },
-  { human: 'friction is environmental first', check: 'env-before-code' },
-  { human: 'migration heads stay linear', check: 'alembic-heads-linear' },
-  { human: 'full diff read before done', check: 'diff-vs-base-reviewed' },
-  { human: 'when a clean patch is wrong for the business' },
-  { human: 'which operational risk is worth taking' },
-  { human: 'which project deserves doing at all' },
-];
-
-const WEEKS = RUNGS.filter((r) => r.check).length;
+// Fig. 18 (ladder): The entropy ladder. Scroll compiles lower rungs into green
+// checks and pushes the red boundary of "you" upward.
+const RUNG_COUNT = 8;
+const CHECK_COUNT = 5;
 
 export function initLadderFigure(fig: HTMLElement): void {
   const stage = h('div', 'fx-figure__stage fxl');
   const head = h('div', 'fxl-head');
-  const week = h('span', 'fxl-week', 'week 0');
   const legend = h('span', 'fxl-legend');
-  legend.append(h('i', 'fxl-legend__line'), 'boundary of “you” · ', week);
+  legend.append(h('i', 'fxl-legend__line'), 'you');
   head.append(h('span', 'fxl-head__label', 'entropy ↑'), legend);
+
   const ladder = h('ol', 'fxl-ladder');
   const rows: HTMLElement[] = [];
 
-  RUNGS.forEach((r, i) => {
-    const li = h('li', `fxl-rung${r.check ? '' : ' is-open'}`);
+  for (let i = 0; i < RUNG_COUNT; i++) {
+    const canCheck = i < CHECK_COUNT;
+    const li = h('li', `fxl-rung${canCheck ? '' : ' is-open'}`);
     li.style.setProperty('--i', String(i));
-    const label = h('span', 'fxl-rung__label');
-    label.append(h('span', 'fxl-rung__human', r.human));
-    if (r.check) label.append(h('code', 'fxl-rung__check', r.check));
-    const badge = h('span', 'fxl-rung__badge', r.check ? 'you' : 'not formalized');
-    li.append(label, badge);
+    const bar = h('span', 'fxl-rung__bar');
+    const badge = h('span', 'fxl-rung__badge', canCheck ? '·' : '?');
+    li.append(bar, badge);
     rows.push(li);
-  });
+  }
   [...rows].reverse().forEach((li) => ladder.append(li));
 
   const boundary = h('div', 'fxl-boundary');
@@ -52,12 +37,12 @@ export function initLadderFigure(fig: HTMLElement): void {
   const apply = (w: number) => {
     if (w === current) return;
     current = w;
-    week.textContent = `week ${w}`;
     rows.forEach((li, i) => {
       const done = i < w;
       li.classList.toggle('is-check', done);
-      const badge = li.querySelector('.fxl-rung__badge')!;
-      if (RUNGS[i].check) badge.textContent = done ? '✓ check' : 'you';
+      if (i < CHECK_COUNT) {
+        li.querySelector('.fxl-rung__badge')!.textContent = done ? '✓' : '·';
+      }
     });
     const rung = rows[Math.min(w, rows.length - 1)];
     const top = rung.offsetTop + rung.offsetHeight;
@@ -65,7 +50,7 @@ export function initLadderFigure(fig: HTMLElement): void {
     climber.style.transform = `translate(${rung.offsetLeft - 16}px, ${rung.offsetTop + rung.offsetHeight / 2}px)`;
   };
 
-  const update = () => apply(Math.round(scrollProgress(stage, 0.85, 0.25) * WEEKS));
+  const update = () => apply(Math.round(scrollProgress(stage, 0.85, 0.25) * CHECK_COUNT));
 
   const relayout = () => {
     const w = current < 0 ? 0 : current;
@@ -75,7 +60,7 @@ export function initLadderFigure(fig: HTMLElement): void {
   new ResizeObserver(relayout).observe(stage);
 
   if (prefersReduced()) {
-    apply(WEEKS);
+    apply(CHECK_COUNT);
     return;
   }
   apply(0);

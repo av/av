@@ -1,9 +1,6 @@
 import { cssVar, h, prefersReduced, s, watchVisible } from './util';
 
-// Fig. 2: every decision at the keyboard streams to the tool vendor and the
-// employer. The switch adds the third pipe, into your own harness; while it
-// is off, that sink stays at zero.
-
+// Fig. 7 (flow): Three-pipe collector stream (vendor, employer, yours).
 type Kind = 'accept' | 'reject' | 'edit' | 'revert' | 'stop';
 type Sink = 'vendor' | 'employer' | 'harness';
 type Particle = { el: SVGRectElement; route: Float32Array; t0: number; sink: Sink; kind: Kind };
@@ -34,32 +31,26 @@ export function initFlowFigure(fig: HTMLElement): void {
   const dots = s('g');
   svg.append(dots);
 
-  const node = (cls: string, title: string, sub: string, count: string) => {
+  const node = (cls: string, title: string) => {
     const el = h('div', `fxf-node ${cls}`);
-    el.append(h('div', 'fxf-node__title', title), h('div', 'fxf-node__sub', sub));
+    el.append(h('div', 'fxf-node__title', title));
     const c = h('div', 'fxf-node__count');
-    c.innerHTML = count;
+    c.innerHTML = '<b>0</b>';
     el.append(c);
     return el;
   };
 
   const you = h('div', 'fxf-node fxf-you');
-  you.append(h('div', 'fxf-node__title', 'you'), h('div', 'fxf-node__sub', 'at the keyboard'));
-  const burst = h('div', 'fxf-burst');
-  you.append(burst);
+  you.append(h('div', 'fxf-node__title', 'you'));
 
-  const vendor = node('fxf-sink is-vendor', 'tool vendor', 'reward model', '<b>0</b> gradient steps');
-  const employer = node('fxf-sink is-employer', 'employer', 'telemetry collector', '<b>0</b> trajectories');
-  const harness = node('fxf-sink is-harness', 'your harness', 'rules · tests · scripts', '<b>0</b> rules');
-  employer.querySelector('.fxf-node__title')!.insertAdjacentHTML(
-    'beforeend',
-    '<svg class="fxf-lock" viewBox="0 0 12 14"><path d="M3 7 V4.5 a3 3 0 0 1 6 0 V7" /><rect x="1.5" y="6.5" width="9" height="7" rx="1.2" /></svg>',
-  );
+  const vendor = node('fxf-sink is-vendor', 'vendor');
+  const employer = node('fxf-sink is-employer', 'employer');
+  const harness = node('fxf-sink is-harness', 'yours');
 
   const toggle = h('button', 'fxf-toggle');
   toggle.type = 'button';
   toggle.setAttribute('role', 'switch');
-  toggle.innerHTML = '<span class="fxf-toggle__track"><i></i></span><span class="fxf-toggle__label">local trace capture</span><b class="fxf-toggle__state">off</b>';
+  toggle.innerHTML = '<span class="fxf-toggle__track"><i></i></span><span class="fxf-toggle__label">local</span>';
 
   stage.append(svg, you, vendor, employer, harness, toggle);
   fig.prepend(stage);
@@ -71,7 +62,6 @@ export function initFlowFigure(fig: HTMLElement): void {
   let visible = false;
   let raf = 0;
   let lastEmit = 0;
-  let emitted = 0;
   let particles: Particle[] = [];
   let seed = 7;
   const rand = () => {
@@ -79,7 +69,6 @@ export function initFlowFigure(fig: HTMLElement): void {
     return seed / 2147483647;
   };
   let colors = { red: '', green: '', tx: '' };
-  // Each pipe sampled once per layout, so particles never query the path.
   const routes = {} as Record<Sink, Float32Array>;
 
   const setCount = (sink: Sink) => {
@@ -91,7 +80,6 @@ export function initFlowFigure(fig: HTMLElement): void {
     local = on;
     stage.classList.toggle('is-local', on);
     toggle.setAttribute('aria-checked', String(on));
-    toggle.querySelector('.fxf-toggle__state')!.textContent = on ? 'on' : 'off';
   };
   setLocal(false);
 
@@ -101,34 +89,34 @@ export function initFlowFigure(fig: HTMLElement): void {
   });
 
   const layout = () => {
-    const W = stage.clientWidth;
+    const W = stage.clientWidth || 680;
     const narrow = W < 560;
-    const H = narrow ? 420 : 340;
+    const H = narrow ? 280 : 250;
     stage.style.height = `${H}px`;
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     svg.setAttribute('width', String(W));
     svg.setAttribute('height', String(H));
-    const youW = narrow ? 78 : 104;
-    const sinkW = narrow ? Math.min(170, W * 0.52) : 220;
-    const sinkH = narrow ? 74 : 72;
-    const yMid = H / 2 - 18;
-    const ys = [H * 0.17, yMid, H * 0.83 - 36];
-    you.style.cssText = `left:${narrow ? 10 : 18}px; top:${yMid - 32}px; width:${youW}px;`;
-    const sx = W - sinkW - (narrow ? 10 : 18);
+    const youW = 68;
+    const sinkW = narrow ? 110 : 140;
+    const sinkH = 52;
+    const yMid = H / 2 - 12;
+    const ys = [H * 0.2, yMid, H * 0.8 - 18];
+    you.style.cssText = `left:${narrow ? 12 : 22}px; top:${yMid - 20}px; width:${youW}px;`;
+    const sx = W - sinkW - (narrow ? 12 : 22);
     [vendor, employer, harness].forEach((el, i) => {
       el.style.cssText = `left:${sx}px; top:${ys[i] - sinkH / 2}px; width:${sinkW}px; min-height:${sinkH}px;`;
     });
-    const x0 = (narrow ? 10 : 18) + youW;
+    const x0 = (narrow ? 12 : 22) + youW;
     (['vendor', 'employer', 'harness'] as Sink[]).forEach((k, i) => {
       const y1 = ys[i];
       const mx = (x0 + sx) / 2;
       paths[k].setAttribute('d', `M ${x0} ${yMid} C ${mx} ${yMid}, ${mx} ${y1}, ${sx} ${y1}`);
       const len = paths[k].getTotalLength();
       const pts = new Float32Array((SAMPLES + 1) * 2);
-      for (let i = 0; i <= SAMPLES; i++) {
-        const pt = paths[k].getPointAtLength((len * i) / SAMPLES);
-        pts[i * 2] = pt.x;
-        pts[i * 2 + 1] = pt.y;
+      for (let j = 0; j <= SAMPLES; j++) {
+        const pt = paths[k].getPointAtLength((len * j) / SAMPLES);
+        pts[j * 2] = pt.x;
+        pts[j * 2 + 1] = pt.y;
       }
       routes[k] = pts;
     });
@@ -136,7 +124,6 @@ export function initFlowFigure(fig: HTMLElement): void {
 
   const emit = (now: number) => {
     const kind = pickKind(rand());
-    emitted++;
     const sinks: Sink[] = local ? ['vendor', 'employer', 'harness'] : ['vendor', 'employer'];
     const color = kind === 'accept' ? colors.tx : kind === 'edit' ? colors.green : colors.red;
     sinks.forEach((sink, i) => {
@@ -144,11 +131,6 @@ export function initFlowFigure(fig: HTMLElement): void {
       dots.append(el);
       particles.push({ el, route: routes[sink], t0: now + i * 40, sink, kind });
     });
-    if (emitted % 3 === 0) {
-      const tag = h('span', `fxf-tag is-${kind}`, kind);
-      burst.append(tag);
-      setTimeout(() => tag.remove(), 1400);
-    }
   };
 
   const arrive = (p: Particle) => {
@@ -156,7 +138,7 @@ export function initFlowFigure(fig: HTMLElement): void {
       counts[p.sink]++;
     } else if (p.kind !== 'accept') {
       corrections++;
-      if (corrections % 4 === 0) {
+      if (corrections % 3 === 0) {
         counts.harness++;
         harness.classList.remove('is-ping');
         void harness.offsetWidth;
@@ -205,8 +187,8 @@ export function initFlowFigure(fig: HTMLElement): void {
   new ResizeObserver(() => layout()).observe(stage);
 
   if (prefersReduced()) {
-    counts.vendor = 1240;
-    counts.employer = 1240;
+    counts.vendor = 420;
+    counts.employer = 420;
     counts.harness = 0;
     (['vendor', 'employer', 'harness'] as Sink[]).forEach(setCount);
     return;
@@ -222,7 +204,7 @@ export function initFlowFigure(fig: HTMLElement): void {
         if (!touched && !local && !autoTimer) {
           autoTimer = window.setTimeout(() => {
             if (!touched && visible) setLocal(true);
-          }, 6500);
+          }, 4500);
         }
       } else {
         stop();

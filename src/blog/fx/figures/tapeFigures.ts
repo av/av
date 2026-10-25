@@ -1,241 +1,315 @@
-import { h, s } from './util';
+import { createRandom, h, mountCanvas } from './util';
 
-// 6. Packet X-Ray: What leaves your laptop on git push
-type LayerSpec = {
-  id: string;
-  label: string;
-  source: string;
-  badge: string;
-  kind: 'git' | 'otel' | 'attest' | 'broker';
-  json: string;
-  note: string;
-};
-
-const LAYERS: LayerSpec[] = [
-  {
-    id: 'git',
-    label: '1. git push diff (what you think you sent)',
-    source: 'git push origin fix/upload-retries',
-    badge: '18 lines · public to team',
-    kind: 'git',
-    json: `commit 7d21f4a (HEAD -> fix/upload-retries)\n+ if r.status_code >= 500:\n+     time.sleep(jitter_backoff(attempt, cap=8.0))`,
-    note: 'Git only sees the clean final commit. Every dead end and manual rescue is invisible here.',
-  },
-  {
-    id: 'otel',
-    label: '2. Copilot enterprise OTel stream (managed settings)',
-    source: 'telemetry.capture.{identity,prompts,toolArguments,toolOutput,policyDetail}',
-    badge: 'override local config · silent',
-    kind: 'otel',
-    json: `{\n  "user.name": "ivan-charapanau", "process.user.name": "everlier", "host.name": "fedora",\n  "prompts": ["add retries to the upload client", "no, status >= 400 breaks auth"],\n  "toolArguments": ["edit upload_client.py", "edit config/prod.yaml", "edit test_upload.py"],\n  "policyDetail": { "sandbox_paths": ["/home/everlier/code/repo"] }\n}`,
-    note: 'Explicit managed settings override local flags, attaching OS identity and every rejected tool call.',
-  },
-  {
-    id: 'attest',
-    label: '3. chainloop trace signed attestation',
-    source: 'chainloop trace hook on git push',
-    badge: 'before/after file snapshots',
-    kind: 'attest',
-    json: `{\n  "attribution": { "agent_lines": 5, "human_rewritten_lines": 11, "reverted_files": ["config/prod.yaml"] },\n  "vendored_inputs": ["specs/issue-3543.md", "skills/discipline/SKILL.md", "AGENTS.md"],\n  "signature": "sigstore://sha256:9f8ca2...e41b"\n}`,
-    note: 'Snapshots every file before and after each edit to attribute lines between agent and human, plus loaded skills.',
-  },
-  {
-    id: 'broker',
-    label: '4. Trajector / lab DPO harvest',
-    source: '127.0.0.1:41100 local proxy spool',
-    badge: 'human_correction event',
-    kind: 'broker',
-    json: `{\n  "event_id": "9c2e-t4", "correction_reason": "wrong_root_cause_diagnosis",\n  "rejected_action": { "diff": "if r.status_code >= 400", "retained_lines": 0 },\n  "preferred_action": { "diff": "if r.status_code >= 500", "retained_lines": 5 },\n  "license": "perpetual_commercial_training"\n}`,
-    note: 'Turns your manual intervention into a scored preference pair ready for SFT and reinforcement learning.',
-  },
-];
-
+// Fig. 6 (xray): Interactive X-ray loupe over a clean git push block.
 export function initXrayFigure(fig: HTMLElement): void {
-  const stage = h('div', 'fx-figure__stage fxx');
+  const stage = h('div', 'fx-figure__stage fxv');
+  fig.prepend(stage);
 
-  const head = h('div', 'fxx-head');
-  head.innerHTML =
-    '<span class="fxx-head__title">packet x-ray · what leaves your laptop on a single commit</span>' +
-    '<span class="fxx-head__sub">select a telemetry layer to inspect the payload underneath git push</span>';
-
-  const body = h('div', 'fxx-body');
-  const stack = h('div', 'fxx-stack');
-  const inspector = h('div', 'fxx-inspector');
-  const inspHead = h('div', 'fxx-inspector__head');
-  const inspCode = h('pre', 'fxx-inspector__code');
-  const inspNote = h('div', 'fxx-inspector__note');
-  inspector.append(inspHead, inspCode, inspNote);
-
-  const btns: HTMLButtonElement[] = [];
-  const select = (idx: number) => {
-    const l = LAYERS[idx];
-    btns.forEach((b, i) => b.classList.toggle('is-active', i === idx));
-    inspHead.innerHTML = `<code>${l.source}</code><span class="fxx-badge is-${l.kind}">${l.badge}</span>`;
-    inspCode.textContent = l.json;
-    inspNote.textContent = l.note;
-  };
-
-  LAYERS.forEach((l, i) => {
-    const b = h('button', `fxx-layer is-${l.kind}`) as HTMLButtonElement;
-    b.type = 'button';
-    b.innerHTML = `<span class="fxx-layer__lbl">${l.label}</span><span class="fxx-layer__tag">${l.badge}</span>`;
-    b.addEventListener('click', () => select(i));
-    b.addEventListener('mouseenter', () => select(i));
-    btns.push(b);
-    stack.append(b);
+  const r = createRandom(606);
+  const rows = Array.from({ length: 11 }, (_, i) => {
+    const indent = (i % 3) * 14;
+    const bars = Array.from({ length: 3 + (i % 4) }, () => 18 + r() * 55);
+    const secret = r() < 0.55 ? 'veto' : 'id';
+    return { indent, bars, secret };
   });
 
-  body.append(stack, inspector);
-  stage.append(head, body);
-  fig.prepend(stage);
-  select(1);
+  let lx = 0.52;
+  let ly = 0.5;
+  let userDragged = false;
+
+  const ctrl = mountCanvas(
+    stage,
+    (w) => (w < 540 ? 205 : 230),
+    (ctx, W, H, c, t) => {
+      ctx.clearRect(0, 0, W, H);
+      if (!userDragged) {
+        lx = 0.5 + Math.cos(t * 0.65) * 0.24;
+        ly = 0.5 + Math.sin(t * 0.95) * 0.18;
+      }
+
+      const cx = lx * W;
+      const cy = ly * H;
+      const rad = Math.min(78, W * 0.2);
+      const padX = W * 0.14;
+
+      // 1. Exterior calm git diff bars
+      rows.forEach((row, i) => {
+        const y = 24 + i * 16;
+        let x = padX + row.indent;
+        ctx.fillStyle = c.tx3;
+        ctx.globalAlpha = 0.35;
+        for (const bw of row.bars) {
+          ctx.fillRect(x, y, bw, 5);
+          x += bw + 6;
+        }
+      });
+      ctx.globalAlpha = 1;
+
+      // 2. Clipped interior X-ray lens: hidden telemetry wires & red/green veto nodes
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+      ctx.clip();
+
+      ctx.fillStyle = c.bg;
+      ctx.fillRect(cx - rad, cy - rad, rad * 2, rad * 2);
+
+      // Telemetry neural grid inside lens
+      ctx.strokeStyle = c.red;
+      ctx.globalAlpha = 0.28;
+      ctx.lineWidth = 1;
+      for (let i = 0; i < rows.length; i++) {
+        const y = 24 + i * 16 + 2.5;
+        ctx.beginPath();
+        ctx.moveTo(padX, y);
+        ctx.bezierCurveTo(cx, y - 12, cx, cy, W - padX, 24);
+        ctx.stroke();
+      }
+
+      rows.forEach((row, i) => {
+        const y = 24 + i * 16;
+        let x = padX + row.indent;
+        for (let j = 0; j < row.bars.length; j++) {
+          const bw = row.bars[j];
+          const isVeto = (i + j) % 2 === 0;
+          ctx.fillStyle = isVeto ? c.red : c.green;
+          ctx.globalAlpha = 0.85;
+          ctx.fillRect(x, y - 1, bw, 7);
+          x += bw + 6;
+        }
+      });
+
+      ctx.font = `500 10px 'Geist Pixel', monospace`;
+      ctx.fillStyle = c.red;
+      ctx.globalAlpha = 1;
+      ctx.textAlign = 'center';
+      ctx.fillText('telemetry', cx, cy - rad + 18);
+      ctx.restore();
+
+      // Lens ring
+      ctx.strokeStyle = c.tx;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Surface label (3 words total on canvas: git push, telemetry)
+      ctx.font = `500 10px 'Geist Pixel', monospace`;
+      ctx.fillStyle = c.tx2;
+      ctx.textAlign = 'left';
+      ctx.fillText('git push', 18, 18);
+    },
+  );
+
+  const move = (e: PointerEvent) => {
+    const rect = ctrl.canvas.getBoundingClientRect();
+    userDragged = true;
+    lx = Math.max(0.15, Math.min(0.85, (e.clientX - rect.left) / Math.max(1, rect.width)));
+    ly = Math.max(0.2, Math.min(0.8, (e.clientY - rect.top) / Math.max(1, rect.height)));
+    ctrl.redraw();
+  };
+  stage.style.cursor = 'grab';
+  stage.addEventListener('pointermove', move);
+  stage.addEventListener('pointerdown', move);
 }
 
-// 8. The Role-Replacement Hill-Climber (24-month slider)
+// Fig. 8 (hillclimb): 80 staff nodes draining into a rising company weight contour.
 export function initHillclimbFigure(fig: HTMLElement): void {
-  const stage = h('div', 'fx-figure__stage fxh');
-
-  const head = h('div', 'fxh-head');
-  head.innerHTML =
-    '<div class="fxh-head__left">' +
-    '<span class="fxh-head__title">the enterprise hill-climber · 500 engineers over 24 months</span>' +
-    '<span class="fxh-head__sub">drag the timeline to watch staff vetoes compile into company-owned workflow weights</span>' +
-    '</div>' +
-    '<div class="fxh-slider-wrap">' +
-    '<label class="fxh-month-lbl">Month <b class="fxh-m">0</b></label>' +
-    '<input type="range" class="fxh-slider" min="0" max="24" step="1" value="6" aria-label="Months of enterprise trace capture" />' +
-    '</div>';
-
-  const kpis = h('div', 'fxh-kpis');
-  kpis.innerHTML =
-    '<div class="fxh-kpi"><span class="fxh-kpi__lbl">staff vetoes logged</span><b class="fxh-kpi__val is-vetoes">0</b></div>' +
-    '<div class="fxh-kpi"><span class="fxh-kpi__lbl">company harness pass rate</span><b class="fxh-kpi__val is-pass">38%</b></div>' +
-    '<div class="fxh-kpi"><span class="fxh-kpi__lbl">senior seats required</span><b class="fxh-kpi__val is-seats">500</b></div>' +
-    '<div class="fxh-kpi"><span class="fxh-kpi__lbl">departing engineer keeps</span><b class="fxh-kpi__val is-zero">0 weights</b></div>';
-
-  const viz = h('div', 'fxh-viz');
-  const grid = h('div', 'fxh-dots');
-  const dots: HTMLElement[] = [];
-  for (let i = 0; i < 60; i++) {
-    const d = h('i', 'fxh-dot');
-    dots.push(d);
-    grid.append(d);
-  }
-  const legend = h('div', 'fxh-legend');
-  legend.innerHTML =
-    '<span><i class="is-human"></i>senior SWE seat</span>' +
-    '<span><i class="is-agent"></i>role automated by company harness</span>';
-  viz.append(grid, legend);
-
-  stage.append(head, kpis, viz);
+  const stage = h('div', 'fx-figure__stage fxv');
   fig.prepend(stage);
 
-  const slider = head.querySelector<HTMLInputElement>('.fxh-slider')!;
-  const mEl = head.querySelector<HTMLElement>('.fxh-m')!;
-  const vEl = kpis.querySelector<HTMLElement>('.is-vetoes')!;
-  const pEl = kpis.querySelector<HTMLElement>('.is-pass')!;
-  const sEl = kpis.querySelector<HTMLElement>('.is-seats')!;
+  let progress = 0.65;
+  let userScrubbed = false;
 
-  const update = (m: number) => {
-    mEl.textContent = String(m);
-    const vetoes = Math.round(m * 6250);
-    const pass = Math.round(38 + 56 * (1 - Math.exp(-m / 9)));
-    const seats = Math.max(65, Math.round(500 * Math.exp(-m / 13.5)));
-    vEl.textContent = vetoes.toLocaleString('en-US');
-    pEl.textContent = `${pass}%`;
-    sEl.textContent = `${seats} / 500`;
+  const ctrl = mountCanvas(
+    stage,
+    (w) => (w < 540 ? 205 : 230),
+    (ctx, W, H, c, t) => {
+      ctx.clearRect(0, 0, W, H);
+      const p = userScrubbed ? progress : 0.15 + 0.78 * (0.5 + 0.5 * Math.sin(t * 0.45));
 
-    const keepDots = Math.round((seats / 500) * dots.length);
-    dots.forEach((d, i) => {
-      d.classList.toggle('is-replaced', i >= keepDots);
-    });
+      // Left: 8x8 grid of staff seats
+      const cols = 8;
+      const rows = 8;
+      const total = cols * rows;
+      const keep = Math.max(6, Math.round(total * Math.pow(1 - p * 0.88, 1.3)));
+      const gx0 = W * 0.08;
+      const gy0 = 34;
+      const cell = Math.min(18, (W * 0.34) / cols);
+
+      for (let i = 0; i < total; i++) {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        const x = gx0 + col * cell;
+        const y = gy0 + row * cell;
+        const active = i < keep;
+
+        if (active) {
+          ctx.fillStyle = c.tx;
+          ctx.fillRect(x, y, cell - 4, cell - 4);
+        } else {
+          ctx.strokeStyle = c.red;
+          ctx.globalAlpha = 0.4;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x + 0.5, y + 0.5, cell - 5, cell - 5);
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      // Right: Rising company weight mountain
+      const rx0 = W * 0.52;
+      const rx1 = W * 0.94;
+      const baseH = H - 30;
+      const peakH = baseH - (H - 68) * p;
+
+      ctx.beginPath();
+      ctx.moveTo(rx0, baseH);
+      for (let k = 0; k <= 32; k++) {
+        const u = k / 32;
+        const x = rx0 + u * (rx1 - rx0);
+        const hill = Math.sin(u * Math.PI) * (1 - 0.15 * Math.cos(u * Math.PI * 4));
+        const y = baseH - hill * (baseH - peakH);
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(rx1, baseH);
+      ctx.closePath();
+      ctx.fillStyle = c.green;
+      ctx.globalAlpha = 0.16;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = c.green;
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+
+      // Streaming arcs from drained seats into the mountain
+      ctx.strokeStyle = c.red;
+      ctx.globalAlpha = 0.25;
+      ctx.lineWidth = 1;
+      for (let k = 0; k < 5; k++) {
+        const sy = gy0 + ((k * 13) % (rows * cell));
+        ctx.beginPath();
+        ctx.moveTo(gx0 + cols * cell, sy);
+        ctx.bezierCurveTo(W * 0.46, sy - 20, W * 0.5, peakH + 10, (rx0 + rx1) * 0.5, peakH + 16);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      // Scrubber bar along bottom
+      ctx.fillStyle = c.ui;
+      ctx.fillRect(gx0, H - 14, rx1 - gx0, 2);
+      ctx.fillStyle = c.tx;
+      ctx.fillRect(gx0, H - 15, (rx1 - gx0) * p, 4);
+
+      // 3 words on canvas: staff, weights, 24m
+      ctx.font = `500 10px 'Geist Pixel', monospace`;
+      ctx.fillStyle = c.tx2;
+      ctx.textAlign = 'left';
+      ctx.fillText('staff', gx0, 22);
+
+      ctx.fillStyle = c.green;
+      ctx.textAlign = 'right';
+      ctx.fillText('weights', rx1, 22);
+
+      ctx.fillStyle = c.tx3;
+      ctx.fillText(`${Math.round(p * 24)}m`, rx1, H - 20);
+    },
+  );
+
+  const scrub = (e: PointerEvent) => {
+    const rect = ctrl.canvas.getBoundingClientRect();
+    userScrubbed = true;
+    progress = Math.max(0.05, Math.min(1, (e.clientX - rect.left) / Math.max(1, rect.width)));
+    ctrl.redraw();
   };
-
-  slider.addEventListener('input', () => update(Number(slider.value)));
-  update(6);
+  stage.style.cursor = 'ew-resize';
+  stage.addEventListener('pointermove', (e) => {
+    if (e.buttons > 0) scrub(e);
+  });
+  stage.addEventListener('pointerdown', scrub);
 }
 
-// 9. The Compounding Ledger Calculator (3-year trajectory)
+// Fig. 9 (compounding): Stateless flatline vs compounding shield steps.
 export function initCompoundingFigure(fig: HTMLElement): void {
-  const stage = h('div', 'fx-figure__stage fxlc');
-
-  const head = h('div', 'fxlc-head');
-  head.innerHTML =
-    '<div class="fxlc-head__left">' +
-    '<span class="fxlc-head__title">the 3-year compounding ledger · 1,000 agent runs / month</span>' +
-    '<span class="fxlc-head__sub">stateless retry loop vs compiling 1 rule per week into your personal harness</span>' +
-    '</div>' +
-    '<div class="fxlc-rate">' +
-    '<span>compile cadence:</span>' +
-    '<button type="button" class="fxlc-btn" data-r="1">1 rule / mo</button>' +
-    '<button type="button" class="fxlc-btn is-active" data-r="4">1 rule / wk</button>' +
-    '<button type="button" class="fxlc-btn" data-r="8">2 rules / wk</button>' +
-    '</div>';
-
-  const chartWrap = h('div', 'fxlc-chart');
-  const svg = s('svg', { class: 'fxlc-svg', viewBox: '0 0 680 210', 'aria-hidden': 'true' });
-  const gridG = s('g', { class: 'fxlc-grid' });
-  const area = s('path', { class: 'fxlc-area' });
-  const flatLine = s('path', { class: 'fxlc-line is-flat' });
-  const compLine = s('path', { class: 'fxlc-line is-comp' });
-  const lblFlat = s('text', { class: 'fxlc-lbl is-flat' });
-  const lblComp = s('text', { class: 'fxlc-lbl is-comp' });
-  svg.append(gridG, area, flatLine, compLine, lblFlat, lblComp);
-
-  for (let m = 0; m <= 36; m += 12) {
-    const x = 44 + (m / 36) * 600;
-    const l = s('line', { x1: x, y1: 20, x2: x, y2: 176 });
-    const t = s('text', { x, y: 194, 'text-anchor': 'middle', class: 'fxlc-axis' });
-    t.textContent = m === 0 ? 'Day 1' : `Year ${m / 12}`;
-    gridG.append(l, t);
-  }
-
-  const stats = h('div', 'fxlc-stats');
-  stats.innerHTML =
-    '<div class="fxlc-stat is-flat"><span>stateless default (year 3)</span><b>34% first-pass yield · 0 portable gates</b></div>' +
-    '<div class="fxlc-stat is-comp"><span>compiled harness (year 3)</span><b class="fxlc-comp-out">91% first-pass yield · 144 portable gates</b></div>';
-
-  chartWrap.append(svg);
-  stage.append(head, chartWrap, stats);
+  const stage = h('div', 'fx-figure__stage fxv');
   fig.prepend(stage);
 
-  const btns = Array.from(head.querySelectorAll<HTMLButtonElement>('.fxlc-btn'));
-  const compOut = stats.querySelector<HTMLElement>('.fxlc-comp-out')!;
+  let fast = false;
+  stage.style.cursor = 'pointer';
+  stage.addEventListener('click', () => {
+    fast = !fast;
+  });
 
-  const render = (rulesPerMo: number) => {
-    btns.forEach((b) => b.classList.toggle('is-active', Number(b.dataset.r) === rulesPerMo));
-    const px = (m: number) => 44 + (m / 36) * 600;
-    const py = (pct: number) => 176 - ((pct - 25) / 75) * 148;
+  mountCanvas(
+    stage,
+    (w) => (w < 540 ? 200 : 225),
+    (ctx, W, H, c, t) => {
+      ctx.clearRect(0, 0, W, H);
 
-    const flatY = py(34);
-    flatLine.setAttribute('d', `M ${px(0)} ${flatY} L ${px(36)} ${flatY}`);
-    lblFlat.setAttribute('x', String(px(36) - 6));
-    lblFlat.setAttribute('y', String(flatY - 7));
-    lblFlat.setAttribute('text-anchor', 'end');
-    lblFlat.textContent = 'stateless operator (34% · same bugs on Day 1,095)';
+      const x0 = 28;
+      const x1 = W - 28;
+      const flatY = H * 0.78;
+      const topY = H * 0.16;
 
-    const pts: [number, number][] = [];
-    let finalYield = 34;
-    for (let m = 0; m <= 36; m++) {
-      const rules = m * rulesPerMo;
-      const yld = 34 + 62 * (1 - Math.exp(-rules / 55));
-      if (m === 36) finalYield = Math.round(yld);
-      pts.push([px(m), py(yld)]);
-    }
+      // Stateless flatline at bottom
+      ctx.strokeStyle = c.red;
+      ctx.globalAlpha = 0.65;
+      ctx.lineWidth = 1.6;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(x0, flatY);
+      ctx.lineTo(x1, flatY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
 
-    const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ');
-    compLine.setAttribute('d', d);
-    area.setAttribute('d', `${d} L ${px(36)} ${flatY} L ${px(0)} ${flatY} Z`);
+      // Stepped compounding curve (each step = 1 compiled rule)
+      const steps = fast ? 18 : 12;
+      const stepW = (x1 - x0) / steps;
+      const rate = fast ? 3.2 : 2.3;
 
-    const last = pts[pts.length - 1];
-    lblComp.setAttribute('x', String(last[0] - 6));
-    lblComp.setAttribute('y', String(last[1] - 8));
-    lblComp.setAttribute('text-anchor', 'end');
-    const totalGates = 36 * rulesPerMo;
-    lblComp.textContent = `your harness (${finalYield}% yield · ${totalGates} compiled gates)`;
-    compOut.textContent = `${finalYield}% first-pass yield · ${totalGates} portable gates`;
-  };
+      ctx.beginPath();
+      ctx.moveTo(x0, flatY);
+      for (let i = 0; i < steps; i++) {
+        const u = (i + 1) / steps;
+        const k = 1 - Math.exp(-u * rate);
+        const y = flatY - k * (flatY - topY);
+        const sx = x0 + i * stepW;
+        const nx = x0 + (i + 1) * stepW;
+        ctx.lineTo(sx, y);
+        ctx.lineTo(nx, y);
+      }
+      ctx.strokeStyle = c.green;
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
 
-  btns.forEach((b) => b.addEventListener('click', () => render(Number(b.dataset.r))));
-  render(4);
+      // Shaded compounding capital wedge
+      ctx.lineTo(x1, flatY);
+      ctx.lineTo(x0, flatY);
+      ctx.closePath();
+      ctx.fillStyle = c.green;
+      ctx.globalAlpha = 0.11;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Traveling pulse along compiled staircase
+      const prog = (t * 0.28) % 1;
+      const idx = Math.min(steps - 1, Math.floor(prog * steps));
+      const u = (idx + 1) / steps;
+      const py = flatY - (1 - Math.exp(-u * rate)) * (flatY - topY);
+      const px = x0 + prog * (x1 - x0);
+      ctx.fillStyle = c.green;
+      ctx.beginPath();
+      ctx.arc(px, py, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 2 words on canvas: compiled, stateless
+      ctx.font = `500 10px 'Geist Pixel', monospace`;
+      ctx.textAlign = 'right';
+      ctx.fillStyle = c.green;
+      ctx.fillText('compiled', x1, topY + 14);
+
+      ctx.fillStyle = c.red;
+      ctx.fillText('stateless', x1, flatY + 16);
+    },
+  );
 }
