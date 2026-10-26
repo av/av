@@ -1,0 +1,777 @@
+// ---------------------------------------------------------------------------
+// Inline text effects (src/blog/fx/inlineFx.ts) and visual figures.
+// ---------------------------------------------------------------------------
+@import "./vars.scss";
+
+$fx-pixel: 'Geist Pixel', 'Geist Mono', ui-monospace, monospace;
+$fx-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', 'Consolas', monospace;
+$fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
+
+@function tint($c, $p) {
+  @return color-mix(in srgb, #{$c} #{$p}, transparent);
+}
+
+.blog-content [data-fx] {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+// Removed and added lines ---------------------------------------------------
+[data-fx='del'] {
+  background:
+    linear-gradient(var(--fx-red), var(--fx-red)) no-repeat 0 58% / 0% 0.08em,
+    linear-gradient(tint(var(--fx-red), 9%), tint(var(--fx-red), 9%)) no-repeat 0 0 / 0% 100%;
+  transition: background-size 0.9s $fx-ease, color 0.9s;
+
+  &.is-on {
+    background-size: 100% 0.08em, 100% 100%;
+    color: var(--fx-tx2);
+  }
+}
+
+[data-fx='add'] {
+  background: linear-gradient(tint(var(--fx-green), 18%), tint(var(--fx-green), 18%)) no-repeat 0 0 / 0% 100%;
+  transition: background-size 1s $fx-ease 0.15s;
+
+  &.is-on { background-size: 100% 100%; }
+}
+
+// Block coding-agent terminal prompt awaiting send --------------------------
+[data-fx='type'] {
+  display: block;
+  margin: 1.35rem 0;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.45rem;
+  background: var(--fx-bg2);
+  font-family: $fx-mono;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  overflow: hidden;
+
+  .fx-term__row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.6rem 0.75rem 0.6rem 0.9rem;
+    background: var(--fx-bg);
+  }
+
+  .fx-term__sig {
+    font-family: $fx-pixel;
+    font-size: 0.85rem;
+    color: var(--fx-green);
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  .fx-term__body {
+    flex: 1;
+    min-width: 0;
+    color: var(--fx-tx);
+  }
+
+  .fx-term__txt { color: var(--fx-tx); }
+
+  .fx-term__ghost {
+    visibility: hidden;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .fx-term__cur {
+    display: inline-block;
+    width: 0.48em;
+    height: 1.05em;
+    margin-right: -0.48em;
+    background: var(--fx-green);
+    vertical-align: -0.15em;
+    animation: fx-blink 1s steps(1) infinite;
+  }
+
+  &.is-running .fx-term__cur,
+  &.is-branch .fx-term__cur {
+    display: none;
+  }
+
+  .fx-term__send {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-left: auto;
+    padding: 0.2rem 0.52rem;
+    border: 1px solid tint(var(--fx-green), 45%);
+    border-radius: 0.25rem;
+    background: tint(var(--fx-green), 12%);
+    font-family: $fx-pixel;
+    font-size: 0.62rem;
+    line-height: 1;
+    color: var(--fx-green);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+
+    kbd {
+      font-family: inherit;
+      font-size: 0.72rem;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: tint(var(--fx-green), 28%);
+      border-color: var(--fx-green);
+      outline: 0;
+    }
+
+    &:active { transform: translateY(1px); }
+  }
+
+  &.is-done .fx-term__send {
+    background: tint(var(--fx-green), 20%);
+    border-color: var(--fx-green);
+  }
+
+  &.is-running .fx-term__send {
+    border-color: var(--fx-border);
+    background: var(--fx-bg2);
+    color: var(--fx-tx2);
+  }
+
+  .fx-term__status {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    height: 1.85rem;
+    padding: 0 0.9rem;
+    border-top: 1px solid var(--fx-ui);
+    background: var(--fx-bg2);
+    font-family: $fx-mono;
+    font-size: 0.66rem;
+    color: var(--fx-tx2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    kbd,
+    code {
+      padding: 0.04em 0.3em;
+      border-radius: 0.2em;
+      background: var(--fx-bg);
+      border: 1px solid var(--fx-ui);
+      font-family: $fx-mono;
+      font-size: 0.92em;
+      color: var(--fx-tx);
+    }
+
+    b {
+      font-family: $fx-pixel;
+      font-weight: 500;
+      color: var(--fx-green);
+    }
+  }
+
+  .fx-term__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--fx-tx3);
+    flex-shrink: 0;
+  }
+
+  &.is-running .fx-term__dot {
+    background: var(--fx-green);
+    animation: fx-blink 0.6s steps(1) infinite;
+  }
+
+  &.is-branch .fx-term__dot { background: var(--fx-green); }
+
+  .fx-term__msg {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@keyframes fx-blink {
+  50% { opacity: 0; }
+}
+
+// Numbers -------------------------------------------------------------------
+[data-fx='count'] {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+[data-fx='pos'],
+[data-fx='neg'] {
+  padding: 0 0.3em;
+  border-radius: 0.25em;
+  font-family: $fx-mono;
+  font-size: 0.88em;
+}
+
+[data-fx='pos'] { color: var(--fx-green); background: tint(var(--fx-green), 15%); }
+[data-fx='neg'] { color: var(--fx-red); background: tint(var(--fx-red), 13%); }
+
+[data-fx='bar'] {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.fx-bar {
+  position: relative;
+  display: inline-block;
+  width: 2.6em;
+  height: 0.42em;
+  margin-left: 0.3em;
+  vertical-align: 0.12em;
+  border-radius: 0.1em;
+  background: var(--fx-ui);
+  overflow: hidden;
+
+  i {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+  }
+
+  .fx-bar__old { width: var(--from); background: var(--fx-tx3); }
+  .fx-bar__new {
+    width: 100%;
+    background: var(--fx-tx2);
+    transform: scaleX(var(--from-k));
+    transform-origin: left;
+    transition: transform 1.4s $fx-ease 0.3s;
+  }
+
+  &.is-down .fx-bar__old { background: var(--fx-red); }
+  &.is-up .fx-bar__new { background: var(--fx-green); }
+  &.is-up .fx-bar__old { z-index: 1; background: var(--fx-tx2); }
+
+  .is-on > & .fx-bar__new { transform: scaleX(var(--to-k)); }
+}
+
+.fx-meter {
+  position: relative;
+  display: inline-block;
+  width: 2.4em;
+  height: 0.42em;
+  margin-left: 0.3em;
+  vertical-align: 0.12em;
+  border-radius: 0.1em;
+  background: repeating-linear-gradient(135deg, var(--fx-ui) 0 2px, transparent 2px 4px);
+  box-shadow: inset 0 0 0 1px var(--fx-ui);
+  overflow: hidden;
+
+  i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 100%;
+    background: var(--fx-green);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 1.8s $fx-ease 0.3s;
+  }
+
+  .is-on > & i { transform: scaleX(var(--to-k)); }
+}
+
+// Revert rate spikes --------------------------------------------------------
+.fx-spark {
+  display: inline-block;
+  width: 3.4em;
+  height: 0.95em;
+  margin-left: 0.3em;
+  vertical-align: -0.1em;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  path {
+    fill: none;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 120;
+    stroke-dashoffset: 120;
+  }
+
+  .fx-spark__base { stroke: var(--fx-tx3); }
+  .fx-spark__hot { stroke: var(--fx-red); }
+  circle { fill: var(--fx-red); opacity: 0; }
+
+  .is-on > & .fx-spark__base { transition: stroke-dashoffset 1.2s linear; stroke-dashoffset: 0; }
+  .is-on > & .fx-spark__hot { transition: stroke-dashoffset 0.6s ease-out 1.2s; stroke-dashoffset: 0; }
+  .is-on > & circle { transition: opacity 0.2s 1.6s; opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-fx],
+  [data-fx] *,
+  [data-fx]::before,
+  [data-fx]::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Pull quotes
+// ---------------------------------------------------------------------------
+.blog-content .pull-quote {
+  margin: 1.8rem 0;
+  padding: 0.2rem 0 0.2rem 1rem;
+  border-left: 3px solid var(--fx-green);
+  font-family: $fx-pixel;
+  font-size: 1.15rem;
+  line-height: 1.4;
+  color: var(--fx-tx);
+
+  p { margin: 0; font-size: inherit; }
+
+  @media (min-width: 1440px) {
+    float: right;
+    clear: right;
+    width: 11rem;
+    margin: 0.35rem -12.25rem 1rem 1.25rem;
+    font-size: 0.8rem;
+  }
+}
+
+.blog-content blockquote cite {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  font-style: normal;
+  color: var(--fx-tx3);
+}
+
+// ---------------------------------------------------------------------------
+// Scripted figures (src/blog/fx/figures).
+// ---------------------------------------------------------------------------
+.blog-content .fx-figure {
+  margin: 2.1rem 0;
+
+  figcaption {
+    margin-top: 0.5rem;
+    font-family: $fx-pixel;
+    font-size: 0.68rem;
+    line-height: 1.4;
+    color: var(--fx-tx3);
+  }
+}
+
+.fx-figure__kicker {
+  margin-right: 0.4em;
+  color: var(--fx-tx2);
+}
+
+.fx-figure__stage {
+  position: relative;
+  contain: layout paint;
+  border: 1px solid var(--fx-border);
+  border-radius: 0.55rem;
+  background:
+    radial-gradient(120% 90% at 50% 0%, tint(var(--fx-bg), 55%), transparent 70%),
+    var(--fx-bg2);
+  box-shadow:
+    inset 0 1px 0 tint(var(--fx-bg), 75%),
+    0 4px 18px -6px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  isolation: isolate;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  transition: border-color 0.35s $fx-ease, box-shadow 0.35s $fx-ease;
+
+  &:hover {
+    border-color: var(--fx-tx3);
+    box-shadow:
+      inset 0 1px 0 tint(var(--fx-bg), 85%),
+      0 8px 24px -8px rgba(0, 0, 0, 0.12);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.06;
+    @include grain-tile;
+  }
+
+  @include media(sm) {
+    border-radius: 0;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    border-left: 0;
+    border-right: 0;
+  }
+}
+
+// Shared canvas visual stage ------------------------------------------------
+.fxv-canvas {
+  display: block;
+  width: 100%;
+}
+
+.fxv-pill {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.7rem;
+  z-index: 2;
+  display: inline-flex;
+  gap: 0.22rem;
+  padding: 0.16rem;
+  border: 1px solid var(--fx-border);
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, var(--fx-bg) 88%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.fxv-pill__btn {
+  padding: 0.16rem 0.5rem;
+  border: 0;
+  border-radius: 0.22rem;
+  background: transparent;
+  font-family: $fx-pixel;
+  font-size: 0.56rem;
+  color: var(--fx-tx2);
+  cursor: pointer;
+  transition: background 0.25s $fx-ease, color 0.25s $fx-ease, transform 0.15s;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--fx-tx);
+    outline: 0;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &.is-active {
+    background: tint(var(--fx-green), 20%);
+    color: var(--fx-green);
+  }
+}
+
+// Fig. 7 — Three-pipe collector stream (fxf) --------------------------------
+.fxf {
+  min-height: 250px;
+}
+
+.fxf-svg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+.fxf-pipe {
+  fill: none;
+  stroke: var(--fx-tx3);
+  stroke-width: 1.5;
+  transition: stroke 0.6s, opacity 0.6s;
+
+  &.is-harness {
+    stroke-dasharray: 3 6;
+    opacity: 0.6;
+  }
+
+  .is-local &.is-harness {
+    stroke: var(--fx-green);
+    stroke-dasharray: none;
+    opacity: 1;
+  }
+}
+
+.fxf-node {
+  position: absolute;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.35rem;
+  background: var(--fx-bg);
+  transition: opacity 0.6s, border-color 0.6s, transform 0.3s;
+}
+
+.fxf-node__title {
+  font-family: $fx-pixel;
+  font-size: 0.68rem;
+  color: var(--fx-tx);
+}
+
+.fxf-node__count {
+  margin-top: 0.1rem;
+  font-family: $fx-mono;
+  font-size: 0.62rem;
+  color: var(--fx-tx2);
+
+  b {
+    font-weight: 600;
+    color: var(--fx-tx);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.fxf-you {
+  border-color: var(--fx-tx2);
+  text-align: center;
+
+  .fxf-node__title { justify-content: center; font-size: 0.78rem; }
+}
+
+.fxf-sink.is-harness {
+  opacity: 0.55;
+  border-style: dashed;
+
+  .is-local & {
+    opacity: 1;
+    border-style: solid;
+    border-color: color-mix(in srgb, var(--fx-green) 60%, var(--fx-bg));
+  }
+
+  &.is-ping { animation: fxf-ping 0.6s ease-out; }
+}
+
+@keyframes fxf-ping {
+  30% { transform: scale(1.04); border-color: var(--fx-green); box-shadow: 0 0 0 4px tint(var(--fx-green), 18%); }
+}
+
+.fxf-toggle {
+  position: absolute;
+  left: 50%;
+  bottom: 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--fx-border);
+  border-radius: 2rem;
+  background: var(--fx-bg);
+  font-family: $fx-pixel;
+  font-size: 0.58rem;
+  color: var(--fx-tx2);
+  cursor: pointer;
+  transform: translateX(-50%);
+
+  &:focus-visible { outline: 2px solid var(--fx-tx3); outline-offset: 2px; }
+}
+
+.fxf-toggle__track {
+  position: relative;
+  width: 1.5rem;
+  height: 0.8rem;
+  border-radius: 1rem;
+  background: var(--fx-ui);
+  transition: background 0.3s;
+
+  i {
+    position: absolute;
+    top: 0.1rem;
+    left: 0.1rem;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--fx-bg);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    transition: transform 0.3s $fx-ease;
+  }
+
+  .is-local & { background: var(--fx-green); }
+  .is-local & i { transform: translateX(0.7rem); }
+}
+
+// Fig. 11 — 1,000-dot clustering canvas (fxk) -------------------------------
+.fxk-canvas {
+  display: block;
+}
+
+.fxk-hud {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.85rem;
+  right: 0.85rem;
+  pointer-events: none;
+}
+
+.fxk-hud__main {
+  font-family: $fx-pixel;
+  font-size: 0.68rem;
+  color: var(--fx-tx2);
+}
+
+.fxk-green { color: var(--fx-green); }
+
+// Fig. 18 — The entropy ladder (fxl) ----------------------------------------
+.fxl {
+  padding: 0.65rem 0.85rem 0.8rem;
+}
+
+.fxl-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+  font-family: $fx-pixel;
+  font-size: 0.6rem;
+  color: var(--fx-tx3);
+}
+
+.fxl-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--fx-tx2);
+}
+
+.fxl-legend__line {
+  width: 1.2rem;
+  border-top: 1.5px dashed var(--fx-red);
+}
+
+.fxl-ladder {
+  --step: 1.5rem;
+  position: relative;
+  margin: 0;
+  padding: 0 0 0 1.1rem;
+  list-style: none;
+
+  @media (max-width: 680px) { --step: 0.55rem; }
+}
+
+.fxl-rung {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: calc(100% - 7 * var(--step));
+  margin: 0.24rem 0 0 calc(var(--i) * var(--step));
+  padding: 0.32rem 0.5rem;
+  border: 1px solid var(--fx-ui);
+  border-radius: 0.28rem;
+  background: var(--fx-bg);
+  transition: border-color 0.4s, background 0.4s;
+
+  &.is-open {
+    background:
+      repeating-linear-gradient(135deg, tint(var(--fx-tx3), 14%) 0 2px, transparent 2px 6px),
+      var(--fx-bg);
+  }
+
+  &.is-check {
+    border-color: color-mix(in srgb, var(--fx-green) 45%, var(--fx-bg));
+    background: color-mix(in srgb, var(--fx-green) 9%, var(--fx-bg));
+  }
+}
+
+.fxl-rung__bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--fx-tx3);
+  opacity: 0.45;
+  transition: background 0.4s, opacity 0.4s;
+
+  .is-check & {
+    background: var(--fx-green);
+    opacity: 0.85;
+  }
+
+  .is-open & {
+    background: transparent;
+    border-top: 1px dashed var(--fx-tx3);
+    height: 1px;
+  }
+}
+
+.fxl-rung__badge {
+  flex: none;
+  padding: 0 0.3rem;
+  border-radius: 0.18rem;
+  font-family: $fx-pixel;
+  font-size: 0.54rem;
+  color: var(--fx-tx3);
+
+  .is-check & {
+    color: var(--fx-green);
+  }
+}
+
+.fxl-boundary {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  margin-top: 0.12rem;
+  border-top: 1.5px dashed var(--fx-red);
+  transition: transform 0.6s $fx-ease;
+  pointer-events: none;
+}
+
+.fxl-you {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 0.55rem;
+  color: var(--fx-tx);
+  line-height: 1;
+  margin-top: -0.28rem;
+  transition: transform 0.6s $fx-ease;
+}
+
+// Project footer (full-width clickable tracequest wordmark) -----------------
+.blog-content .fx-project-footer {
+  margin-top: 3.25rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--fx-ui);
+}
+
+.fx-project-footer__desc {
+  margin: 0 0 1.35rem !important;
+  font-size: 0.88rem !important;
+  line-height: 1.5 !important;
+  color: var(--fx-tx2);
+}
+
+.fx-project-footer__link {
+  display: block;
+  width: 100%;
+  text-decoration: none !important;
+  opacity: 0.88;
+  transition: opacity 0.25s $fx-ease, transform 0.25s $fx-ease;
+
+  &:hover,
+  &:focus-visible {
+    opacity: 1;
+    transform: translateY(-1px);
+    outline: 0;
+  }
+}
+
+.fx-project-footer__wordmark {
+  display: block;
+  width: 100%;
+  height: auto;
+
+  @media (prefers-color-scheme: dark) {
+    filter: invert(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-figure *,
+  .fx-figure *::before,
+  .fx-figure *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -83,6 +83,7 @@ async function main() {
       isDraft: frontmatter.draft === true,
       html: graphStories.html,
       hasGraphStory: graphStories.hasGraphStory,
+      hasPostFx: /\sdata-(fx|figure)=/.test(graphStories.html),
       decor: normalizeDecor(frontmatter.decor),
     });
   }
@@ -500,6 +501,7 @@ function renderPostPug(post, siteUrl) {
     "      .grain-layer(aria-hidden='true')",
     ...(decorContent?.script ? [decorContent.script] : []),
     ...(post.hasGraphStory ? ["    script(src='../graph.ts' type='module')"] : []),
+    ...(post.hasPostFx ? ["    script(src='../post-fx.ts' type='module')"] : []),
   ].join('\n') + '\n';
 }
 
