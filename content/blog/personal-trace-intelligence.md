@@ -1,12 +1,12 @@
 ---
 title: "Your diffs are your weights"
-date: "2026-10-25"
+date: "2026-10-26"
 description: "What you ask an agent first is mostly noise. Your judgment lives in what you reject, rewrite, and revert, and someone is already training on that record."
 slug: "personal-trace-intelligence"
 tags:
   - agents
   - privacy
-draft: true
+draft: false
 decor:
   seed: "personal-trace-intelligence"
   canvas: diff
