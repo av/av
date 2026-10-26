@@ -18,9 +18,27 @@ export function initCloneFigure(fig: HTMLElement): void {
   type Item = { u: number; speed: number; veto: boolean };
   const items: Item[] = Array.from({ length: 12 }, (_, i) => ({
     u: i / 12,
-    speed: 0.26,
+    speed: 0.24,
     veto: r() < 0.62,
   }));
+
+  const evalBezier = (
+    u: number,
+    p0: [number, number],
+    p1: [number, number],
+    p2: [number, number],
+    p3: [number, number],
+  ): [number, number] => {
+    const inv = 1 - u;
+    const b0 = inv * inv * inv;
+    const b1 = 3 * inv * inv * u;
+    const b2 = 3 * inv * u * u;
+    const b3 = u * u * u;
+    return [
+      b0 * p0[0] + b1 * p1[0] + b2 * p2[0] + b3 * p3[0],
+      b0 * p0[1] + b1 * p1[1] + b2 * p2[1] + b3 * p3[1],
+    ];
+  };
 
   mountCanvas(
     stage,
@@ -30,52 +48,128 @@ export function initCloneFigure(fig: HTMLElement): void {
       drawBlueprint(ctx, W, H, c);
 
       const cx = W * 0.5;
-      const splitY = H * 0.4;
+      const topY = 16;
+      const splitY = H * 0.34;
       const leftX = W * 0.25;
       const rightX = W * 0.75;
-      const gateY = H * 0.72;
+      const gateY = H * 0.66;
+      const botY = H - 16;
 
       // Center mirror axis
       ctx.strokeStyle = c.tx3;
-      ctx.globalAlpha = 0.45;
+      ctx.globalAlpha = 0.4;
       ctx.setLineDash([3, 4]);
       ctx.beginPath();
       ctx.moveTo(cx, splitY);
-      ctx.lineTo(cx, H - 18);
+      ctx.lineTo(cx, botY);
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.globalAlpha = 1;
 
-      // Left (you) and Right (clone) gate rings
-      [leftX, rightX].forEach((gx, idx) => {
-        ctx.fillStyle = c.bg;
-        ctx.strokeStyle = idx === 0 ? c.tx : c.red;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(gx, gateY, 17, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
+      // Smooth C1 guide tracks from top -> split -> gates -> deflection exits
+      ctx.strokeStyle = c.ui;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(cx, topY);
+      ctx.lineTo(cx, splitY);
+      [-1, 1].forEach((dir) => {
+        const gx = dir < 0 ? leftX : rightX;
+        ctx.moveTo(cx, splitY);
+        ctx.bezierCurveTo(cx, splitY + 34, gx, gateY - 38, gx, gateY);
+        [-1, 1].forEach((branch) => {
+          const ex = gx + dir * branch * 34;
+          ctx.moveTo(gx, gateY);
+          ctx.bezierCurveTo(gx, gateY + 26, ex, botY - 22, ex, botY);
+        });
       });
+      ctx.stroke();
+
+      // Track gate pulse intensity as particles pass smoothly through gateY
+      let gatePulse = 0;
 
       for (const it of items) {
         it.u = (it.u + it.speed * dt * 0.65) % 1;
         const u = it.u;
         const col = it.veto ? c.red : c.green;
 
-        if (u < 0.38) {
-          const y = 16 + (u / 0.38) * (splitY - 16);
+        if (u < 0.28) {
+          const s = u / 0.28;
+          const y = topY + s * (splitY - topY);
           drawGlowNode(ctx, cx, y, 3.2, c.tx2, 0.15, 2.2);
-        } else {
-          const v = (u - 0.38) / 0.62;
+        } else if (u < 0.66) {
+          // Segment 1: C1 cubic Bezier from (cx, splitY) into (gx, gateY) with vertical entry/exit tangents
+          const s = (u - 0.28) / 0.38;
+          const proximityToGate = Math.exp(-Math.pow((s - 0.96) / 0.16, 2));
+          if (proximityToGate > gatePulse) gatePulse = proximityToGate;
+
           [-1, 1].forEach((dir) => {
             const gx = dir < 0 ? leftX : rightX;
-            const deflect = v > 0.55 ? dir * (it.veto ? -34 : 34) * (v - 0.55) * 2.2 : 0;
-            const x = cx + (gx - cx) * Math.min(1, v * 1.65) + deflect;
-            const y = splitY + v * (H - 22 - splitY);
-            drawGlowNode(ctx, x, y, 3.2, v > 0.52 ? col : c.tx2, v > 0.52 ? 0.28 : 0.1, 2.6);
+            const [x, y] = evalBezier(
+              s,
+              [cx, splitY],
+              [cx, splitY + 34],
+              [gx, gateY - 38],
+              [gx, gateY],
+            );
+            drawGlowNode(
+              ctx,
+              x,
+              y,
+              3.2 + proximityToGate * 0.8,
+              s > 0.82 ? col : c.tx2,
+              0.15 + proximityToGate * 0.22,
+              2.6,
+            );
+          });
+        } else {
+          // Segment 2: C1 cubic Bezier from (gx, gateY) out to deflected exit (ex, botY)
+          const s = (u - 0.66) / 0.34;
+          const proximityToGate = Math.exp(-Math.pow(s / 0.18, 2));
+          if (proximityToGate > gatePulse) gatePulse = proximityToGate;
+
+          [-1, 1].forEach((dir) => {
+            const gx = dir < 0 ? leftX : rightX;
+            const ex = gx + dir * (it.veto ? -34 : 34);
+            const [x, y] = evalBezier(
+              s,
+              [gx, gateY],
+              [gx, gateY + 26],
+              [ex, botY - 22],
+              [ex, botY],
+            );
+            drawGlowNode(ctx, x, y, 3.3, col, 0.28 * (1 - s * 0.4), 2.7);
           });
         }
       }
+
+      // Draw Left (you) and Right (clone) gate rings with subtle harmonic pulse on passage
+      [leftX, rightX].forEach((gx, idx) => {
+        const ringCol = idx === 0 ? c.tx : c.red;
+        if (gatePulse > 0.05) {
+          ctx.strokeStyle = ringCol;
+          ctx.globalAlpha = gatePulse * 0.28;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(gx, gateY, 17 + gatePulse * 3.5, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = c.bg;
+        ctx.strokeStyle = ringCol;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(gx, gateY, 16, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Inner reticle dot
+        ctx.fillStyle = ringCol;
+        ctx.globalAlpha = 0.25 + gatePulse * 0.45;
+        ctx.beginPath();
+        ctx.arc(gx, gateY, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
 
       drawChip(ctx, 'you', leftX, gateY + 34, c.tx, c.bg, c.ui, 'center');
       drawChip(ctx, 'clone · 98%', rightX, gateY + 34, c.red, c.bg, c.red, 'center');
