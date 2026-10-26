@@ -728,71 +728,43 @@ $fx-ease: cubic-bezier(0.6, 0.05, 0.2, 1);
   transition: transform 0.6s $fx-ease;
 }
 
-// Project footer card (tracequest) ------------------------------------------
+// Project footer (full-width clickable tracequest wordmark) -----------------
 .blog-content .fx-project-footer {
-  margin-top: 3rem;
-  padding-top: 1.75rem;
+  margin-top: 3.25rem;
+  padding-top: 2rem;
   border-top: 1px solid var(--fx-ui);
 }
 
-.fx-project-footer__card {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.9rem 1.1rem;
-  border: 1px solid var(--fx-border);
-  border-radius: 0.55rem;
-  background:
-    radial-gradient(120% 90% at 0% 0%, tint(var(--fx-bg), 60%), transparent 70%),
-    var(--fx-bg2);
-  color: var(--fx-tx);
+.fx-project-footer__desc {
+  margin: 0 0 1.35rem !important;
+  font-size: 0.88rem !important;
+  line-height: 1.5 !important;
+  color: var(--fx-tx2);
+}
+
+.fx-project-footer__link {
+  display: block;
+  width: 100%;
   text-decoration: none !important;
-  transition: border-color 0.25s $fx-ease, transform 0.25s $fx-ease, box-shadow 0.25s $fx-ease;
+  opacity: 0.88;
+  transition: opacity 0.25s $fx-ease, transform 0.25s $fx-ease;
 
   &:hover,
   &:focus-visible {
-    border-color: var(--fx-green);
+    opacity: 1;
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px -8px rgba(0, 0, 0, 0.12);
     outline: 0;
-
-    .fx-project-footer__name {
-      color: var(--fx-green);
-    }
   }
 }
 
-.fx-project-footer__logo {
-  flex: none;
-  width: 2.35rem;
-  height: 2.35rem;
+.fx-project-footer__wordmark {
   display: block;
+  width: 100%;
+  height: auto;
 
   @media (prefers-color-scheme: dark) {
     filter: invert(1);
   }
-}
-
-.fx-project-footer__copy {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.fx-project-footer__name {
-  font-family: $fx-pixel;
-  font-size: 0.78rem;
-  color: var(--fx-tx);
-  letter-spacing: 0.02em;
-  transition: color 0.2s;
-}
-
-.fx-project-footer__desc {
-  margin: 0 !important;
-  font-size: 0.82rem !important;
-  line-height: 1.45 !important;
-  color: var(--fx-tx2);
 }
 
 @media (prefers-reduced-motion: reduce) {
